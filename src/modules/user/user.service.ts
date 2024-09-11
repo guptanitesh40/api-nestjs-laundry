@@ -213,7 +213,7 @@ export class UserService {
     if (!user) {
       return {
         statusCode: 404,
-        message: 'user not found',
+        message: 'User Not Found',
         data: null,
       };
     }
