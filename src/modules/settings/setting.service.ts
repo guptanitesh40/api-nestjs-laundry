@@ -20,7 +20,11 @@ export class SettingService {
     try {
       await queryRunner.manager.update(
         Setting,
-        { setting_key: updateSettingDto.setting_key, deleted_at: IsNull() },
+        {
+          setting_key: updateSettingDto.setting_key,
+          gst: updateSettingDto.gst,
+          deleted_at: IsNull(),
+        },
         { deleted_at: new Date() },
       );
 
@@ -48,6 +52,9 @@ export class SettingService {
     const result = {};
     setting.map((element) => {
       result[element.setting_key] = element.setting_value;
+      if (element.gst !== null && element.gst !== undefined) {
+        result['gst_percentage'] = element.gst;
+      }
     });
 
     return {

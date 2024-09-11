@@ -96,7 +96,7 @@ export class CompanyService {
       updateData.logo = logoPath;
     }
 
-    await this.companyRepository.update(id, updateCompanyDto);
+    await this.companyRepository.update(id, updateData);
 
     const update_company = await this.companyRepository.findOne({
       where: { company_id: id, deleted_at: null },
