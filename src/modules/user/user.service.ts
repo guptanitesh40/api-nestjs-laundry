@@ -200,7 +200,7 @@ export class UserService {
     });
     return {
       statusCode: 200,
-      message: 'users retrived successfully,',
+      message: 'users retrived   successfully,',
       data: { users },
     };
   }
