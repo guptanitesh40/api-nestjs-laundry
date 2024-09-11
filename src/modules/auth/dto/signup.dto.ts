@@ -5,6 +5,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsOptional,
+  IsString,
   MinLength,
 } from 'class-validator';
 import { User } from 'src/entities/user.entity';
@@ -27,6 +28,10 @@ export class SignupDto {
   @IsDecimal()
   @IsUnique({ tablename: User.name, column: 'mobile_number' })
   mobile_number: number;
+
+  @IsNotEmpty()
+  @IsString()
+  otp: number;
 
   @IsNotEmpty()
   @MinLength(6)

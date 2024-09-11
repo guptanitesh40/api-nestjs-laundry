@@ -8,10 +8,13 @@ import * as bcrypt from 'bcrypt';
 import { Response } from 'src/dto/response.dto';
 import { DeviceUser } from 'src/entities/device-user.entity';
 import { LoginHistory } from 'src/entities/login-history.entity';
+import { Otp } from 'src/entities/otp.entity';
 import { User } from 'src/entities/user.entity';
+import { OtpType } from 'src/enum/otp.enum';
+import { Role } from 'src/enum/role.enum';
 import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -23,9 +26,23 @@ export class UserService {
     private deviceUserRepository: Repository<DeviceUser>,
     @InjectRepository(LoginHistory)
     private loginHistoryRepository: Repository<LoginHistory>,
+    @InjectRepository(Otp) private otpRepository: Repository<Otp>,
   ) {}
 
   async signup(signUpDto: SignupDto): Promise<User> {
+    const { mobile_number, otp } = signUpDto;
+    const existingUser = await this.userRepository.findOne({
+      where: { mobile_number },
+    });
+
+    if (existingUser) {
+      throw new BadRequestException('Mobile number already registered');
+    }
+
+    const isValidOtp = await this.validateOtp(mobile_number, otp);
+    if (!isValidOtp) {
+      throw new BadRequestException('Invalid or expired OTP');
+    }
     const salt = await bcrypt.genSalt(10);
 
     const hashedpassword = await bcrypt.hash(signUpDto.password, salt);
@@ -226,6 +243,59 @@ export class UserService {
       statusCode: 200,
       message: 'User deleted successfully',
       data: user,
+    };
+  }
+
+  async generateOtp(mobile_number: number, type: OtpType): Promise<number> {
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    const otpEntry = this.otpRepository.create({
+      mobile_number,
+      otp,
+      type,
+      created_at: new Date(),
+    });
+    await this.otpRepository.save(otpEntry);
+    return otp;
+  }
+
+  async validateOtp(mobile_number: number, otp: number): Promise<boolean> {
+    const tenMinutesAgo = new Date(new Date().getTime() - 10 * 60 * 1000);
+    const otpEntry = await this.otpRepository.findOne({
+      where: {
+        mobile_number,
+        otp,
+        deleted_at: null,
+        created_at: MoreThan(tenMinutesAgo),
+      },
+    });
+    if (otpEntry) {
+      otpEntry.deleted_at = new Date();
+      await this.otpRepository.save(otpEntry);
+      return true;
+    }
+    return false;
+  }
+
+  async getAllDeliveryBoys(): Promise<Response> {
+    const deliveryBoys = await this.userRepository.find({
+      where: {
+        role_id: Role.DELIVERY_BOY,
+        deleted_at: null,
+      },
+    });
+
+    if (deliveryBoys.length === 0) {
+      return {
+        statusCode: 404,
+        message: 'No delivery boys found',
+        data: null,
+      };
+    }
+
+    return {
+      statusCode: 200,
+      message: 'Delivery boys retrieved successfully',
+      data: { deliveryBoys },
     };
   }
 }

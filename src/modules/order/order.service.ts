@@ -7,9 +7,12 @@ import { OrderItem } from 'src/entities/order-item.entity';
 import { OrderDetail } from 'src/entities/order.entity';
 import { Product } from 'src/entities/product.entity';
 import { Service } from 'src/entities/service.entity';
+import { User } from 'src/entities/user.entity';
+import { Role } from 'src/enum/role.enum';
 import { Repository } from 'typeorm';
 import { CouponService } from '../coupon/coupon.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Injectable()
 export class OrderService {
@@ -27,6 +30,8 @@ export class OrderService {
     @InjectRepository(OrderItem)
     private orderItemRepository: Repository<OrderItem>,
     private readonly couponService: CouponService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   private mapOrderToResponse(order: OrderDetail) {
@@ -82,6 +87,9 @@ export class OrderService {
       createOrderDto.shipping_charges +
       (createOrderDto.express_delivery_charges || 0);
 
+    const paid_amount = createOrderDto.paid_amount || 0;
+    const kasar_amount = paid_amount < total ? total - paid_amount : 0;
+
     const order = this.orderRepository.create({
       ...createOrderDto,
       sub_total,
@@ -89,6 +97,7 @@ export class OrderService {
       coupon_code,
       coupon_discount,
       address_details,
+      kasar_amount,
     });
     const savedOrder = await this.orderRepository.save(order);
 
@@ -137,6 +146,124 @@ export class OrderService {
       statusCode: 200,
       message: 'Order retrieved successfully',
       data: result,
+    };
+  }
+
+  async updateOrder(
+    order_id: number,
+    updateOrderDto: UpdateOrderDto,
+  ): Promise<Response> {
+    const order = await this.orderRepository.findOne({
+      where: { order_id },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${order_id} not found`);
+    }
+
+    const { address_id, items, ...orderUpdates } = updateOrderDto;
+
+    if (address_id) {
+      const address = await this.addressRepository.findOne({
+        where: { address_id },
+      });
+      if (!address) {
+        throw new NotFoundException(`Address with id ${address_id} not found`);
+      }
+
+      order.address_details = `${address.building_number}, ${address.area}, ${address.city}, ${address.state}, ${address.country} - ${address.pincode}`;
+    }
+
+    Object.assign(order, orderUpdates);
+
+    const updatedOrder = await this.orderRepository.save(order);
+
+    if (items) {
+      await this.orderItemRepository.delete({ order: { order_id } });
+
+      const orderItems = items.map((item) => ({
+        ...item,
+        order: updatedOrder,
+      }));
+
+      await this.orderItemRepository.insert(orderItems);
+    }
+
+    return {
+      statusCode: 200,
+      message: 'Order updated successfully',
+      data: this.mapOrderToResponse(updatedOrder),
+    };
+  }
+
+  async updateOrderStatus(order_id: number, status: number): Promise<Response> {
+    const order = await this.orderRepository.findOne({
+      where: { order_id: order_id },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${order_id} not found`);
+    }
+
+    order.order_status = status;
+    await this.orderRepository.save(order);
+
+    return {
+      statusCode: 200,
+      message: 'Order status updated successfully',
+    };
+  }
+
+  async updatePaymentStatus(
+    order_id: number,
+    status: number,
+  ): Promise<Response> {
+    const order = await this.orderRepository.findOne({
+      where: { order_id: order_id },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${order_id} not found`);
+    }
+
+    order.payment_status = status;
+    await this.orderRepository.save(order);
+
+    return {
+      statusCode: 200,
+      message: 'Payment status updated successfully',
+    };
+  }
+
+  async assignDeliveryBoy(
+    order_id: number,
+    delivery_boy_id: number,
+  ): Promise<Response> {
+    const order = await this.orderRepository.findOne({
+      where: { order_id: order_id },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${order_id} not found`);
+    }
+
+    const deliveryBoy = await this.userRepository.findOne({
+      where: { user_id: delivery_boy_id, role_id: Role.DELIVERY_BOY },
+    });
+
+    if (!deliveryBoy) {
+      throw new NotFoundException(
+        `Delivery Boy with id ${delivery_boy_id} not found`,
+      );
+    }
+
+    order.delivery_boy_id = deliveryBoy.user_id;
+
+    await this.orderRepository.save(order);
+
+    return {
+      statusCode: 200,
+      message: 'Delivery boy assigned successfully',
     };
   }
 }

@@ -71,6 +71,9 @@ export class OrderDetail extends BaseEntity {
   @IsOptional()
   transaction_id?: string;
 
+  @Column({ type: 'decimal', nullable: true })
+  kasar_amount?: number;
+
   @Column({ type: 'int', default: PaymentType.ONLINE_PAYMENT })
   payment_type: PaymentType;
 
@@ -85,4 +88,11 @@ export class OrderDetail extends BaseEntity {
 
   @OneToMany(() => Note, (note) => note.order)
   notes: Note[];
+
+  @ManyToOne(() => User, (user) => user.ordersAsDeliveryBoy)
+  @JoinColumn({ name: 'delivery_boy_id' })
+  delivery_boy: User;
+
+  @Column({ nullable: true })
+  delivery_boy_id: number;
 }

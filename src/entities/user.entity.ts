@@ -67,4 +67,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Note, (note) => note.user)
   notes: Note[];
+
+  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.delivery_boy)
+  ordersAsDeliveryBoy: OrderDetail[];
 }
