@@ -538,15 +538,20 @@ export class OrderService {
       data: orders,
     };
   }
-  async getAssignedOrders(delivery_boy_id: number): Promise<Response> {
-    const ordersWithAssignedDeliveryBoys = await this.orderRepository
+
+  async getAssignedOrders(
+    delivery_boy_id: number,
+    search?: string,
+  ): Promise<Response> {
+    const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .innerJoinAndSelect('order.items', 'items')
       .innerJoinAndSelect('order.user', 'user')
       .where('order.delivery_boy_id = :delivery_boy_id', { delivery_boy_id })
       .select([
         'order.order_id As order_id',
-        'user.user_id As delivery_boy_id',
+        'order.delivery_boy_id As delivery_boy_id',
+        'user.user_id As user_id',
         'user.first_name As first_name',
         'user.last_name As last_name',
         'user.mobile_number As mobile_number',
@@ -554,9 +559,18 @@ export class OrderService {
         'COUNT(items.item_id) As total_item',
         'order.estimated_pickup_time As estimated_pickup_time_hour',
       ])
-      .groupBy('order.order_id')
-      .getRawMany();
+      .groupBy('order.order_id');
 
+    if (search) {
+      queryBuilder.andWhere(
+        '(user.first_name LIKE :search OR user.last_name LIKE :search OR user.mobile_number LIKE :search OR order.address_details LIKE :search OR user.email LIKE :search)',
+        {
+          search: `%${search}%`,
+        },
+      );
+    }
+
+    const ordersWithAssignedDeliveryBoys = await queryBuilder.getRawMany();
     return {
       statusCode: 200,
       message: 'Orders with assigned delivery boys retrieved successfully',

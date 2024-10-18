@@ -45,6 +45,7 @@ export class CartService {
       })
       .select([
         'cart.cart_id as cart_id',
+        'cart.quantity as quantity',
         'cart.product_id as product_id',
         'product.name as product_name',
         `CONCAT('${BASE_URL}/', product.image) as product_image`,

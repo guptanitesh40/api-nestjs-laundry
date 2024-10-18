@@ -31,9 +31,15 @@ export class OrderController {
 
   @Get('orders/assigned')
   @Roles(Role.DELIVERY_BOY)
-  async getAssignedOrders(@Request() req): Promise<Response> {
+  async getAssignedOrders(
+    @Request() req,
+    @Query() paginationQuery: PaginationQueryDto,
+  ): Promise<Response> {
     const delivery_id = req.user;
-    return await this.orderService.getAssignedOrders(delivery_id.user_id);
+    return await this.orderService.getAssignedOrders(
+      delivery_id.user_id,
+      paginationQuery.search,
+    );
   }
 
   @Post('orders')
