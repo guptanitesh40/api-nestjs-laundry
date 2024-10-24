@@ -36,9 +36,25 @@ export class OrderController {
     @Query() paginationQuery: PaginationQueryDto,
   ): Promise<Response> {
     const user = req.user;
+
     return await this.orderService.getAssignedOrders(
       user.user_id,
       paginationQuery.search,
+    );
+  }
+
+  @Patch('orders/:order_id/pickup')
+  @Roles(Role.DELIVERY_BOY)
+  async pickupOrder(
+    @Request() req,
+    @Param('order_id', ParseIntPipe) order_id: number,
+    @Body('comment') comment: string,
+  ): Promise<Response> {
+    const delivery_boy_id = req.user.user_id;
+    return await this.orderService.pickupOrder(
+      order_id,
+      delivery_boy_id,
+      comment,
     );
   }
 

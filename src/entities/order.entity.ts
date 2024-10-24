@@ -129,4 +129,8 @@ export class OrderDetail extends BaseEntity {
   @Column({ type: 'varchar', nullable: true })
   @IsOptional()
   refund_descriptions?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  @IsOptional()
+  pickup_comment?: string;
 }

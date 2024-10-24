@@ -12,6 +12,7 @@ import { OrderItem } from 'src/entities/order-item.entity';
 import { OrderDetail } from 'src/entities/order.entity';
 import { Product } from 'src/entities/product.entity';
 import { Service } from 'src/entities/service.entity';
+import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
@@ -554,8 +555,8 @@ export class OrderService {
   ): Promise<Response> {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
-      .innerJoinAndSelect('order.items', 'items')
-      .innerJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('order.user', 'user')
       .where('order.delivery_boy_id = :delivery_boy_id', { delivery_boy_id })
       .select([
         'order.order_id As order_id',
@@ -568,7 +569,7 @@ export class OrderService {
         'COUNT(items.item_id) As total_item',
         'order.estimated_pickup_time As estimated_pickup_time_hour',
       ])
-      .groupBy('order.order_id');
+      .groupBy('order.order_id,user.user_id');
 
     if (search) {
       queryBuilder.andWhere(
@@ -580,10 +581,35 @@ export class OrderService {
     }
 
     const ordersWithAssignedDeliveryBoys = await queryBuilder.getRawMany();
+
     return {
       statusCode: 200,
       message: 'Orders with assigned delivery boys retrieved successfully',
       data: ordersWithAssignedDeliveryBoys,
+    };
+  }
+
+  async pickupOrder(
+    order_id: number,
+    delivery_boy_id: number,
+    comment: string,
+  ): Promise<Response> {
+    const order = await this.orderRepository.findOne({
+      where: { order_id, delivery_boy_id },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${order_id} not found`);
+    }
+
+    order.pickup_comment = comment;
+    order.order_status = OrderStatus.READY_TO_DELIVERY;
+
+    await this.orderRepository.save(order);
+
+    return {
+      statusCode: 200,
+      message: 'Order picked up successfully',
     };
   }
 

@@ -40,6 +40,9 @@ export class CreateOrderDto {
   transaction_id?: string;
 
   @IsOptional()
+  comment?: string;
+
+  @IsOptional()
   @IsEnum(PaymentType)
   payment_type?: PaymentType;
 
