@@ -31,10 +31,12 @@ export class ApiService {
   async getProductsByCategoryAndService(
     category_id: number,
     service_id: number,
+    user_id: number,
   ): Promise<Response> {
     const prices = await this.priceService.getPricesByCategoryAndService(
       category_id,
       service_id,
+      user_id,
     );
 
     return {

@@ -566,10 +566,11 @@ export class OrderService {
         'user.last_name As last_name',
         'user.mobile_number As mobile_number',
         'order.address_details As address',
+        'items.item_id As item_id',
         'COUNT(items.item_id) As total_item',
         'order.estimated_pickup_time As estimated_pickup_time_hour',
       ])
-      .groupBy('order.order_id,user.user_id');
+      .groupBy('order.order_id,user.user_id,items.item_id');
 
     if (search) {
       queryBuilder.andWhere(

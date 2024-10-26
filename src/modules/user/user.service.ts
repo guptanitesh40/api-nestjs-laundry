@@ -405,7 +405,6 @@ export class UserService {
       },
     });
     if (otpEntry) {
-      otpEntry.deleted_at = new Date();
       await this.otpRepository.save(otpEntry);
       return true;
     }
