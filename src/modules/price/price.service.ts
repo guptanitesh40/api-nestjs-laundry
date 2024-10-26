@@ -78,14 +78,39 @@ export class PriceService {
       data: result,
     };
   }
-  async getPricesByCategoryAndService(category_id: number, service_id: number) {
-    const prices = await this.priceRepository.find({
-      where: {
-        category: { category_id: category_id },
-        service: { service_id: service_id },
-      },
-      relations: ['product'],
-    });
+
+  async getPricesByCategoryAndService(
+    category_id: number,
+    service_id: number,
+    user_id: number,
+  ) {
+    const prices = await this.priceRepository
+      .createQueryBuilder('price')
+      .innerJoinAndSelect('price.category', 'category')
+      .innerJoinAndSelect('price.service', 'service')
+      .innerJoinAndSelect('price.product', 'product')
+      .leftJoinAndMapOne(
+        'price.carts',
+        'carts',
+        'cart',
+        'cart.product_id = price.product_id AND cart.category_id = price.category_id AND cart.service_id = price.service_id AND cart.user_id = user_id',
+        { userId: user_id },
+      )
+      .where('category.category_id = :categoryId', { categoryId: category_id })
+      .select([
+        'price',
+        'category.category_id',
+        'category.name',
+        'product.product_id',
+        'product.name',
+        'product.image',
+        'service.service_id',
+        'service.name',
+        'service.image',
+        'cart',
+      ])
+      .andWhere('service.service_id = :serviceId', { serviceId: service_id })
+      .getMany();
 
     return prices.map((price) => ({
       ...price,

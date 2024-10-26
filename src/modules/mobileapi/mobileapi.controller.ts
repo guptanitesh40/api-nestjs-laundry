@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
@@ -20,12 +20,15 @@ export class MobileApiController {
 
   @Get('products')
   async getProductsByCategoryAndService(
+    @Request() req,
     @Query('category_id') category_id: number,
     @Query('service_id') service_id: number,
   ): Promise<Response> {
+    const user = req.user;
     return await this.apiService.getProductsByCategoryAndService(
       category_id,
       service_id,
+      user.use_id,
     );
   }
 
