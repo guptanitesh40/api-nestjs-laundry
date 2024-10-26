@@ -106,13 +106,6 @@ export class OrderDetail extends BaseEntity {
   @Column({ nullable: true })
   delivery_boy_id: number;
 
-  @ManyToOne(() => User, (user) => user.ordersAsWorkShopManager)
-  @JoinColumn({ name: 'workshop_manager_id' })
-  workshop_manager: User;
-
-  @Column({ nullable: true })
-  workshop_manager_id: number;
-
   @Column({ type: 'date', nullable: true })
   estimated_delivery_time: Date;
 

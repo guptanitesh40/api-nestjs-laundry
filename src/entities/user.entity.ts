@@ -102,9 +102,6 @@ export class User extends BaseEntity {
   @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.delivery_boy)
   ordersAsDeliveryBoy: OrderDetail[];
 
-  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.workshop_manager)
-  ordersAsWorkShopManager: OrderDetail[];
-
   @OneToMany(() => Branch, (branch) => branch.branchManager)
   branches: Branch[];
 
