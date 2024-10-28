@@ -26,6 +26,7 @@ import { UsersModule } from './modules/user/user.module';
 import { IsUniqueConstraint } from './modules/validator/is-unique-constarint';
 import { WebModule } from './modules/web/web.module';
 import { MorganMiddleware } from './morgan.middleware';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { MorganMiddleware } from './morgan.middleware';
     InvoiceModule,
     WebModule,
     FeedbackModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService, IsUniqueConstraint],
