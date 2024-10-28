@@ -64,9 +64,13 @@ export class PriceService {
       .getMany();
 
     const result = {};
-    prices.forEach((element) => {
+    prices.map((element) => {
       result[
-        `${element.category_id}_${element.product_id}_${element.service_id}`
+        element.category_id +
+          '_' +
+          element.product_id +
+          '_' +
+          element.service_id
       ] = element.price;
     });
 
