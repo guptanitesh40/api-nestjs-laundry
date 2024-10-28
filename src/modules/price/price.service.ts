@@ -100,6 +100,7 @@ export class PriceService {
         { userId: user_id },
       )
       .where('category.category_id = :categoryId', { categoryId: category_id })
+      .andWhere('price.price > 0')
       .select([
         'price',
         'category.category_id',
