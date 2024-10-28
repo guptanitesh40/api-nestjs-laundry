@@ -5,6 +5,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { addDays, addHours } from 'date-fns';
+import ejs from 'ejs';
+import * as fs from 'fs';
+import { writeFileSync } from 'fs';
+import * as pdf from 'html-pdf';
+import path, { join } from 'path';
 import { Response } from 'src/dto/response.dto';
 import { UserAddress } from 'src/entities/address.entity';
 import { Category } from 'src/entities/category.entity';
@@ -632,7 +637,7 @@ export class OrderService {
     };
   }
 
-  async createRefund(refundOrderDto: RefundOrderDto): Promise<Response> {
+  async createRefund(refundOrderDto: RefundOrderDto): Promise<OrderDetail> {
     const order = await this.orderRepository.findOne({
       where: { order_id: refundOrderDto.order_id },
     });
@@ -657,9 +662,111 @@ export class OrderService {
 
     await this.orderRepository.save(order);
 
-    return {
-      statusCode: 200,
-      message: 'Refund processed successfully',
+    const pdfBuffer = await this.generateRefundReceipt(order.order_id);
+
+    const filePath = join(
+      process.cwd(),
+      `pdf/refund-receipt-${order.order_id}.pdf`,
+    );
+    writeFileSync(filePath, pdfBuffer);
+
+    return order;
+  }
+
+  async generateRefundReceipt(order_id: number): Promise<Buffer> {
+    const base_url = process.env.BASE_URL;
+    const order = await this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.items', 'item')
+      .leftJoinAndSelect('item.category', 'category')
+      .leftJoinAndSelect('item.product', 'product')
+      .leftJoinAndSelect('item.service', 'service')
+      .where('order.order_id = :order_id', { order_id })
+      .select([
+        'order.order_id',
+        'order.total',
+        'order.payment_type',
+        'order.coupon_code',
+        'order.address_details',
+        'order.refund_status',
+        'order.refund_amount',
+        'user.first_name',
+        'user.last_name',
+        'user.mobile_number',
+        'user.email',
+        'item.price',
+        'item.quantity',
+        'category.name',
+        'product.name',
+        'service.name',
+      ])
+      .getOne();
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${order_id} not found`);
+    }
+
+    const {
+      address_details,
+      total,
+      payment_type,
+      coupon_code,
+      refund_status,
+      refund_amount,
+    } = order;
+    const user = order.user;
+
+    const orderItems = order.items.map((item) => ({
+      category: item.category ? item.category.name : 'N/A',
+      product: item.product ? item.product.name : 'N/A',
+      service: item.service ? item.service.name : 'N/A',
+      price: item.price,
+      quantity: item.quantity,
+      total: item.price * item.quantity,
+    }));
+
+    const refundData = {
+      logoUrl: `${base_url}/images/logo/logo2.png`,
+      order_id,
+      user: {
+        name: `${user.first_name} ${user.last_name}`,
+        mobile_number: user.mobile_number,
+        email: user.email,
+      },
+      address_details,
+      payment_type,
+      coupon_code,
+      refund_status: RefundStatus[refund_status],
+      refund_amount,
+      items: orderItems,
+      total_amount: total,
     };
+
+    try {
+      const htmlTemplatePath = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'src/templates/refund-receipt.ejs',
+      );
+      const templateContent = fs.readFileSync(htmlTemplatePath, 'utf-8');
+      const htmlContent = ejs.render(templateContent, refundData);
+
+      const pdfOptions = { format: 'A4', orientation: 'portrait' };
+      const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
+        pdf.create(htmlContent, pdfOptions).toBuffer((err, buffer) => {
+          if (err) reject(err);
+          resolve(buffer);
+        });
+      });
+
+      return Buffer.from(pdfBuffer);
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to generate refund receipt: ${error.message}`,
+      );
+    }
   }
 }
