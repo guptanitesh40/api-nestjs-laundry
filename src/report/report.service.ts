@@ -11,13 +11,15 @@ export class ReportService {
   ) {}
 
   async getTotalOrderReport(): Promise<{ day: string; count: number }[]> {
-    const result = await this.orderRepository.query(`
-      SELECT DATE_FORMAT(created_at, '%b-%Y') AS day, COUNT(*) AS count
-      FROM orders
-      WHERE created_at >= NOW() - INTERVAL 6 MONTH AND deleted_at IS NULL
-      GROUP BY day
-      ORDER BY day DESC;
-    `);
+    const result = await this.orderRepository
+      .createQueryBuilder('orders')
+      .select("DATE_FORMAT(orders.created_at, '%b-%Y') AS day")
+      .addSelect('COUNT(*) AS count')
+      .where('orders.created_at >= NOW() - INTERVAL 6 MONTH')
+      .andWhere('orders.deleted_at IS NULL')
+      .groupBy('day')
+      .orderBy('day', 'DESC')
+      .getRawMany();
 
     return result.map((row: { day: string; count: string }) => ({
       day: row.day,
