@@ -34,14 +34,22 @@ export class PriceService {
     await queryRunner.startTransaction();
 
     try {
-      await queryRunner.manager.update(
-        Price,
-        { deleted_at: IsNull() },
-        { deleted_at: new Date() },
-      );
+      const validPrices = [];
+      for (const priceDto of createPriceDto.prices) {
+        if (priceDto.price !== 0) {
+          validPrices.push(priceDto);
+        }
+      }
 
-      await queryRunner.manager.insert(Price, createPriceDto.prices);
+      if (validPrices.length > 0) {
+        await queryRunner.manager.update(
+          Price,
+          { deleted_at: IsNull() },
+          { deleted_at: new Date() },
+        );
 
+        await queryRunner.manager.insert(Price, createPriceDto.prices);
+      }
       await queryRunner.commitTransaction();
 
       return {
