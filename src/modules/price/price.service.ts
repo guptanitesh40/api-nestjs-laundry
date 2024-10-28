@@ -57,11 +57,14 @@ export class PriceService {
   }
 
   async findAll(): Promise<Response> {
-    const price = await this.priceRepository.find({
-      where: { deleted_at: null },
-    });
+    const prices = await this.priceRepository
+      .createQueryBuilder('price')
+      .where('price.deleted_at IS NULL')
+      .andWhere('price.price > 0')
+      .getMany();
+
     const result = {};
-    price.map((element) => {
+    prices.map((element) => {
       result[
         element.category_id +
           '_' +
@@ -74,7 +77,7 @@ export class PriceService {
     return {
       statusCode: 200,
       message:
-        'prices retrieved successfully (category_id, product_id, service_id)',
+        'Prices retrieved successfully (category_id, product_id, service_id)',
       data: result,
     };
   }
@@ -97,6 +100,7 @@ export class PriceService {
         { userId: user_id },
       )
       .where('category.category_id = :categoryId', { categoryId: category_id })
+      .andWhere('price.price > 0')
       .select([
         'price',
         'category.category_id',
