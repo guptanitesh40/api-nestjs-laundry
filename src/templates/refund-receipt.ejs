@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Refund Receipt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .header {
+            text-align: center;
+        }
+        .details, .items {
+          font-size: 16px;
+            margin-top: 20px;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Refund Receipt</h1>
+        <img src="<%= logoUrl %>" alt="Logo" style="max-width: 60px;">
+        <p><strong>Order ID:</strong> <%= order_id %></p>
+        <p><strong>Date:</strong> <%= new Date().toLocaleDateString() %></p>
+    </div>
+    <div class="details">
+      <p><strong>Refund Amount:</strong> <%= typeof refund_amount !== 'undefined' ? Number(refund_amount).toFixed(2) : 'N/A' %></p>
+      <p><strong>Refund Status:</strong> <%= typeof refund_status !== 'undefined' ? refund_status : 'N/A' %></p>
+     
+      <p><strong>Customer Name:</strong> <%= user.name || 'N/A' %></p>
+      <p><strong>Contact:</strong> <%= user.mobile_number || 'N/A' %> | <%= user.email || 'N/A' %></p>
+      <p><strong>Address:</strong> <%= address_details || 'N/A' %></p>
+  </div>
+  
+    <div class="items">
+        <h2>Refunded Items</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Product</th>
+                    <th>Service</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% items.forEach(item => { %>
+                    <tr>
+                        <td><%= item.category %></td>
+                        <td><%= item.product %></td>
+                        <td><%= item.service %></td>
+                        <td><%= Number(item.price).toFixed(2) %></td>
+                        <td><%= item.quantity %></td>
+                        <td><%= Number(item.price * item.quantity).toFixed(2) %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="5" class="total">Total Amount:</td>
+                <td class="total"><%= typeof total_amount !== 'undefined' ? Number(total_amount).toFixed(2) : 'N/A' %></td>
+            </tr>
+                <tr>
+                    <td colspan="5" class="total">Total Refund:</td>
+                    <td class="total"><%= typeof refund_amount !== 'undefined' ? Number(refund_amount).toFixed(2) : 'N/A' %></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <div class="footer">
+        <p>Thank you for choosing Sikka Cleaners!</p>
+    </div>
+</body>
+</html>

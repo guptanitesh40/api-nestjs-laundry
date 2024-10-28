@@ -10,11 +10,15 @@ import {
   Put,
   Query,
   Request,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { createReadStream, writeFileSync } from 'fs';
+import { join } from 'path';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
+import { OrderDetail } from 'src/entities/order.entity';
 import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from '../auth/guard/role.guard';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
@@ -157,7 +161,22 @@ export class OrderController {
   }
 
   @Post('refund')
-  async refundOrder(@Body() refundOrderDto: RefundOrderDto) {
-    return await this.orderService.createRefund(refundOrderDto);
+  async refundOrder(
+    @Body() refundOrderDto: RefundOrderDto,
+  ): Promise<StreamableFile> {
+    const order: OrderDetail =
+      await this.orderService.createRefund(refundOrderDto);
+    const pdfBuffer = await this.orderService.generateRefundReceipt(
+      order.order_id,
+    );
+
+    const filePath = join(
+      process.cwd(),
+      `pdf/refund-receipt-${order.order_id}.pdf`,
+    );
+    writeFileSync(filePath, pdfBuffer);
+
+    const file = createReadStream(filePath);
+    return new StreamableFile(file, { type: 'application/pdf' });
   }
 }
