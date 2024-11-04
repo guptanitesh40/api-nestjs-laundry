@@ -26,6 +26,7 @@ import { DataSource, Repository } from 'typeorm';
 import { CouponService } from '../coupon/coupon.service';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { NotificationService } from '../notification/notification.service';
+import { PriceService } from '../price/price.service';
 import { SettingService } from '../settings/setting.service';
 import { UserService } from '../user/user.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -51,6 +52,7 @@ export class OrderService {
     private readonly userService: UserService,
     private readonly notificationService: NotificationService,
     private readonly settingService: SettingService,
+    private readonly priceService: PriceService,
     private dataSource: DataSource,
   ) {}
 
@@ -148,10 +150,18 @@ export class OrderService {
 
       const estimated_delivery_date = addDays(new Date(), deliveryDaysToAdd);
 
+      const prices = await this.priceService.findAll();
       const orderItemsMap = new Map();
 
       for (const item of createOrderDto.items) {
-        const key = `${item.category_id}-${item.product_id}-${item.service_id}`;
+        const key = `${item.category_id}_${item.product_id}_${item.service_id}`;
+        const price = prices.data[key];
+
+        if (!price) {
+          throw new Error(
+            `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}`,
+          );
+        }
         if (orderItemsMap.has(key)) {
           const existingItem = orderItemsMap.get(key);
           existingItem.quantity += item.quantity || 1;
@@ -211,6 +221,7 @@ export class OrderService {
         order_id: savedOrder.order_id,
         total: savedOrder.total,
         created_at: savedOrder.created_at,
+        address_details: savedOrder.address_details,
         items: orderItems.length,
         user: {
           first_name: user.first_name,
@@ -224,6 +235,7 @@ export class OrderService {
       return {
         statusCode: 201,
         message: 'Order details added successfully',
+        data: orderDetail,
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();

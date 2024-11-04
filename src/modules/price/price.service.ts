@@ -93,21 +93,15 @@ export class PriceService {
   async getPricesByCategoryAndService(
     category_id: number,
     service_id: number,
-    user_id: number,
+    user_id?: number,
   ) {
     const prices = await this.priceRepository
       .createQueryBuilder('price')
       .innerJoinAndSelect('price.category', 'category')
       .innerJoinAndSelect('price.service', 'service')
       .innerJoinAndSelect('price.product', 'product')
-      .leftJoinAndMapOne(
-        'price.carts',
-        'carts',
-        'cart',
-        'cart.product_id = price.product_id AND cart.category_id = price.category_id AND cart.service_id = price.service_id AND cart.user_id = user_id',
-        { userId: user_id },
-      )
       .where('category.category_id = :categoryId', { categoryId: category_id })
+      .andWhere('service.service_id = :serviceId', { serviceId: service_id })
       .andWhere('price.price > 0')
       .select([
         'price',
@@ -119,12 +113,23 @@ export class PriceService {
         'service.service_id',
         'service.name',
         'service.image',
-        'cart',
-      ])
-      .andWhere('service.service_id = :serviceId', { serviceId: service_id })
-      .getMany();
+      ]);
 
-    return prices.map((price) => ({
+    if (user_id) {
+      prices.leftJoinAndMapOne(
+        'price.carts',
+        'carts',
+        'cart',
+        'cart.product_id = price.product_id AND cart.category_id = price.category_id AND cart.service_id = price.service_id AND cart.user_id = :userId',
+        { userId: user_id },
+      );
+    } else {
+      prices.addSelect('NULL AS cart');
+    }
+
+    const result = await prices.getMany();
+
+    return result.map((price) => ({
       ...price,
       product: {
         ...price.product,
