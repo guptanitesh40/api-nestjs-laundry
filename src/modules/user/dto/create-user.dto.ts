@@ -1,6 +1,5 @@
-import { Type } from 'class-transformer';
 import {
-  ArrayNotEmpty,
+  IsArray,
   IsDecimal,
   IsEmail,
   IsEnum,
@@ -8,7 +7,6 @@ import {
   IsNumber,
   IsOptional,
   MinLength,
-  ValidateNested,
 } from 'class-validator';
 import { User } from 'src/entities/user.entity';
 import { Gender } from 'src/enum/gender.enum';
@@ -60,27 +58,36 @@ export class CreateUserDto {
   @IsNumber()
   security_deposit?: number;
 
+  @IsArray()
   @IsOptional()
-  @ArrayNotEmpty()
-  @ValidateNested({ each: true })
-  @Type(() => CompanyAssignmentDto)
-  companies?: CompanyAssignmentDto[];
+  @IsNumber({}, { each: true })
+  company_ids?: number[];
 
+  @IsArray()
   @IsOptional()
-  @ArrayNotEmpty()
-  @ValidateNested({ each: true })
-  @Type(() => BranchAssignmentDto)
-  branches?: BranchAssignmentDto[];
+  @IsNumber({}, { each: true })
+  branch_ids?: number[];
+  // @IsOptional()
+  // @ArrayNotEmpty()
+  // @ValidateNested({ each: true })
+  // @Type(() => CompanyAssignmentDto)
+  // companies?: CompanyAssignmentDto[];
+
+  // @IsOptional()
+  // @ArrayNotEmpty()
+  // @ValidateNested({ each: true })
+  // @Type(() => BranchAssignmentDto)
+  // branches?: BranchAssignmentDto[];
 }
 
-export class CompanyAssignmentDto {
-  @IsNotEmpty()
-  @IsNumber()
-  company_id: number;
-}
+// export class CompanyAssignmentDto {
+//   @IsNotEmpty()
+//   @IsNumber()
+//   company_id: number;
+// }
 
-export class BranchAssignmentDto {
-  @IsNotEmpty()
-  @IsNumber()
-  branch_id: number;
-}
+// export class BranchAssignmentDto {
+//   @IsNotEmpty()
+//   @IsNumber()
+//   branch_id: number;
+// }

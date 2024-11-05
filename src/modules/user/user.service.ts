@@ -22,7 +22,7 @@ import twilio from 'twilio';
 import { MoreThan, Repository } from 'typeorm';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { BranchAssignmentDto, CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 const twilioClient = twilio(
@@ -205,20 +205,20 @@ export class UserService {
     const result = await this.userRepository.save(user);
 
     if (createUserDto.role_id === Role.SUB_ADMIN) {
-      if (createUserDto.companies) {
-        const companyMappings = createUserDto.companies.map((companyDto) =>
+      if (createUserDto.company_ids) {
+        const companyMappings = createUserDto.company_ids.map((companyId) =>
           this.userCompanyMappingRepository.create({
             user_id: result.user_id,
-            company_id: companyDto.company_id,
+            company_id: companyId,
           }),
         );
         await this.userCompanyMappingRepository.save(companyMappings);
       }
-      await this.assignBranches(result.user_id, createUserDto.branches);
+      await this.assignBranches(result.user_id, createUserDto.branch_ids);
     }
 
     if (createUserDto.role_id === Role.BRANCH_MANAGER) {
-      await this.assignBranches(result.user_id, createUserDto.branches);
+      await this.assignBranches(result.user_id, createUserDto.branch_ids);
     }
 
     return {
@@ -228,20 +228,18 @@ export class UserService {
     };
   }
 
-  private async assignBranches(
-    userId: number,
-    branches?: BranchAssignmentDto[],
-  ) {
-    if (branches) {
-      const branchMappings = branches.map((branchDto) =>
+  private async assignBranches(userId: number, branchIds?: number[]) {
+    if (branchIds) {
+      const branchMappings = branchIds.map((branchId) =>
         this.userBranchMappingRepository.create({
           user_id: userId,
-          branch_id: branchDto.branch_id,
+          branch_id: branchId,
         }),
       );
       await this.userBranchMappingRepository.save(branchMappings);
     }
   }
+
   getVendorCodeExpiry(expiryDays: number): Date {
     const currentDate = new Date();
     currentDate.setDate(currentDate.getDate() + expiryDays);
