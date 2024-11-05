@@ -26,12 +26,12 @@ export class WebController {
     @Query('service_id') service_id: number,
   ): Promise<Response> {
     const user = req.user;
-    const userId = user ? user.user_id : null;
+    const user_id = user ? user.user_id : null;
 
     return await this.apiService.getProductsByCategoryAndService(
       category_id,
       service_id,
-      userId,
+      user_id,
     );
   }
 
