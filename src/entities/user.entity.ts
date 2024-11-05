@@ -3,6 +3,7 @@ import {
   Column,
   Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -17,6 +18,8 @@ import { LoginHistory } from './login-history.entity';
 import { Note } from './note.entity';
 import { OrderDetail } from './order.entity';
 import { Role } from './role.entity';
+import { UserBranchMapping } from './user-branch-mapping.entity';
+import { UserCompanyMapping } from './user-company-mapping.entity';
 
 @Entity({ name: 'users' })
 export class User extends BaseEntity {
@@ -107,4 +110,10 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Cart, (cart) => cart.user)
   carts: Cart[];
+
+  @ManyToMany(() => UserCompanyMapping, (userCompanyMpg) => userCompanyMpg.user)
+  userCompanyMpgs: UserCompanyMapping[];
+
+  @ManyToMany(() => UserBranchMapping, (userCompanyMpg) => userCompanyMpg.user)
+  userBranchMapping: UserBranchMapping[];
 }

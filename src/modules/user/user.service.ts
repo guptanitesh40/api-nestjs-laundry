@@ -10,6 +10,8 @@ import { Response } from 'src/dto/response.dto';
 import { DeviceUser } from 'src/entities/device-user.entity';
 import { LoginHistory } from 'src/entities/login-history.entity';
 import { Otp } from 'src/entities/otp.entity';
+import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
+import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
 import { OtpType } from 'src/enum/otp.enum';
 import { Role } from 'src/enum/role.enum';
@@ -20,7 +22,7 @@ import twilio from 'twilio';
 import { MoreThan, Repository } from 'typeorm';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { CreateUserDto } from './dto/create-user.dto';
+import { BranchAssignmentDto, CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 const twilioClient = twilio(
@@ -38,6 +40,10 @@ export class UserService {
     @InjectRepository(LoginHistory)
     private loginHistoryRepository: Repository<LoginHistory>,
     @InjectRepository(Otp) private otpRepository: Repository<Otp>,
+    @InjectRepository(UserCompanyMapping)
+    private userCompanyMappingRepository: Repository<UserCompanyMapping>,
+    @InjectRepository(UserBranchMapping)
+    private userBranchMappingRepository: Repository<UserBranchMapping>,
   ) {}
 
   async signup(signUpDto: SignupDto): Promise<User> {
@@ -198,6 +204,23 @@ export class UserService {
 
     const result = await this.userRepository.save(user);
 
+    if (createUserDto.role_id === Role.SUB_ADMIN) {
+      if (createUserDto.companies) {
+        const companyMappings = createUserDto.companies.map((companyDto) =>
+          this.userCompanyMappingRepository.create({
+            user_id: result.user_id,
+            company_id: companyDto.company_id,
+          }),
+        );
+        await this.userCompanyMappingRepository.save(companyMappings);
+      }
+      await this.assignBranches(result.user_id, createUserDto.branches);
+    }
+
+    if (createUserDto.role_id === Role.BRANCH_MANAGER) {
+      await this.assignBranches(result.user_id, createUserDto.branches);
+    }
+
     return {
       statusCode: 201,
       message: 'User added successfully',
@@ -205,6 +228,20 @@ export class UserService {
     };
   }
 
+  private async assignBranches(
+    userId: number,
+    branches?: BranchAssignmentDto[],
+  ) {
+    if (branches) {
+      const branchMappings = branches.map((branchDto) =>
+        this.userBranchMappingRepository.create({
+          user_id: userId,
+          branch_id: branchDto.branch_id,
+        }),
+      );
+      await this.userBranchMappingRepository.save(branchMappings);
+    }
+  }
   getVendorCodeExpiry(expiryDays: number): Date {
     const currentDate = new Date();
     currentDate.setDate(currentDate.getDate() + expiryDays);

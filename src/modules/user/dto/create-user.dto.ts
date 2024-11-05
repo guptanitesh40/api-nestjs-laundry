@@ -1,4 +1,6 @@
+import { Type } from 'class-transformer';
 import {
+  ArrayNotEmpty,
   IsDecimal,
   IsEmail,
   IsEnum,
@@ -6,6 +8,7 @@ import {
   IsNumber,
   IsOptional,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 import { User } from 'src/entities/user.entity';
 import { Gender } from 'src/enum/gender.enum';
@@ -56,4 +59,28 @@ export class CreateUserDto {
   @IsOptional()
   @IsNumber()
   security_deposit?: number;
+
+  @IsOptional()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CompanyAssignmentDto)
+  companies?: CompanyAssignmentDto[];
+
+  @IsOptional()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => BranchAssignmentDto)
+  branches?: BranchAssignmentDto[];
+}
+
+export class CompanyAssignmentDto {
+  @IsNotEmpty()
+  @IsNumber()
+  company_id: number;
+}
+
+export class BranchAssignmentDto {
+  @IsNotEmpty()
+  @IsNumber()
+  branch_id: number;
 }

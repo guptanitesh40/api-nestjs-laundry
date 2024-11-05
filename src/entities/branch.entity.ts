@@ -2,11 +2,13 @@ import {
   Column,
   Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Company } from './company.entity';
+import { UserBranchMapping } from './user-branch-mapping.entity';
 import { User } from './user.entity';
 
 @Entity({ name: 'branches' })
@@ -42,4 +44,7 @@ export class Branch extends BaseEntity {
   @ManyToOne(() => User, (user) => user.branches)
   @JoinColumn({ name: 'branch_manager_id' })
   branchManager: User;
+
+  @ManyToMany(() => UserBranchMapping, (userBranchMpg) => userBranchMpg.branch)
+  userBranchMapping: UserBranchMapping[];
 }
