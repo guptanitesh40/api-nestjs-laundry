@@ -67,27 +67,4 @@ export class CreateUserDto {
   @IsOptional()
   @IsNumber({}, { each: true })
   branch_ids?: number[];
-  // @IsOptional()
-  // @ArrayNotEmpty()
-  // @ValidateNested({ each: true })
-  // @Type(() => CompanyAssignmentDto)
-  // companies?: CompanyAssignmentDto[];
-
-  // @IsOptional()
-  // @ArrayNotEmpty()
-  // @ValidateNested({ each: true })
-  // @Type(() => BranchAssignmentDto)
-  // branches?: BranchAssignmentDto[];
 }
-
-// export class CompanyAssignmentDto {
-//   @IsNotEmpty()
-//   @IsNumber()
-//   company_id: number;
-// }
-
-// export class BranchAssignmentDto {
-//   @IsNotEmpty()
-//   @IsNumber()
-//   branch_id: number;
-// }
