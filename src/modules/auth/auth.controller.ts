@@ -1,9 +1,7 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
-  Param,
   Post,
   Request,
   UseGuards,
@@ -50,20 +48,18 @@ export class AuthController {
     return this.userService.resetPassword(mobile_number, otp, new_password);
   }
 
-  @Delete('logout/:device_id')
-  @Roles(Role.CUSTOMER)
-  @UseGuards(AuthGuard('jwt'))
-  async logout(
-    @Request() req,
-    @Param('device_id') device_id: number,
-  ): Promise<Response> {
-    const user = req.user;
-    return this.userService.logout(user.user_id, device_id);
-  }
-
+  @Post('logout')
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.CUSTOMER)
+  async logout(@Request() req): Promise<Response> {
+    const user = req.user;
+    return this.userService.logout(user.user_id);
+  }
+
   @Get('superadmin')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.BRANCH_MANAGER)
   getSuperAdminResource() {
     return { message: 'This is a Super Admin resource' };

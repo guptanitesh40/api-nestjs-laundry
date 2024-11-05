@@ -474,10 +474,9 @@ export class UserService {
     };
   }
 
-  async logout(user_id: number, device_id: number): Promise<Response> {
+  async logout(user_id: number): Promise<Response> {
     await this.deviceUserRepository.delete({
       user_id: user_id,
-      device_id: device_id,
     });
     return {
       statusCode: 200,

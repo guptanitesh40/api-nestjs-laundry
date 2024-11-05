@@ -1,5 +1,6 @@
-import { Controller, Get, Query, Request } from '@nestjs/common';
+import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
 import { Response } from 'src/dto/response.dto';
+import { OptionalAuthGuard } from '../auth/guard/optional.guard';
 import { BannerService } from '../banner/banner.service';
 import { ApiService } from '../mobileapi/api.service';
 import { ServicesService } from '../services/services.service';
@@ -18,12 +19,15 @@ export class WebController {
   }
 
   @Get('products')
+  @UseGuards(OptionalAuthGuard)
   async getProductsByCategoryAndService(
     @Request() req,
     @Query('category_id') category_id: number,
     @Query('service_id') service_id: number,
   ): Promise<Response> {
-    const user_id = req.user;
+    const user = req.user;
+    const user_id = user ? user.user_id : null;
+
     return await this.apiService.getProductsByCategoryAndService(
       category_id,
       service_id,

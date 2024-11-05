@@ -74,9 +74,21 @@ export class BranchService {
   }
 
   async findOne(id: number): Promise<Response> {
-    const result = await this.branchRepository.findOne({
-      where: { branch_id: id, deleted_at: null },
-    });
+    const result = await this.branchRepository
+      .createQueryBuilder('branch')
+      .where('branch.branch_id = :id', { id })
+      .andWhere('branch.deleted_at IS NULL')
+      .leftJoinAndSelect('branch.branchManager', 'user')
+      .leftJoinAndSelect('branch.company', 'company')
+      .where('branch.deleted_at IS NULL')
+      .select([
+        'branch',
+        'company.company_name',
+        'user.first_name',
+        'user.last_name',
+      ])
+      .getOne();
+
     if (!result) {
       return {
         statusCode: 404,
