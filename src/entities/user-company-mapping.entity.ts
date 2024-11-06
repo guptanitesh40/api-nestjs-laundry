@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Company } from './company.entity';
 import { User } from './user.entity';
@@ -9,6 +15,7 @@ export class UserCompanyMapping extends BaseEntity {
   user_company_mapping_id: number;
 
   @ManyToOne(() => User, (user) => user.userCompanyMpgs, { nullable: false })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ nullable: true })
@@ -17,6 +24,7 @@ export class UserCompanyMapping extends BaseEntity {
   @ManyToOne(() => Company, (company) => company.userCompanyMpgs, {
     nullable: false,
   })
+  @JoinColumn({ name: 'company_id' })
   company: Company;
 
   @Column({ nullable: true })
