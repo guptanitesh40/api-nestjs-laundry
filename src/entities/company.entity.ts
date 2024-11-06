@@ -1,11 +1,5 @@
 import { CompanyOwed } from 'src/enum/company_owed.enum';
-import {
-  Column,
-  Entity,
-  ManyToMany,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Branch } from './branch.entity';
 import { UserCompanyMapping } from './user-company-mapping.entity';
@@ -66,7 +60,7 @@ export class Company extends BaseEntity {
   @OneToMany(() => Branch, (branch) => branch.company)
   branches: Branch[];
 
-  @ManyToMany(
+  @OneToMany(
     () => UserCompanyMapping,
     (userCompanyMpg) => userCompanyMpg.company,
   )
