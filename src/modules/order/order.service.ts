@@ -18,7 +18,7 @@ import { OrderDetail } from 'src/entities/order.entity';
 import { Product } from 'src/entities/product.entity';
 import { Service } from 'src/entities/service.entity';
 import { OrderStatus } from 'src/enum/order-status.eum';
-import { PaymentType } from 'src/enum/payment.enum';
+import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
@@ -106,23 +106,13 @@ export class OrderService {
       const settingsResponse = await this.settingService.findAll(settingKeys);
       const settings = settingsResponse.data;
 
-      let sub_total = createOrderDto.sub_total;
       let coupon_discount = 0;
       const coupon_code = createOrderDto.coupon_code;
 
-      if (coupon_code) {
-        const couponValidation = await this.couponService.applyCoupon(
-          { coupon_Code: coupon_code, order_Total: sub_total },
-          createOrderDto.user_id,
-        );
-        coupon_discount = couponValidation.data.discountAmount;
-        sub_total -= coupon_discount;
-      }
-
       const gst_percentage = parseFloat(settings['gst_percentage'] || 0);
-      const gst_amount = (sub_total * gst_percentage) / 100;
+      const gst_amount = (createOrderDto.sub_total * gst_percentage) / 100;
       const total =
-        sub_total +
+        createOrderDto.sub_total +
         gst_amount +
         createOrderDto.shipping_charges +
         (createOrderDto.express_delivery_charges || 0);
@@ -130,7 +120,10 @@ export class OrderService {
       const paid_amount = createOrderDto.paid_amount || 0;
 
       let kasar_amount = 0;
-      if (createOrderDto.payment_type === PaymentType.CASH_ON_DELIVERY) {
+      if (
+        createOrderDto.payment_type === PaymentType.CASH_ON_DELIVERY ||
+        createOrderDto.payment_status === PaymentStatus.FULL_PAYMENT_RECEIVED
+      ) {
         kasar_amount = paid_amount < total ? total - paid_amount : 0;
       }
 
@@ -162,6 +155,13 @@ export class OrderService {
             `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}`,
           );
         }
+
+        if (item.price !== price) {
+          throw new Error(
+            `Price mismatch for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${price.price}, Received: ${item.price}`,
+          );
+        }
+
         if (orderItemsMap.has(key)) {
           const existingItem = orderItemsMap.get(key);
           existingItem.quantity += item.quantity || 1;
@@ -176,9 +176,30 @@ export class OrderService {
         }
       }
 
+      let calculatedSubTotal = 0;
+      let subTotal = 0;
+      for (const item of orderItemsMap.values()) {
+        calculatedSubTotal += item.price * item.quantity;
+      }
+
+      if (coupon_code) {
+        const couponValidation = await this.couponService.applyCoupon(
+          { coupon_Code: coupon_code, order_Total: calculatedSubTotal },
+          createOrderDto.user_id,
+        );
+        coupon_discount = couponValidation.data.discountAmount;
+        subTotal = calculatedSubTotal - coupon_discount;
+      }
+
+      if (subTotal !== createOrderDto.sub_total) {
+        throw new Error(
+          'Sub-total mismatch: Please verify item prices and quantities.',
+        );
+      }
+
       const order = this.orderRepository.create({
         ...createOrderDto,
-        sub_total,
+        sub_total: calculatedSubTotal,
         gst: gst_amount,
         total,
         coupon_code,
