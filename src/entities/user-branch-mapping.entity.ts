@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Branch } from './branch.entity';
 import { User } from './user.entity';
@@ -8,13 +8,13 @@ export class UserBranchMapping extends BaseEntity {
   @PrimaryGeneratedColumn()
   user_branch_mapping_id: number;
 
-  @ManyToMany(() => User, (user) => user.userBranchMapping, { nullable: false })
+  @ManyToOne(() => User, (user) => user.userBranchMapping, { nullable: false })
   user: User;
 
   @Column({ nullable: true })
   user_id: number;
 
-  @ManyToMany(() => Branch, (branch) => branch.userBranchMapping, {
+  @ManyToOne(() => Branch, (branch) => branch.userBranchMapping, {
     nullable: false,
   })
   branch: Branch;

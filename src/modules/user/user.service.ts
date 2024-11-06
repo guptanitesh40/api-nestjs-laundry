@@ -204,21 +204,40 @@ export class UserService {
 
     const result = await this.userRepository.save(user);
 
-    if (createUserDto.role_id === Role.SUB_ADMIN) {
-      if (createUserDto.company_ids) {
-        const companyMappings = createUserDto.company_ids.map((companyId) =>
+    const companyMappings = [];
+    const branchMappings = [];
+
+    if (createUserDto.role_id === Role.SUB_ADMIN && createUserDto.company_ids) {
+      for (const companyId of createUserDto.company_ids) {
+        companyMappings.push(
           this.userCompanyMappingRepository.create({
             user_id: result.user_id,
             company_id: companyId,
           }),
         );
-        await this.userCompanyMappingRepository.save(companyMappings);
       }
-      await this.assignBranches(result.user_id, createUserDto.branch_ids);
     }
 
-    if (createUserDto.role_id === Role.BRANCH_MANAGER) {
-      await this.assignBranches(result.user_id, createUserDto.branch_ids);
+    if (
+      createUserDto.role_id === Role.BRANCH_MANAGER &&
+      createUserDto.branch_ids
+    ) {
+      for (const branchId of createUserDto.branch_ids) {
+        branchMappings.push(
+          this.userBranchMappingRepository.create({
+            user_id: result.user_id,
+            branch_id: branchId,
+          }),
+        );
+      }
+    }
+
+    if (companyMappings.length > 0) {
+      await this.userCompanyMappingRepository.save(companyMappings);
+    }
+
+    if (branchMappings.length > 0) {
+      await this.userBranchMappingRepository.save(branchMappings);
     }
 
     return {
@@ -226,18 +245,6 @@ export class UserService {
       message: 'User added successfully',
       data: { result },
     };
-  }
-
-  private async assignBranches(userId: number, branchIds?: number[]) {
-    if (branchIds) {
-      const branchMappings = branchIds.map((branchId) =>
-        this.userBranchMappingRepository.create({
-          user_id: userId,
-          branch_id: branchId,
-        }),
-      );
-      await this.userBranchMappingRepository.save(branchMappings);
-    }
   }
 
   getVendorCodeExpiry(expiryDays: number): Date {
