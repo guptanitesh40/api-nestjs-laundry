@@ -45,6 +45,9 @@ export class Branch extends BaseEntity {
   @JoinColumn({ name: 'branch_manager_id' })
   branchManager: User;
 
-  @OneToMany(() => UserBranchMapping, (userBranchMpg) => userBranchMpg.branch)
-  userBranchMapping: UserBranchMapping[];
+  @OneToMany(
+    () => UserBranchMapping,
+    (userBranchmapping) => userBranchmapping.branch,
+  )
+  userBranchMappings: UserBranchMapping[];
 }

@@ -62,7 +62,7 @@ export class Company extends BaseEntity {
 
   @OneToMany(
     () => UserCompanyMapping,
-    (userCompanyMpg) => userCompanyMpg.company,
+    (userCompanyMapping) => userCompanyMapping.company,
   )
-  userCompanyMpgs: UserCompanyMapping[];
+  userCompanyMappings: UserCompanyMapping[];
 }

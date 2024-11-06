@@ -14,14 +14,14 @@ export class UserBranchMapping extends BaseEntity {
   @PrimaryGeneratedColumn()
   user_branch_mapping_id: number;
 
-  @ManyToOne(() => User, (user) => user.userBranchMapping, { nullable: false })
+  @ManyToOne(() => User, (user) => user.userBranchMappings, { nullable: false })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ nullable: true })
   user_id: number;
 
-  @ManyToOne(() => Branch, (branch) => branch.userBranchMapping, {
+  @ManyToOne(() => Branch, (branch) => branch.userBranchMappings, {
     nullable: false,
   })
   @JoinColumn({ name: 'branch_id' })

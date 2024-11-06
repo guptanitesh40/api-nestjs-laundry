@@ -110,9 +110,15 @@ export class User extends BaseEntity {
   @OneToMany(() => Cart, (cart) => cart.user)
   carts: Cart[];
 
-  @OneToMany(() => UserCompanyMapping, (userCompanyMpg) => userCompanyMpg.user)
-  userCompanyMpgs: UserCompanyMapping[];
+  @OneToMany(
+    () => UserCompanyMapping,
+    (userCompanyMapping) => userCompanyMapping.user,
+  )
+  UserCompanyMappings: UserCompanyMapping[];
 
-  @OneToMany(() => UserBranchMapping, (userCompanyMpg) => userCompanyMpg.user)
-  userBranchMapping: UserBranchMapping[];
+  @OneToMany(
+    () => UserBranchMapping,
+    (userBranchMapping) => userBranchMapping.user,
+  )
+  userBranchMappings: UserBranchMapping[];
 }
