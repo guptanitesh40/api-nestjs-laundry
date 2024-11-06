@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsDecimal,
   IsEmail,
   IsEnum,
@@ -56,4 +57,14 @@ export class CreateUserDto {
   @IsOptional()
   @IsNumber()
   security_deposit?: number;
+
+  @IsArray()
+  @IsOptional()
+  @IsNumber({}, { each: true })
+  company_ids?: number[];
+
+  @IsArray()
+  @IsOptional()
+  @IsNumber({}, { each: true })
+  branch_ids?: number[];
 }

@@ -2,6 +2,7 @@ import { CompanyOwed } from 'src/enum/company_owed.enum';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Branch } from './branch.entity';
+import { UserCompanyMapping } from './user-company-mapping.entity';
 
 @Entity({ name: 'companies' })
 export class Company extends BaseEntity {
@@ -58,4 +59,10 @@ export class Company extends BaseEntity {
 
   @OneToMany(() => Branch, (branch) => branch.company)
   branches: Branch[];
+
+  @OneToMany(
+    () => UserCompanyMapping,
+    (userCompanyMapping) => userCompanyMapping.company,
+  )
+  userCompanyMappings: UserCompanyMapping[];
 }

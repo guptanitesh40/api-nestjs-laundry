@@ -10,6 +10,8 @@ import { Response } from 'src/dto/response.dto';
 import { DeviceUser } from 'src/entities/device-user.entity';
 import { LoginHistory } from 'src/entities/login-history.entity';
 import { Otp } from 'src/entities/otp.entity';
+import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
+import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
 import { OtpType } from 'src/enum/otp.enum';
 import { Role } from 'src/enum/role.enum';
@@ -38,6 +40,10 @@ export class UserService {
     @InjectRepository(LoginHistory)
     private loginHistoryRepository: Repository<LoginHistory>,
     @InjectRepository(Otp) private otpRepository: Repository<Otp>,
+    @InjectRepository(UserCompanyMapping)
+    private userCompanyMappingRepository: Repository<UserCompanyMapping>,
+    @InjectRepository(UserBranchMapping)
+    private userBranchMappingRepository: Repository<UserBranchMapping>,
   ) {}
 
   async signup(signUpDto: SignupDto): Promise<User> {
@@ -197,6 +203,42 @@ export class UserService {
     });
 
     const result = await this.userRepository.save(user);
+
+    const companyMappings = [];
+    const branchMappings = [];
+
+    if (createUserDto.role_id === Role.SUB_ADMIN && createUserDto.company_ids) {
+      for (const companyId of createUserDto.company_ids) {
+        companyMappings.push(
+          this.userCompanyMappingRepository.create({
+            user_id: result.user_id,
+            company_id: companyId,
+          }),
+        );
+      }
+    }
+
+    if (
+      createUserDto.role_id === Role.BRANCH_MANAGER &&
+      createUserDto.branch_ids
+    ) {
+      for (const branchId of createUserDto.branch_ids) {
+        branchMappings.push(
+          this.userBranchMappingRepository.create({
+            user_id: result.user_id,
+            branch_id: branchId,
+          }),
+        );
+      }
+    }
+
+    if (companyMappings.length > 0) {
+      await this.userCompanyMappingRepository.save(companyMappings);
+    }
+
+    if (branchMappings.length > 0) {
+      await this.userBranchMappingRepository.save(branchMappings);
+    }
 
     return {
       statusCode: 201,

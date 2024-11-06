@@ -17,6 +17,8 @@ import { LoginHistory } from './login-history.entity';
 import { Note } from './note.entity';
 import { OrderDetail } from './order.entity';
 import { Role } from './role.entity';
+import { UserBranchMapping } from './user-branch-mapping.entity';
+import { UserCompanyMapping } from './user-company-mapping.entity';
 
 @Entity({ name: 'users' })
 export class User extends BaseEntity {
@@ -107,4 +109,16 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Cart, (cart) => cart.user)
   carts: Cart[];
+
+  @OneToMany(
+    () => UserCompanyMapping,
+    (userCompanyMapping) => userCompanyMapping.user,
+  )
+  UserCompanyMappings: UserCompanyMapping[];
+
+  @OneToMany(
+    () => UserBranchMapping,
+    (userBranchMapping) => userBranchMapping.user,
+  )
+  userBranchMappings: UserBranchMapping[];
 }
