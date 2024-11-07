@@ -113,7 +113,6 @@ export class OrderService {
       const gst_amount = (createOrderDto.sub_total * gst_percentage) / 100;
       const total =
         createOrderDto.sub_total +
-        gst_amount +
         createOrderDto.shipping_charges +
         (createOrderDto.express_delivery_charges || 0);
 
@@ -121,7 +120,7 @@ export class OrderService {
 
       let kasar_amount = 0;
       if (
-        createOrderDto.payment_type === PaymentType.CASH_ON_DELIVERY ||
+        createOrderDto.payment_type === PaymentType.CASH_ON_DELIVERY &&
         createOrderDto.payment_status === PaymentStatus.FULL_PAYMENT_RECEIVED
       ) {
         kasar_amount = paid_amount < total ? total - paid_amount : 0;
