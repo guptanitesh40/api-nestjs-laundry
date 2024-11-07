@@ -189,6 +189,8 @@ export class OrderService {
         );
         coupon_discount = couponValidation.data.discountAmount;
         subTotal = calculatedSubTotal - coupon_discount;
+      } else {
+        subTotal = calculatedSubTotal;
       }
 
       if (subTotal !== createOrderDto.sub_total) {
@@ -396,21 +398,20 @@ export class OrderService {
     const { address_id, items, ...orderUpdates } = updateOrderDto;
 
     if (address_id) {
-      const address = await this.addressRepository.findOne({
+      const address = await this.dataSource.manager.findOne(UserAddress, {
         where: { address_id },
       });
       if (!address) {
         throw new NotFoundException(`Address with id ${address_id} not found`);
       }
-
       order.address_details = `${address.building_number}, ${address.area}, ${address.city}, ${address.state}, ${address.country} - ${address.pincode}`;
     }
 
     const settingKeys = ['gst_percentage'];
     const settingsResponse = await this.settingService.findAll(settingKeys);
     const settings = settingsResponse.data;
-
     const gst_percentage = parseFloat(settings['gst_percentage'] || 0);
+
     const sub_total = updateOrderDto.sub_total;
     const gst_amount = (sub_total * gst_percentage) / 100;
     const total =
@@ -419,30 +420,68 @@ export class OrderService {
       (updateOrderDto.shipping_charges || 0) +
       (updateOrderDto.express_delivery_charges || 0);
 
-    Object.assign(order, {
-      ...orderUpdates,
-      sub_total,
-      gst: gst_amount,
-      total,
-    });
+    order.sub_total = sub_total;
+    order.gst = gst_amount;
+    order.total = total;
+    Object.assign(order, orderUpdates);
 
-    const updatedOrder = await this.orderRepository.save(order);
+    const updatedOrder = await this.dataSource.manager.save(order);
 
     if (items) {
-      await this.orderItemRepository.delete({ order: { order_id } });
+      await this.dataSource.manager.delete(OrderItem, { order: { order_id } });
 
-      const orderItems = items.map((item) => ({
-        ...item,
+      const prices = await this.priceService.findAll();
+      const orderItemsMap = new Map();
+
+      for (const item of items) {
+        const key = `${item.category_id}_${item.product_id}_${item.service_id}`;
+        const price = prices.data[key];
+
+        if (!price) {
+          throw new Error(
+            `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}`,
+          );
+        }
+
+        if (item.price !== price) {
+          throw new Error(
+            `Price mismatch for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${price.price}, Received: ${item.price}`,
+          );
+        }
+
+        if (orderItemsMap.has(key)) {
+          const existingItem = orderItemsMap.get(key);
+          existingItem.quantity += item.quantity || 1;
+        } else {
+          orderItemsMap.set(key, {
+            category_id: item.category_id,
+            product_id: item.product_id,
+            service_id: item.service_id,
+            price: item.price,
+            quantity: item.quantity || 1,
+          });
+        }
+      }
+
+      const orderItems = Array.from(orderItemsMap.values()).map((item) => ({
         order: updatedOrder,
+        ...item,
       }));
 
-      await this.orderItemRepository.insert(orderItems);
+      for (const orderItem of orderItems) {
+        await this.dataSource.manager.insert(OrderItem, orderItem);
+      }
     }
 
     return {
       statusCode: 200,
       message: 'Order updated successfully',
-      data: this.mapOrderToResponse(updatedOrder),
+      data: {
+        order_id: updatedOrder.order_id,
+        total: updatedOrder.total,
+        address_details: updatedOrder.address_details,
+        items: items ? items.length : 0,
+      },
     };
   }
 
