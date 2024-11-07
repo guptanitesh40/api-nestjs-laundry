@@ -7,4 +7,5 @@ export const FilePath = {
   PDF_DIRECTORY: 'pdf',
   CONTRACT_DOCUMENT: 'pdf',
   USER_IMAGES: 'images/user',
+  USER_ID_PROOF: 'images/user',
 };

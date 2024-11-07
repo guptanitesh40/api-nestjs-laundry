@@ -231,19 +231,20 @@ export class UserService {
         );
       }
     }
-
+    let branchs = null;
+    let companys = null;
     if (companyMappings.length > 0) {
-      await this.userCompanyMappingRepository.save(companyMappings);
+      companys = await this.userCompanyMappingRepository.save(companyMappings);
     }
 
     if (branchMappings.length > 0) {
-      await this.userBranchMappingRepository.save(branchMappings);
+      branchs = await this.userBranchMappingRepository.save(branchMappings);
     }
 
     return {
       statusCode: 201,
       message: 'User added successfully',
-      data: { result },
+      data: { result, companys, branchs },
     };
   }
 
@@ -266,12 +267,87 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
+    const { branch_ids, company_ids, ...userUpdateData } = updateUserDto;
+
+    if (imagePath) {
+      userUpdateData.image = imagePath;
+    }
+
+    if (userUpdateData.password) {
+      const salt = await bcrypt.genSalt(10);
+      userUpdateData.password = await bcrypt.hash(
+        userUpdateData.password,
+        salt,
+      );
+    } else {
+      delete userUpdateData.password;
+    }
+
+    await this.userRepository.update(user_id, userUpdateData);
+    let branchs = null;
+    let companys = null;
+    if (updateUserDto.role_id === Role.SUB_ADMIN && company_ids) {
+      await this.userCompanyMappingRepository.delete({ user_id });
+      const companyMappings = company_ids.map((companyId) =>
+        this.userCompanyMappingRepository.create({
+          user_id,
+          company_id: companyId,
+        }),
+      );
+      companys = await this.userCompanyMappingRepository.save(companyMappings);
+    }
+
+    if (updateUserDto.role_id === Role.BRANCH_MANAGER && branch_ids) {
+      await this.userBranchMappingRepository.delete({ user_id });
+      const branchMappings = branch_ids.map((branchId) =>
+        this.userBranchMappingRepository.create({
+          user_id,
+          branch_id: branchId,
+        }),
+      );
+      branchs = await this.userBranchMappingRepository.save(branchMappings);
+    }
+
+    const updatedUser = await this.userRepository.findOne({
+      where: { user_id },
+    });
+
+    const users = appendBaseUrlToImages([updatedUser])[0];
+
+    return {
+      statusCode: 200,
+      message: 'User updated successfully',
+      data: {
+        user: users,
+        companys,
+        branchs,
+      },
+    };
+  }
+
+  async update(
+    user_id: number,
+    updateUserDto: UpdateUserDto,
+    imagePath?: string,
+    idProofPath?: string,
+  ): Promise<Response> {
+    const user = await this.userRepository.findOne({
+      where: { user_id, deleted_at: null },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     const updatedData = { ...user, ...updateUserDto };
 
     if (imagePath) {
       updatedData.image = imagePath;
     }
 
+    if (idProofPath) {
+      updatedData.id_proof = idProofPath;
+    }
     if (updateUserDto.password) {
       const salt = await bcrypt.genSalt(10);
       updatedData.password = await bcrypt.hash(updateUserDto.password, salt);
@@ -281,20 +357,23 @@ export class UserService {
 
     await this.userRepository.update(user_id, updatedData);
 
-    const users = appendBaseUrlToImages([user])[0];
+    const userdata = await this.userRepository.findOne({
+      where: { user_id, deleted_at: null },
+    });
+
+    const updatedUser = appendBaseUrlToImages([userdata])[0];
     return {
       statusCode: 200,
       message: 'User updated successfully',
       data: {
-        user,
-        users,
+        user: { userdata: updatedUser },
       },
     };
   }
 
   async getUserById(user_id: number): Promise<Response> {
     const user = await this.userRepository.findOne({
-      where: { user_id, deleted_at: null },
+      where: { user_id: user_id, deleted_at: null },
     });
 
     if (!user) {

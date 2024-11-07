@@ -18,7 +18,7 @@ import { OrderDetail } from 'src/entities/order.entity';
 import { Product } from 'src/entities/product.entity';
 import { Service } from 'src/entities/service.entity';
 import { OrderStatus } from 'src/enum/order-status.eum';
-import { PaymentType } from 'src/enum/payment.enum';
+import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
@@ -106,23 +106,13 @@ export class OrderService {
       const settingsResponse = await this.settingService.findAll(settingKeys);
       const settings = settingsResponse.data;
 
-      let sub_total = createOrderDto.sub_total;
       let coupon_discount = 0;
       const coupon_code = createOrderDto.coupon_code;
 
-      if (coupon_code) {
-        const couponValidation = await this.couponService.applyCoupon(
-          { coupon_Code: coupon_code, order_Total: sub_total },
-          createOrderDto.user_id,
-        );
-        coupon_discount = couponValidation.data.discountAmount;
-        sub_total -= coupon_discount;
-      }
-
       const gst_percentage = parseFloat(settings['gst_percentage'] || 0);
-      const gst_amount = (sub_total * gst_percentage) / 100;
+      const gst_amount = (createOrderDto.sub_total * gst_percentage) / 100;
       const total =
-        sub_total +
+        createOrderDto.sub_total +
         gst_amount +
         createOrderDto.shipping_charges +
         (createOrderDto.express_delivery_charges || 0);
@@ -130,7 +120,10 @@ export class OrderService {
       const paid_amount = createOrderDto.paid_amount || 0;
 
       let kasar_amount = 0;
-      if (createOrderDto.payment_type === PaymentType.CASH_ON_DELIVERY) {
+      if (
+        createOrderDto.payment_type === PaymentType.CASH_ON_DELIVERY ||
+        createOrderDto.payment_status === PaymentStatus.FULL_PAYMENT_RECEIVED
+      ) {
         kasar_amount = paid_amount < total ? total - paid_amount : 0;
       }
 
@@ -150,18 +143,29 @@ export class OrderService {
 
       const estimated_delivery_date = addDays(new Date(), deliveryDaysToAdd);
 
-      const prices = await this.priceService.findAll();
+      const uniquePriceKeys = createOrderDto.items.map(
+        (item) => `${item.category_id}_${item.product_id}_${item.service_id}`,
+      );
+
+      const pricesResponse = await this.priceService.findAll(uniquePriceKeys);
+
       const orderItemsMap = new Map();
+      const mismatchedPrices = [];
 
       for (const item of createOrderDto.items) {
         const key = `${item.category_id}_${item.product_id}_${item.service_id}`;
-        const price = prices.data[key];
+        const prices = pricesResponse.data[key];
 
-        if (!price) {
-          throw new Error(
+        if (!prices) {
+          mismatchedPrices.push(
             `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}`,
           );
+        } else if (item.price !== prices) {
+          mismatchedPrices.push(
+            `Price mismatch for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${prices}, Received: ${item.price}`,
+          );
         }
+
         if (orderItemsMap.has(key)) {
           const existingItem = orderItemsMap.get(key);
           existingItem.quantity += item.quantity || 1;
@@ -176,9 +180,35 @@ export class OrderService {
         }
       }
 
+      if (mismatchedPrices.length > 0) {
+        throw new Error(
+          `Price validation failed:\n${mismatchedPrices.join('\n')}`,
+        );
+      }
+
+      let calculatedSubTotal = 0;
+      for (const item of orderItemsMap.values()) {
+        calculatedSubTotal += item.price * item.quantity;
+      }
+
+      if (coupon_code) {
+        const couponValidation = await this.couponService.applyCoupon(
+          { coupon_Code: coupon_code, order_Total: calculatedSubTotal },
+          createOrderDto.user_id,
+        );
+        coupon_discount = couponValidation.data.discountAmount;
+        calculatedSubTotal -= coupon_discount;
+      }
+
+      if (calculatedSubTotal !== createOrderDto.sub_total) {
+        throw new Error(
+          'Sub-total mismatch: Please verify item prices and quantities.',
+        );
+      }
+
       const order = this.orderRepository.create({
         ...createOrderDto,
-        sub_total,
+        sub_total: calculatedSubTotal,
         gst: gst_amount,
         total,
         coupon_code,
@@ -375,21 +405,20 @@ export class OrderService {
     const { address_id, items, ...orderUpdates } = updateOrderDto;
 
     if (address_id) {
-      const address = await this.addressRepository.findOne({
+      const address = await this.dataSource.manager.findOne(UserAddress, {
         where: { address_id },
       });
       if (!address) {
         throw new NotFoundException(`Address with id ${address_id} not found`);
       }
-
       order.address_details = `${address.building_number}, ${address.area}, ${address.city}, ${address.state}, ${address.country} - ${address.pincode}`;
     }
 
     const settingKeys = ['gst_percentage'];
     const settingsResponse = await this.settingService.findAll(settingKeys);
     const settings = settingsResponse.data;
-
     const gst_percentage = parseFloat(settings['gst_percentage'] || 0);
+
     const sub_total = updateOrderDto.sub_total;
     const gst_amount = (sub_total * gst_percentage) / 100;
     const total =
@@ -398,30 +427,68 @@ export class OrderService {
       (updateOrderDto.shipping_charges || 0) +
       (updateOrderDto.express_delivery_charges || 0);
 
-    Object.assign(order, {
-      ...orderUpdates,
-      sub_total,
-      gst: gst_amount,
-      total,
-    });
+    order.sub_total = sub_total;
+    order.gst = gst_amount;
+    order.total = total;
+    Object.assign(order, orderUpdates);
 
-    const updatedOrder = await this.orderRepository.save(order);
+    const updatedOrder = await this.dataSource.manager.save(order);
 
     if (items) {
-      await this.orderItemRepository.delete({ order: { order_id } });
+      await this.dataSource.manager.delete(OrderItem, { order: { order_id } });
 
-      const orderItems = items.map((item) => ({
-        ...item,
+      const prices = await this.priceService.findAll();
+      const orderItemsMap = new Map();
+
+      for (const item of items) {
+        const key = `${item.category_id}_${item.product_id}_${item.service_id}`;
+        const price = prices.data[key];
+
+        if (!price) {
+          throw new Error(
+            `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}`,
+          );
+        }
+
+        if (item.price !== price) {
+          throw new Error(
+            `Price mismatch for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${price.price}, Received: ${item.price}`,
+          );
+        }
+
+        if (orderItemsMap.has(key)) {
+          const existingItem = orderItemsMap.get(key);
+          existingItem.quantity += item.quantity || 1;
+        } else {
+          orderItemsMap.set(key, {
+            category_id: item.category_id,
+            product_id: item.product_id,
+            service_id: item.service_id,
+            price: item.price,
+            quantity: item.quantity || 1,
+          });
+        }
+      }
+
+      const orderItems = Array.from(orderItemsMap.values()).map((item) => ({
         order: updatedOrder,
+        ...item,
       }));
 
-      await this.orderItemRepository.insert(orderItems);
+      for (const orderItem of orderItems) {
+        await this.dataSource.manager.insert(OrderItem, orderItem);
+      }
     }
 
     return {
       statusCode: 200,
       message: 'Order updated successfully',
-      data: this.mapOrderToResponse(updatedOrder),
+      data: {
+        order_id: updatedOrder.order_id,
+        total: updatedOrder.total,
+        address_details: updatedOrder.address_details,
+        items: items ? items.length : 0,
+      },
     };
   }
 

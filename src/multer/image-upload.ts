@@ -19,7 +19,7 @@ export const fileUpload = (destination: string) => ({
     fileSize: 2 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
-    if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+    if (!file.mimetype.match(/\/(jpg|jpeg|png|pdf)$/)) {
       cb(
         new HttpException(
           'Only JPEG, JPG, or PNG image files are allowed!',

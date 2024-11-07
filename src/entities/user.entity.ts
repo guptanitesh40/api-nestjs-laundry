@@ -47,6 +47,14 @@ export class User extends BaseEntity {
   @IsOptional()
   image?: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  @IsOptional()
+  id_proof?: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  @IsOptional()
+  education_qualification?: string;
+
   @Column()
   role_id: number;
 

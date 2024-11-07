@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsDecimal,
   IsEmail,
   IsEnum,
@@ -39,4 +40,17 @@ export class UpdateUserDto {
   @IsOptional()
   @IsNumber()
   role_id?: number;
+
+  @IsOptional()
+  id_proof?: string;
+
+  @IsArray()
+  @IsOptional()
+  @IsNumber({}, { each: true })
+  company_ids?: number[];
+
+  @IsArray()
+  @IsOptional()
+  @IsNumber({}, { each: true })
+  branch_ids?: number[];
 }
