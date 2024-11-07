@@ -231,20 +231,20 @@ export class UserService {
         );
       }
     }
-    let branchs = null;
-    let companys = null;
+    let branches = null;
+    let companies = null;
     if (companyMappings.length > 0) {
-      companys = await this.userCompanyMappingRepository.save(companyMappings);
+      companies = await this.userCompanyMappingRepository.save(companyMappings);
     }
 
     if (branchMappings.length > 0) {
-      branchs = await this.userBranchMappingRepository.save(branchMappings);
+      branches = await this.userBranchMappingRepository.save(branchMappings);
     }
 
     return {
       statusCode: 201,
       message: 'User added successfully',
-      data: { result, companys, branchs },
+      data: { result, companies, branches },
     };
   }
 
@@ -284,8 +284,8 @@ export class UserService {
     }
 
     await this.userRepository.update(user_id, userUpdateData);
-    let branchs = null;
-    let companys = null;
+    let branches = null;
+    let companies = null;
     if (updateUserDto.role_id === Role.SUB_ADMIN && company_ids) {
       await this.userCompanyMappingRepository.delete({ user_id });
       const companyMappings = company_ids.map((companyId) =>
@@ -294,7 +294,12 @@ export class UserService {
           company_id: companyId,
         }),
       );
-      companys = await this.userCompanyMappingRepository.save(companyMappings);
+      companies = await this.userCompanyMappingRepository.save(companyMappings);
+    } else if (updateUserDto.role_id === Role.SUB_ADMIN) {
+      companies = await this.userCompanyMappingRepository.find({
+        where: { user_id },
+        select: ['company_id'],
+      });
     }
 
     if (updateUserDto.role_id === Role.BRANCH_MANAGER && branch_ids) {
@@ -305,7 +310,12 @@ export class UserService {
           branch_id: branchId,
         }),
       );
-      branchs = await this.userBranchMappingRepository.save(branchMappings);
+      branches = await this.userBranchMappingRepository.save(branchMappings);
+    } else if (updateUserDto.role_id === Role.BRANCH_MANAGER) {
+      branches = await this.userBranchMappingRepository.find({
+        where: { user_id },
+        select: ['branch_id'],
+      });
     }
 
     const updatedUser = await this.userRepository.findOne({
@@ -319,8 +329,8 @@ export class UserService {
       message: 'User updated successfully',
       data: {
         user: users,
-        companys,
-        branchs,
+        companies,
+        branches,
       },
     };
   }
@@ -372,22 +382,46 @@ export class UserService {
   }
 
   async getUserById(user_id: number): Promise<Response> {
-    const user = await this.userRepository.findOne({
-      where: { user_id: user_id, deleted_at: null },
-    });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
+      .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
+      .where('user.user_id = :user_id', { user_id })
+      .andWhere('user.deleted_at IS NULL')
+      .select(['user', 'companyMapping.company_id', 'branchMapping.branch_id'])
+      .getOne();
 
     if (!user) {
       return {
         statusCode: 404,
-        message: 'user not found',
+        message: 'User not found',
         data: null,
       };
     }
 
+    const mappedUser = {
+      ...user,
+      branches: user.userBranchMappings.map((branch) => ({
+        branch_id: branch.branch_id,
+      })),
+      companies: user.UserCompanyMappings.map((company) => ({
+        company_id: company.company_id,
+      })),
+    };
+
     return {
-      statusCode: 201,
-      message: 'user found ',
-      data: { user },
+      statusCode: 200,
+      message: 'User found',
+      data: {
+        user: {
+          user_id: mappedUser.user_id,
+          first_name: mappedUser.first_name,
+          last_name: mappedUser.last_name,
+          email: mappedUser.email,
+          branches: mappedUser.branches,
+          companies: mappedUser.companies,
+        },
+      },
     };
   }
 
@@ -401,7 +435,10 @@ export class UserService {
 
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
+      .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
+      .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
       .where('user.deleted_at IS NULL')
+      .select(['user', 'companyMapping.company_id', 'branchMapping.branch_id'])
       .take(perPage)
       .skip(skip);
 
@@ -430,10 +467,25 @@ export class UserService {
 
     const [result, total] = await queryBuilder.getManyAndCount();
 
+    const mappedResult = result.map((user) => ({
+      ...user,
+      branches: user.userBranchMappings.map((branch) => ({
+        branch_id: branch.branch_id,
+      })),
+      companies: user.UserCompanyMappings.map((company) => ({
+        company_id: company.company_id,
+      })),
+    }));
+
     return {
       statusCode: 200,
       message: 'Users retrieved successfully',
-      data: { result, limit: perPage, page_number: pageNumber, count: total },
+      data: {
+        result: mappedResult,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+      },
     };
   }
 
