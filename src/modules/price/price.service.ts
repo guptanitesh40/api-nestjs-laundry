@@ -64,22 +64,32 @@ export class PriceService {
     }
   }
 
-  async findAll(): Promise<Response> {
-    const prices = await this.priceRepository
+  async findAll(requiredKeys?: string[]): Promise<Response> {
+    const query = this.priceRepository
       .createQueryBuilder('price')
       .where('price.deleted_at IS NULL')
-      .andWhere('price.price > 0')
-      .getMany();
+      .andWhere('price.price > 0');
+
+    if (requiredKeys?.length) {
+      requiredKeys.forEach((key, index) => {
+        const [categoryId, productId, serviceId] = key.split('_');
+        query.orWhere(
+          `(price.category_id = :categoryId${index} AND price.product_id = :productId${index} AND price.service_id = :serviceId${index})`,
+          {
+            [`categoryId${index}`]: categoryId,
+            [`productId${index}`]: productId,
+            [`serviceId${index}`]: serviceId,
+          },
+        );
+      });
+    }
+
+    const prices = await query.getMany();
 
     const result = {};
-    prices.map((element) => {
-      result[
-        element.category_id +
-          '_' +
-          element.product_id +
-          '_' +
-          element.service_id
-      ] = element.price;
+    prices.forEach((price) => {
+      result[`${price.category_id}_${price.product_id}_${price.service_id}`] =
+        price.price;
     });
 
     return {

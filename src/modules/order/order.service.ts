@@ -143,21 +143,26 @@ export class OrderService {
 
       const estimated_delivery_date = addDays(new Date(), deliveryDaysToAdd);
 
-      const prices = await this.priceService.findAll();
+      const uniquePriceKeys = createOrderDto.items.map(
+        (item) => `${item.category_id}_${item.product_id}_${item.service_id}`,
+      );
+
+      const pricesResponse = await this.priceService.findAll(uniquePriceKeys);
+
       const orderItemsMap = new Map();
       const mismatchedPrices = [];
 
       for (const item of createOrderDto.items) {
         const key = `${item.category_id}_${item.product_id}_${item.service_id}`;
-        const price = prices.data[key];
+        const prices = pricesResponse.data[key];
 
-        if (!price) {
+        if (!prices) {
           mismatchedPrices.push(
             `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}`,
           );
-        } else if (item.price !== price) {
+        } else if (item.price !== prices) {
           mismatchedPrices.push(
-            `Price mismatch for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${price.price}, Received: ${item.price}`,
+            `Price mismatch for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${prices}, Received: ${item.price}`,
           );
         }
 
