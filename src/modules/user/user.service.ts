@@ -401,10 +401,10 @@ export class UserService {
 
     const mappedUser = {
       ...user,
-      branches: user.userBranchMappings.map((branch) => ({
+      branch_ids: user.userBranchMappings.map((branch) => ({
         branch_id: branch.branch_id,
       })),
-      companies: user.UserCompanyMappings.map((company) => ({
+      company_ids: user.UserCompanyMappings.map((company) => ({
         company_id: company.company_id,
       })),
     };
@@ -413,14 +413,7 @@ export class UserService {
       statusCode: 200,
       message: 'User found',
       data: {
-        user: {
-          user_id: mappedUser.user_id,
-          first_name: mappedUser.first_name,
-          last_name: mappedUser.last_name,
-          email: mappedUser.email,
-          branches: mappedUser.branches,
-          companies: mappedUser.companies,
-        },
+        user: mappedUser,
       },
     };
   }
@@ -469,10 +462,10 @@ export class UserService {
 
     const mappedResult = result.map((user) => ({
       ...user,
-      branches: user.userBranchMappings.map((branch) => ({
+      branch_ids: user.userBranchMappings.map((branch) => ({
         branch_id: branch.branch_id,
       })),
-      companies: user.UserCompanyMappings.map((company) => ({
+      company_ids: user.UserCompanyMappings.map((company) => ({
         company_id: company.company_id,
       })),
     }));
