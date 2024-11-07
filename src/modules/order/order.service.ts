@@ -145,19 +145,18 @@ export class OrderService {
 
       const prices = await this.priceService.findAll();
       const orderItemsMap = new Map();
+      const mismatchedPrices = [];
 
       for (const item of createOrderDto.items) {
         const key = `${item.category_id}_${item.product_id}_${item.service_id}`;
         const price = prices.data[key];
 
         if (!price) {
-          throw new Error(
+          mismatchedPrices.push(
             `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}`,
           );
-        }
-
-        if (item.price !== price) {
-          throw new Error(
+        } else if (item.price !== price) {
+          mismatchedPrices.push(
             `Price mismatch for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${price.price}, Received: ${item.price}`,
           );
         }
@@ -176,8 +175,13 @@ export class OrderService {
         }
       }
 
+      if (mismatchedPrices.length > 0) {
+        throw new Error(
+          `Price validation failed:\n${mismatchedPrices.join('\n')}`,
+        );
+      }
+
       let calculatedSubTotal = 0;
-      let subTotal = 0;
       for (const item of orderItemsMap.values()) {
         calculatedSubTotal += item.price * item.quantity;
       }
@@ -188,12 +192,10 @@ export class OrderService {
           createOrderDto.user_id,
         );
         coupon_discount = couponValidation.data.discountAmount;
-        subTotal = calculatedSubTotal - coupon_discount;
-      } else {
-        subTotal = calculatedSubTotal;
+        calculatedSubTotal -= coupon_discount;
       }
 
-      if (subTotal !== createOrderDto.sub_total) {
+      if (calculatedSubTotal !== createOrderDto.sub_total) {
         throw new Error(
           'Sub-total mismatch: Please verify item prices and quantities.',
         );
