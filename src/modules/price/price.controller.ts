@@ -36,8 +36,8 @@ export class PriceController {
 
   @Get('customer')
   @Roles(Role.CUSTOMER)
-  async getAll(): Promise<Response> {
-    return await this.priceService.findAll();
+  async getAll(): Promise<any[]> {
+    return await this.priceService.getAll();
   }
 
   @Post('download-pdf')

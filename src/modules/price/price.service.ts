@@ -194,6 +194,22 @@ export class PriceService {
     return uniqueProducts;
   }
 
+  async getAll(): Promise<any[]> {
+    const prices = await this.priceRepository
+      .createQueryBuilder('price')
+      .innerJoinAndSelect('price.category', 'category')
+      .innerJoinAndSelect('price.product', 'product')
+      .innerJoinAndSelect('price.service', 'service')
+      .select(['category.name', 'product.name', 'service.name', 'price.price'])
+      .groupBy('category.name, product.name, service.name,price.price')
+      .orderBy('MAX(category.category_id)', 'ASC')
+      .addOrderBy('MAX(product.product_id)', 'ASC')
+      .addOrderBy('MAX(service.service_id)', 'ASC')
+      .getRawMany();
+
+    return prices;
+  }
+
   async generatePriceListPDF(): Promise<Buffer> {
     const base_url = process.env.BASE_URL;
 
