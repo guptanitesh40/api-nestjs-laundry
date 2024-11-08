@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Post,
-  Request,
   StreamableFile,
   UseGuards,
 } from '@nestjs/common';
@@ -37,9 +36,8 @@ export class PriceController {
 
   @Get('customer')
   @Roles(Role.CUSTOMER)
-  async getAll(@Request() req): Promise<Response> {
-    const user = req.user;
-    return await this.priceService.getAll(user.user_id);
+  async getAll(): Promise<Response> {
+    return await this.priceService.findAll();
   }
 
   @Post('download-pdf')
