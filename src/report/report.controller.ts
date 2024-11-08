@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Role } from 'src/enum/role.enum';
@@ -13,7 +13,10 @@ export class ReportController {
   constructor(private readonly reportService: ReportService) {}
 
   @Get('total-orders')
-  async getTotalOrderReport() {
-    return this.reportService.getTotalOrderReport();
+  async getTotalOrderReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getTotalOrderReport(startDate, endDate);
   }
 }

@@ -206,6 +206,8 @@ export class UserService {
 
     const companyMappings = [];
     const branchMappings = [];
+    const companyIds = [];
+    const branchIds = [];
 
     if (createUserDto.role_id === Role.SUB_ADMIN && createUserDto.company_ids) {
       for (const companyId of createUserDto.company_ids) {
@@ -215,6 +217,7 @@ export class UserService {
             company_id: companyId,
           }),
         );
+        companyIds.push(companyId);
       }
     }
 
@@ -229,22 +232,26 @@ export class UserService {
             branch_id: branchId,
           }),
         );
+        branchIds.push(branchId);
       }
     }
-    let branches = null;
-    let companies = null;
+
     if (companyMappings.length > 0) {
-      companies = await this.userCompanyMappingRepository.save(companyMappings);
+      await this.userCompanyMappingRepository.save(companyMappings);
     }
 
     if (branchMappings.length > 0) {
-      branches = await this.userBranchMappingRepository.save(branchMappings);
+      await this.userBranchMappingRepository.save(branchMappings);
     }
 
     return {
       statusCode: 201,
       message: 'User added successfully',
-      data: { result, companies, branches },
+      data: {
+        result,
+        company_ids: companyIds,
+        branch_ids: branchIds,
+      },
     };
   }
 
@@ -284,53 +291,60 @@ export class UserService {
     }
 
     await this.userRepository.update(user_id, userUpdateData);
-    let branches = null;
-    let companies = null;
-    if (updateUserDto.role_id === Role.SUB_ADMIN && company_ids) {
-      await this.userCompanyMappingRepository.delete({ user_id });
-      const companyMappings = company_ids.map((companyId) =>
-        this.userCompanyMappingRepository.create({
-          user_id,
-          company_id: companyId,
-        }),
-      );
-      companies = await this.userCompanyMappingRepository.save(companyMappings);
-    } else if (updateUserDto.role_id === Role.SUB_ADMIN) {
-      companies = await this.userCompanyMappingRepository.find({
-        where: { user_id },
-        select: ['company_id'],
-      });
+
+    let companyMappings = [];
+    let branchMappings = [];
+
+    if (updateUserDto.role_id === Role.SUB_ADMIN) {
+      if (company_ids) {
+        await this.userCompanyMappingRepository.delete({ user_id });
+        companyMappings = await this.userCompanyMappingRepository.save(
+          company_ids.map((companyId) =>
+            this.userCompanyMappingRepository.create({
+              user_id,
+              company_id: companyId,
+            }),
+          ),
+        );
+      } else {
+        companyMappings = await this.userCompanyMappingRepository.find({
+          where: { user_id },
+          select: ['company_id'],
+        });
+      }
     }
 
-    if (updateUserDto.role_id === Role.BRANCH_MANAGER && branch_ids) {
-      await this.userBranchMappingRepository.delete({ user_id });
-      const branchMappings = branch_ids.map((branchId) =>
-        this.userBranchMappingRepository.create({
-          user_id,
-          branch_id: branchId,
-        }),
-      );
-      branches = await this.userBranchMappingRepository.save(branchMappings);
-    } else if (updateUserDto.role_id === Role.BRANCH_MANAGER) {
-      branches = await this.userBranchMappingRepository.find({
-        where: { user_id },
-        select: ['branch_id'],
-      });
+    if (updateUserDto.role_id === Role.BRANCH_MANAGER) {
+      if (branch_ids) {
+        await this.userBranchMappingRepository.delete({ user_id });
+        branchMappings = await this.userBranchMappingRepository.save(
+          branch_ids.map((branchId) =>
+            this.userBranchMappingRepository.create({
+              user_id,
+              branch_id: branchId,
+            }),
+          ),
+        );
+      } else {
+        branchMappings = await this.userBranchMappingRepository.find({
+          where: { user_id },
+          select: ['branch_id'],
+        });
+      }
     }
 
     const updatedUser = await this.userRepository.findOne({
       where: { user_id },
     });
-
-    const users = appendBaseUrlToImages([updatedUser])[0];
+    const userWithImageUrl = appendBaseUrlToImages([updatedUser])[0];
 
     return {
-      statusCode: 200,
+      statusCode: 201,
       message: 'User updated successfully',
       data: {
-        user: users,
-        companies,
-        branches,
+        result: userWithImageUrl,
+        company_ids: companyMappings.map((mapping) => mapping.company_id) || [],
+        branch_ids: branchMappings.map((mapping) => mapping.branch_id) || [],
       },
     };
   }
@@ -401,12 +415,10 @@ export class UserService {
 
     const mappedUser = {
       ...user,
-      branch_ids: user.userBranchMappings.map((branch) => ({
-        branch_id: branch.branch_id,
-      })),
-      company_ids: user.UserCompanyMappings.map((company) => ({
-        company_id: company.company_id,
-      })),
+      branch_ids: user.userBranchMappings.map((branch) => branch.branch_id),
+      company_ids: user.UserCompanyMappings.map(
+        (company) => company.company_id,
+      ),
     };
 
     return {
@@ -462,12 +474,10 @@ export class UserService {
 
     const mappedResult = result.map((user) => ({
       ...user,
-      branch_ids: user.userBranchMappings.map((branch) => ({
-        branch_id: branch.branch_id,
-      })),
-      company_ids: user.UserCompanyMappings.map((company) => ({
-        company_id: company.company_id,
-      })),
+      branch_ids: user.userBranchMappings.map((branch) => branch.branch_id),
+      company_ids: user.UserCompanyMappings.map(
+        (company) => company.company_id,
+      ),
     }));
 
     return {

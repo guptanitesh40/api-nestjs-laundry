@@ -100,6 +100,40 @@ export class PriceService {
     };
   }
 
+  async getAll(user_id: number): Promise<Response> {
+    const query = this.priceRepository
+      .createQueryBuilder('price')
+      .where('price.deleted_at IS NULL')
+      .andWhere('price.price > 0');
+
+    if (user_id) {
+      query.leftJoinAndMapOne(
+        'price.user',
+        'users',
+        'user',
+        'user.user_id=:user_id',
+        {
+          user_id,
+        },
+      );
+    }
+
+    const prices = await query.getMany();
+
+    const result = {};
+    prices.forEach((price) => {
+      result[`${price.category_id}_${price.product_id}_${price.service_id}`] =
+        price.price;
+    });
+
+    return {
+      statusCode: 200,
+      message:
+        'Prices retrieved successfully (category_id, product_id, service_id)',
+      data: result,
+    };
+  }
+
   async getPricesByCategoryAndService(
     category_id: number,
     service_id: number,
