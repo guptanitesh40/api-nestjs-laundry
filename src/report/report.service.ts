@@ -10,13 +10,28 @@ export class ReportService {
     private readonly orderRepository: Repository<OrderDetail>,
   ) {}
 
-  async getTotalOrderReport(): Promise<{ day: string; count: number }[]> {
-    const result = await this.orderRepository
+  async getTotalOrderReport(
+    startDate?: string,
+    endDate?: string,
+  ): Promise<{ day: string; count: number }[]> {
+    let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
       .select("DATE_FORMAT(orders.created_at, '%b-%Y') AS day")
       .addSelect('COUNT(*) AS count')
-      .where('orders.created_at >= NOW() - INTERVAL 6 MONTH')
-      .andWhere('orders.deleted_at IS NULL')
+      .where('orders.deleted_at IS NULL');
+
+    if (startDate && endDate) {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at BETWEEN :startDate AND :endDate',
+        { startDate, endDate },
+      );
+    } else {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at >= NOW() - INTERVAL 6 MONTH',
+      );
+    }
+
+    const result = await queryBuilder
       .groupBy('day')
       .orderBy('day', 'DESC')
       .getRawMany();

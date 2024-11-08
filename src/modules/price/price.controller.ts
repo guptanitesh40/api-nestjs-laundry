@@ -19,21 +19,29 @@ import { PriceService } from './price.service';
 @Controller('prices')
 @UseGuards(RolesGuard)
 @UseGuards(AuthGuard('jwt'))
-@Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
 export class PriceController {
   constructor(private readonly priceService: PriceService) {}
 
   @Post()
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async create(@Body() createPriceDto: CreatePriceDto): Promise<Response> {
     return await this.priceService.create(createPriceDto);
   }
 
   @Get()
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async findAll(): Promise<Response> {
     return await this.priceService.findAll();
   }
 
+  @Get('customer')
+  @Roles(Role.CUSTOMER)
+  async getAll(): Promise<any[]> {
+    return await this.priceService.getAll();
+  }
+
   @Post('download-pdf')
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async downloadPDF(): Promise<StreamableFile> {
     const pdfBuffer = await this.priceService.generatePriceListPDF();
 
