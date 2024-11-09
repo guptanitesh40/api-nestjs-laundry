@@ -19,7 +19,7 @@ import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
 import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
 import twilio from 'twilio';
-import { MoreThan, Repository } from 'typeorm';
+import { In, MoreThan, Repository } from 'typeorm';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -472,23 +472,40 @@ export class UserService {
 
     const [users, total] = await userQuery.getManyAndCount();
 
-    const usersWithMappings = await Promise.all(
-      users.map(async (user) => {
-        const companyMappings = await this.userCompanyMappingRepository.find({
-          where: { user_id: user.user_id },
-          select: ['company_id'],
-        });
-        const branchMappings = await this.userBranchMappingRepository.find({
-          where: { user_id: user.user_id },
-          select: ['branch_id'],
-        });
-        return {
-          ...user,
-          company_ids: companyMappings.map((cm) => cm.company_id),
-          branch_ids: branchMappings.map((bm) => bm.branch_id),
-        };
-      }),
-    );
+    const userIds = users.map((user) => user.user_id);
+
+    const companyMappings = await this.userCompanyMappingRepository.find({
+      where: { user_id: In(userIds) },
+      select: ['user_id', 'company_id'],
+    });
+
+    const branchMappings = await this.userBranchMappingRepository.find({
+      where: { user_id: In(userIds) },
+      select: ['user_id', 'branch_id'],
+    });
+
+    const userCompanyMap = new Map<number, number[]>();
+    const userBranchMap = new Map<number, number[]>();
+
+    companyMappings.forEach((mapping) => {
+      if (!userCompanyMap.has(mapping.user_id)) {
+        userCompanyMap.set(mapping.user_id, []);
+      }
+      userCompanyMap.get(mapping.user_id)?.push(mapping.company_id);
+    });
+
+    branchMappings.forEach((mapping) => {
+      if (!userBranchMap.has(mapping.user_id)) {
+        userBranchMap.set(mapping.user_id, []);
+      }
+      userBranchMap.get(mapping.user_id)?.push(mapping.branch_id);
+    });
+
+    const usersWithMappings = users.map((user) => ({
+      ...user,
+      company_ids: userCompanyMap.get(user.user_id) || [],
+      branch_ids: userBranchMap.get(user.user_id) || [],
+    }));
 
     return {
       statusCode: 200,
