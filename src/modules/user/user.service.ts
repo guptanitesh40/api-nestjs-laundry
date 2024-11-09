@@ -19,7 +19,7 @@ import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
 import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
 import twilio from 'twilio';
-import { MoreThan, Repository } from 'typeorm';
+import { In, MoreThan, Repository } from 'typeorm';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -438,7 +438,7 @@ export class UserService {
     const perPage = per_page ?? 10;
     const skip = (pageNumber - 1) * perPage;
 
-    const queryBuilder = this.userRepository
+    const userQuery = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
       .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
@@ -448,7 +448,7 @@ export class UserService {
       .skip(skip);
 
     if (search) {
-      queryBuilder.andWhere(
+      userQuery.andWhere(
         '(user.first_name LIKE :search OR ' +
           'user.last_name LIKE :search OR ' +
           'user.email LIKE :search OR ' +
@@ -468,23 +468,50 @@ export class UserService {
       sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
     }
 
-    queryBuilder.orderBy(sortColumn, sortOrder);
+    userQuery.orderBy(sortColumn, sortOrder);
 
-    const [result, total] = await queryBuilder.getManyAndCount();
+    const [users, total] = await userQuery.getManyAndCount();
 
-    const mappedResult = result.map((user) => ({
+    const userIds = users.map((user) => user.user_id);
+
+    const companyMappings = await this.userCompanyMappingRepository.find({
+      where: { user_id: In(userIds) },
+      select: ['user_id', 'company_id'],
+    });
+
+    const branchMappings = await this.userBranchMappingRepository.find({
+      where: { user_id: In(userIds) },
+      select: ['user_id', 'branch_id'],
+    });
+
+    const userCompanyMap = new Map<number, number[]>();
+    const userBranchMap = new Map<number, number[]>();
+
+    companyMappings.forEach((mapping) => {
+      if (!userCompanyMap.has(mapping.user_id)) {
+        userCompanyMap.set(mapping.user_id, []);
+      }
+      userCompanyMap.get(mapping.user_id)?.push(mapping.company_id);
+    });
+
+    branchMappings.forEach((mapping) => {
+      if (!userBranchMap.has(mapping.user_id)) {
+        userBranchMap.set(mapping.user_id, []);
+      }
+      userBranchMap.get(mapping.user_id)?.push(mapping.branch_id);
+    });
+
+    const usersWithMappings = users.map((user) => ({
       ...user,
-      branch_ids: user.userBranchMappings.map((branch) => branch.branch_id),
-      company_ids: user.UserCompanyMappings.map(
-        (company) => company.company_id,
-      ),
+      company_ids: userCompanyMap.get(user.user_id) || [],
+      branch_ids: userBranchMap.get(user.user_id) || [],
     }));
 
     return {
       statusCode: 200,
       message: 'Users retrieved successfully',
       data: {
-        result: mappedResult,
+        users: usersWithMappings,
         limit: perPage,
         page_number: pageNumber,
         count: total,

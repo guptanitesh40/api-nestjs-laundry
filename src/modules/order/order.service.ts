@@ -619,6 +619,11 @@ export class OrderService {
       .select([
         'order.order_id As order_id',
         'order.total As total',
+        'order.paid_amount',
+        'order.kasar_amount',
+        'order.order_status',
+        'order.payment_status',
+        'order.estimated_delivery_time',
         'order.created_at As created_at',
         'COUNT(items.item_id) As total_item',
       ])

@@ -94,7 +94,7 @@ export class UserController {
             if (!file.mimetype.match(/\/(jpg|jpeg|png|pdf)$/)) {
               cb(
                 new HttpException(
-                  'Only PDF files are allowed!',
+                  'Only PDF and IMAGE files are allowed!',
                   HttpStatus.BAD_REQUEST,
                 ),
                 false,
@@ -120,7 +120,7 @@ export class UserController {
   ): Promise<Response> {
     const user = req.user;
 
-    const imageFile = files?.id_proof?.[0];
+    const imageFile = files?.image?.[0];
     const idProofFile = files?.id_proof?.[0];
 
     const imagePath = imageFile
