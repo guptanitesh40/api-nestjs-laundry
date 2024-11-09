@@ -438,7 +438,7 @@ export class UserService {
     const perPage = per_page ?? 10;
     const skip = (pageNumber - 1) * perPage;
 
-    const queryBuilder = this.userRepository
+    const userQuery = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
       .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
@@ -448,7 +448,7 @@ export class UserService {
       .skip(skip);
 
     if (search) {
-      queryBuilder.andWhere(
+      userQuery.andWhere(
         '(user.first_name LIKE :search OR ' +
           'user.last_name LIKE :search OR ' +
           'user.email LIKE :search OR ' +
@@ -468,23 +468,33 @@ export class UserService {
       sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
     }
 
-    queryBuilder.orderBy(sortColumn, sortOrder);
+    userQuery.orderBy(sortColumn, sortOrder);
 
-    const [result, total] = await queryBuilder.getManyAndCount();
+    const [users, total] = await userQuery.getManyAndCount();
 
-    const mappedResult = result.map((user) => ({
-      ...user,
-      branch_ids: user.userBranchMappings.map((branch) => branch.branch_id),
-      company_ids: user.UserCompanyMappings.map(
-        (company) => company.company_id,
-      ),
-    }));
+    const usersWithMappings = await Promise.all(
+      users.map(async (user) => {
+        const companyMappings = await this.userCompanyMappingRepository.find({
+          where: { user_id: user.user_id },
+          select: ['company_id'],
+        });
+        const branchMappings = await this.userBranchMappingRepository.find({
+          where: { user_id: user.user_id },
+          select: ['branch_id'],
+        });
+        return {
+          ...user,
+          company_ids: companyMappings.map((cm) => cm.company_id),
+          branch_ids: branchMappings.map((bm) => bm.branch_id),
+        };
+      }),
+    );
 
     return {
       statusCode: 200,
       message: 'Users retrieved successfully',
       data: {
-        result: mappedResult,
+        users: usersWithMappings,
         limit: perPage,
         page_number: pageNumber,
         count: total,

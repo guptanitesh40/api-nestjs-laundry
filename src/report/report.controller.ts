@@ -19,4 +19,12 @@ export class ReportController {
   ) {
     return this.reportService.getTotalOrderReport(startDate, endDate);
   }
+
+  @Get('delivery-status-report')
+  async getDeliveryStatusReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getDeliveryStatusReport(startDate, endDate);
+  }
 }
