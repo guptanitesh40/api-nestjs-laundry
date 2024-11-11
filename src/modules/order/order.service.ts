@@ -611,29 +611,67 @@ export class OrderService {
     };
   }
 
-  async getAll(user_id: number): Promise<Response> {
-    const orders = await this.orderRepository
+  async getAll(
+    user_id: number,
+    paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
+    const { per_page, page_number, search, sort_by, order } =
+      paginationQueryDto;
+
+    const pageNumber = page_number ?? 1;
+    const perPage = per_page ?? 10;
+    const skip = (pageNumber - 1) * perPage;
+
+    const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'items')
       .where('order.user_id = :userId', { userId: user_id })
+      .andWhere('order.deleted_at IS NULL')
       .select([
-        'order.order_id As order_id',
-        'order.total As total',
+        'order.order_id',
+        'order.total',
         'order.paid_amount',
         'order.kasar_amount',
         'order.order_status',
         'order.payment_status',
         'order.estimated_delivery_time',
-        'order.created_at As created_at',
-        'COUNT(items.item_id) As total_item',
+        'order.created_at',
+        'COUNT(items.item_id) AS total_item',
       ])
       .groupBy('order.order_id')
-      .getRawMany();
+      .take(perPage)
+      .skip(skip);
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(order.order_id LIKE :search OR ' +
+          'order.created_at LIKE :search OR ' +
+          'order.estimated_delivery_time LIKE :search OR ' +
+          'order.total LIKE :search OR ' +
+          'order.paid_amount LIKE :search OR ' +
+          'order.kasar_amount LIKE :search OR ' +
+          'order.payment_status LIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    let sortColumn = 'order.created_at';
+    let sortOrder: 'ASC' | 'DESC' = 'DESC';
+    if (sort_by) {
+      sortColumn = `order.${sort_by}`;
+    }
+    if (order) {
+      sortOrder = order;
+    }
+
+    queryBuilder.orderBy(sortColumn, sortOrder);
+
+    const [result, total] = await queryBuilder.getManyAndCount();
 
     return {
       statusCode: 200,
-      message: 'order retrived',
-      data: orders,
+      message: 'Orders retrieved',
+      data: { result, limit: perPage, page_number: pageNumber, count: total },
     };
   }
 

@@ -84,9 +84,12 @@ export class OrderController {
 
   @Get('orders')
   @Roles(Role.CUSTOMER)
-  async getCustomerOrders(@Request() req): Promise<Response> {
+  async getCustomerOrders(
+    @Request() req,
+    @Query() paginationQuery: PaginationQueryDto,
+  ): Promise<Response> {
     const user = req.user;
-    return this.orderService.getAll(user.user_id);
+    return this.orderService.getAll(user.user_id, paginationQuery);
   }
 
   @Post('admin/orders')
