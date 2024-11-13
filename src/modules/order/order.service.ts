@@ -449,12 +449,6 @@ export class OrderService {
           );
         }
 
-        if (item.price !== price) {
-          throw new Error(
-            `Price mismatch for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${price.price}, Received: ${item.price}`,
-          );
-        }
-
         if (orderItemsMap.has(key)) {
           const existingItem = orderItemsMap.get(key);
           existingItem.quantity += item.quantity || 1;
