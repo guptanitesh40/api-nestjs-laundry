@@ -44,9 +44,6 @@ export class OrderDetail extends BaseEntity {
   @Column({ type: 'float' })
   shipping_charges: number;
 
-  @Column({ type: 'float', nullable: true })
-  pending_due_amount?: number;
-
   @Column({ type: 'float' })
   total: number;
 

@@ -117,7 +117,6 @@ export class OrderService {
         (createOrderDto.express_delivery_charges || 0);
 
       const paid_amount = createOrderDto.paid_amount || 0;
-      const pending_due_amount = total - paid_amount;
       let kasar_amount = 0;
       if (
         createOrderDto.payment_type === PaymentType.CASH_ON_DELIVERY &&
@@ -213,7 +212,6 @@ export class OrderService {
         coupon_code,
         coupon_discount,
         address_details,
-        pending_due_amount,
         kasar_amount,
         estimated_pickup_time,
         estimated_delivery_time: estimated_delivery_date,
@@ -632,7 +630,7 @@ export class OrderService {
         'order.estimated_delivery_time',
         'order.created_at',
         'COUNT(items.item_id) AS total_item',
-        'order.pending_due_amount',
+        '(order.total-COALESCE(order.paid_amount,0)-COALESCE(order.kasar_amount,0)) AS pending_amount',
       ])
 
       .groupBy('order.order_id')
@@ -665,19 +663,25 @@ export class OrderService {
 
     const [result, total] = await queryBuilder.getManyAndCount();
 
-    const inProgressCountQuery = this.orderRepository
+    const inProgressCountOrder = this.orderRepository
       .createQueryBuilder('order')
       .where('order.user_id=:userId', { userId: user_id })
       .andWhere('order.order_status=:status', {
         status: OrderStatus.WORK_IN_PROGRESS,
       })
       .andWhere('order.deleted_at IS NULL');
+    const inProgressCount = await inProgressCountOrder.getCount();
 
-    const inProgressCount = await inProgressCountQuery.getCount();
+    const totalPendingAmount = await this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.user_id=:userId', { userId: user_id })
+      .andWhere('order.deleted_at IS NULL')
+      .select(
+        'SUM(order.total-COALESCE(order.paid_amount,0)-COALESCE(order.kasar_amount,0))',
+        'total_pending_due_amount',
+      )
+      .getRawOne();
 
-    const totalPendingDueAmount = result.reduce((sum, order) => {
-      return sum + (order.pending_due_amount || 0);
-    }, 0);
     return {
       statusCode: 200,
       message: 'Orders retrieved',
@@ -686,8 +690,8 @@ export class OrderService {
         limit: perPage,
         page_number: pageNumber,
         count: total,
-        totalPendingDueAmount,
         inProgressCount,
+        totalPendingAmount,
       },
     };
   }
