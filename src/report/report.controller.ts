@@ -43,4 +43,47 @@ export class ReportController {
   ) {
     return this.reportService.getPendingAmountReport(startDate, endDate);
   }
+
+  @Get('refund-report')
+  async getRefundReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getRefundReport(startDate, endDate);
+  }
+
+  @Get('kasar-report')
+  async getKasarReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getKasarReport(startDate, endDate);
+  }
+
+  @Get('inactive-customer-report')
+  async getInactiveCustomerReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getNotActiveCustomerReport(startDate, endDate);
+  }
+
+  @Get('new-customer-acquisition-report')
+  async getNewCustomerAcquisitionReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getNewCustomerAcquisitionReport(
+      startDate,
+      endDate,
+    );
+  }
+
+  @Get('customer-activity')
+  async getCustomerActivityReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getCustomerActivityReport(startDate, endDate);
+  }
 }
