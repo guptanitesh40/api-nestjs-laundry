@@ -382,8 +382,8 @@ export class ReportService {
 
     const queryBuilder = this.userRespository
       .createQueryBuilder('user')
-      .select("DATE_FORMAT(user.created_at, '%Y-%b') AS month")
-      .addSelect('COUNT(DISTINCT user.user_id) AS loginCount')
+      .select("DATE_FORMAT(loginHistory.created_at, '%Y-%b')", 'month')
+      .addSelect('COUNT(DISTINCT loginHistory.user_id)', 'loginCount')
       .leftJoin(
         'user.loginHistories',
         'loginHistory',
@@ -394,12 +394,11 @@ export class ReportService {
         },
       )
       .where('user.deleted_at IS NULL')
-      .andWhere('loginHistory.user_id IS NOT NULL');
-
-    const result = await queryBuilder
+      .andWhere('loginHistory.user_id IS NOT NULL')
       .groupBy('month')
-      .orderBy('month', 'ASC')
-      .getRawMany();
+      .orderBy('month', 'ASC');
+
+    const result = await queryBuilder.getRawMany();
 
     return result.map((row: { month: string; loginCount: string }) => ({
       month: row.month,
