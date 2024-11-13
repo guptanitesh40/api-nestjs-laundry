@@ -117,7 +117,6 @@ export class OrderService {
         (createOrderDto.express_delivery_charges || 0);
 
       const paid_amount = createOrderDto.paid_amount || 0;
-
       let kasar_amount = 0;
       if (
         createOrderDto.payment_type === PaymentType.CASH_ON_DELIVERY &&
@@ -422,7 +421,6 @@ export class OrderService {
     const gst_amount = (sub_total * gst_percentage) / 100;
     const total =
       sub_total +
-      gst_amount +
       (updateOrderDto.shipping_charges || 0) +
       (updateOrderDto.express_delivery_charges || 0);
 
@@ -446,12 +444,6 @@ export class OrderService {
         if (!price) {
           throw new Error(
             `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}`,
-          );
-        }
-
-        if (item.price !== price) {
-          throw new Error(
-            `Price mismatch for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${price.price}, Received: ${item.price}`,
           );
         }
 
@@ -629,6 +621,7 @@ export class OrderService {
       .andWhere('order.deleted_at IS NULL')
       .select([
         'order.order_id',
+        'order.user_id',
         'order.total',
         'order.paid_amount',
         'order.kasar_amount',
@@ -637,7 +630,9 @@ export class OrderService {
         'order.estimated_delivery_time',
         'order.created_at',
         'COUNT(items.item_id) AS total_item',
+        '(order.total-COALESCE(order.paid_amount,0)-COALESCE(order.kasar_amount,0)) AS pending_amount',
       ])
+
       .groupBy('order.order_id')
       .take(perPage)
       .skip(skip);
@@ -668,10 +663,36 @@ export class OrderService {
 
     const [result, total] = await queryBuilder.getManyAndCount();
 
+    const inProgressCountOrder = this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.user_id=:userId', { userId: user_id })
+      .andWhere('order.order_status=:status', {
+        status: OrderStatus.WORK_IN_PROGRESS,
+      })
+      .andWhere('order.deleted_at IS NULL');
+    const inProgressCount = await inProgressCountOrder.getCount();
+
+    const totalPendingAmount = await this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.user_id=:userId', { userId: user_id })
+      .andWhere('order.deleted_at IS NULL')
+      .select(
+        'SUM(order.total-COALESCE(order.paid_amount,0)-COALESCE(order.kasar_amount,0))',
+        'total_pending_due_amount',
+      )
+      .getRawOne();
+
     return {
       statusCode: 200,
       message: 'Orders retrieved',
-      data: { result, limit: perPage, page_number: pageNumber, count: total },
+      data: {
+        result,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+        inProgressCount,
+        totalPendingAmount,
+      },
     };
   }
 
