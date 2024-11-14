@@ -73,20 +73,10 @@ export class WorkshopService {
       ])
       .getMany();
 
-    const formattedWorkshops = workshops.map((workshop) => {
-      const userIds = workshop.workshopManagerMappings.map(
-        (mapping) => mapping.user_id,
-      );
-      return {
-        ...workshop,
-        user_ids: userIds,
-      };
-    });
-
     return {
       statusCode: 200,
       message: 'Workshops retrieved successfully',
-      data: { workshops: formattedWorkshops },
+      data: { workshops },
     };
   }
 
@@ -106,17 +96,10 @@ export class WorkshopService {
       throw new NotFoundException('Workshop not found');
     }
 
-    const mapped = {
-      ...result,
-      user_ids: result.workshopManagerMappings.map(
-        (mapping) => mapping.user_id,
-      ),
-    };
-
     return {
       statusCode: 200,
       message: 'Workshop Retrieved successfully',
-      data: { result: mapped },
+      data: { result },
     };
   }
 
@@ -145,17 +128,17 @@ export class WorkshopService {
     if (user_ids) {
       await this.workshopManagerRepository.delete({ workshop_id: id });
 
-      for (const userId of user_ids) {
-        const user = await this.userService.findUserById(userId);
+      const users = await this.userService.findUsersByIds(user_ids);
 
-        if (user && user.role_id === Role.WORKSHOP_MANAGER) {
+      for (const user of users) {
+        if (user.role_id === Role.WORKSHOP_MANAGER) {
           workshopMappings.push(
             this.workshopManagerRepository.create({
               workshop_id: workshop.workshop_id,
-              user_id: userId,
+              user_id: user.user_id,
             }),
           );
-          userIds.push(userId);
+          userIds.push(user.user_id);
         }
       }
     } else {

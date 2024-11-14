@@ -701,6 +701,20 @@ export class UserService {
     });
   }
 
+  async findUsersByIds(userIds: number[]): Promise<User[]> {
+    return this.userRepository.find({
+      where: { user_id: In(userIds) },
+      select: [
+        'user_id',
+        'role_id',
+        'first_name',
+        'last_name',
+        'mobile_number',
+        'commission_percentage',
+      ],
+    });
+  }
+
   async getAllUsersByRole(role_id: number, search?: string): Promise<Response> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')

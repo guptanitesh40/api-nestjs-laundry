@@ -12,7 +12,7 @@ import { Workshop } from './workshop.entity';
 @Entity('workshop_manager_mapping')
 export class WorkshopManagerMapping extends BaseEntity {
   @PrimaryGeneratedColumn()
-  id: number;
+  workshop_manager_mapping_id: number;
 
   @ManyToOne(() => User, (user) => user.workshopManagerMappings, {
     nullable: true,

@@ -1,13 +1,13 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateTableWorkshopAndWorkshopManagerMapping1731581051067
+export class CreateTableWorkshopAndWorkshopManagerMapping1731583457301
   implements MigrationInterface
 {
-  name = 'CreateTableWorkshopAndWorkshopManagerMapping1731581051067';
+  name = 'CreateTableWorkshopAndWorkshopManagerMapping1731583457301';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE TABLE \`workshop_manager_mapping\` (\`created_at\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`updated_at\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6), \`deleted_at\` timestamp(6) NULL, \`id\` int NOT NULL AUTO_INCREMENT, \`user_id\` int NULL, \`workshop_id\` int NULL, PRIMARY KEY (\`id\`)) ENGINE=InnoDB`,
+      `CREATE TABLE \`workshop_manager_mapping\` (\`created_at\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`updated_at\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6), \`deleted_at\` timestamp(6) NULL, \`workshop_manager_mapping_id\` int NOT NULL AUTO_INCREMENT, \`user_id\` int NULL, \`workshop_id\` int NULL, PRIMARY KEY (\`workshop_manager_mapping_id\`)) ENGINE=InnoDB`,
     );
     await queryRunner.query(
       `CREATE TABLE \`workshop\` (\`created_at\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`updated_at\` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6), \`deleted_at\` timestamp(6) NULL, \`workshop_id\` int NOT NULL AUTO_INCREMENT, \`workshop_name\` varchar(255) NULL, \`email\` varchar(255) NULL, \`address\` varchar(255) NULL, \`mobile_number\` decimal NULL, PRIMARY KEY (\`workshop_id\`)) ENGINE=InnoDB`,
