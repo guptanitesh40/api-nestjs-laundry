@@ -25,6 +25,7 @@ import { SettingModule } from './modules/settings/setting.module';
 import { UsersModule } from './modules/user/user.module';
 import { IsUniqueConstraint } from './modules/validator/is-unique-constarint';
 import { WebModule } from './modules/web/web.module';
+import { WorkshopModule } from './modules/workshop/workshop.module';
 import { MorganMiddleware } from './morgan.middleware';
 import { ReportModule } from './report/report.module';
 
@@ -55,6 +56,7 @@ import { ReportModule } from './report/report.module';
     WebModule,
     FeedbackModule,
     ReportModule,
+    WorkshopModule,
   ],
   controllers: [AppController],
   providers: [AppService, IsUniqueConstraint],
