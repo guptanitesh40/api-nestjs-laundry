@@ -452,7 +452,8 @@ export class UserService {
         '(user.first_name LIKE :search OR ' +
           'user.last_name LIKE :search OR ' +
           'user.email LIKE :search OR ' +
-          'user.mobile_number LIKE :search)',
+          'user.mobile_number LIKE :search OR' +
+          ` CONCAT(user.first_name,' ',user.last_name) LIKE :search)`,
         { search: `%${search}%` },
       );
     }
@@ -460,7 +461,20 @@ export class UserService {
     let sortColumn = 'user.created_at';
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 
-    if (sort_by) {
+    const validSortColumns = [
+      'user.user_id',
+      'user.first_name',
+      'user.last_name',
+      `CONCAT(user.first_name, ' ', user.last_name) AS full_name`,
+      'user.email',
+      'user.mobile_number',
+      'user.role_id',
+      'user.created_at',
+      'companyMapping.company_id',
+      'branchMapping.branch_id',
+    ];
+
+    if (sort_by && validSortColumns.includes(sort_by)) {
       sortColumn = sort_by;
     }
 
@@ -729,7 +743,7 @@ export class UserService {
 
     if (search) {
       queryBuilder.andWhere(
-        '(user.first_name LIKE :search OR user.last_name LIKE :search OR user.email LIKE :search OR user.mobile_number LIKE :search)',
+        `(user.first_name LIKE :search OR user.last_name LIKE :search OR user.email LIKE :search OR user.mobile_number LIKE :search OR CONCAT(user.first_name , ' ', user.last_name) LIKE :search )`,
         { search: `%${search}%` },
       );
     }

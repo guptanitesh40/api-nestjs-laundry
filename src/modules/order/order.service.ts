@@ -455,6 +455,7 @@ export class OrderService {
             category_id: item.category_id,
             product_id: item.product_id,
             service_id: item.service_id,
+            description: item.description,
             price: item.price,
             quantity: item.quantity || 1,
           });
