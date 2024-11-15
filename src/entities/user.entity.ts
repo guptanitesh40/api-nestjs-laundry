@@ -19,6 +19,7 @@ import { OrderDetail } from './order.entity';
 import { Role } from './role.entity';
 import { UserBranchMapping } from './user-branch-mapping.entity';
 import { UserCompanyMapping } from './user-company-mapping.entity';
+import { WorkshopManagerMapping } from './workshop-manager-mapping.entity';
 
 @Entity({ name: 'users' })
 export class User extends BaseEntity {
@@ -129,4 +130,10 @@ export class User extends BaseEntity {
     (userBranchMapping) => userBranchMapping.user,
   )
   userBranchMappings: UserBranchMapping[];
+
+  @OneToMany(
+    () => WorkshopManagerMapping,
+    (workshopManagerMapping) => workshopManagerMapping.user,
+  )
+  workshopManagerMappings: WorkshopManagerMapping[];
 }

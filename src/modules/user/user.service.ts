@@ -691,6 +691,22 @@ export class UserService {
     return this.userRepository.findOne({
       where: { user_id: userId },
       select: [
+        'user_id',
+        'role_id',
+        'first_name',
+        'last_name',
+        'mobile_number',
+        'commission_percentage',
+      ],
+    });
+  }
+
+  async findUsersByIds(userIds: number[]): Promise<User[]> {
+    return this.userRepository.find({
+      where: { user_id: In(userIds) },
+      select: [
+        'user_id',
+        'role_id',
         'first_name',
         'last_name',
         'mobile_number',
