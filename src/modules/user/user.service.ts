@@ -364,7 +364,6 @@ export class UserService {
     }
 
     const updatedData = { ...user, ...updateUserDto };
-
     if (imagePath) {
       updatedData.image = imagePath;
     }
@@ -381,11 +380,7 @@ export class UserService {
 
     await this.userRepository.update(user_id, updatedData);
 
-    const userdata = await this.userRepository.findOne({
-      where: { user_id, deleted_at: null },
-    });
-
-    const updatedUser = appendBaseUrlToImages([userdata])[0];
+    const updatedUser = appendBaseUrlToImages([updatedData])[0];
     return {
       statusCode: 200,
       message: 'User updated successfully',
@@ -444,6 +439,7 @@ export class UserService {
       .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
       .where('user.deleted_at IS NULL')
       .select(['user', 'companyMapping.company_id', 'branchMapping.branch_id'])
+      .addSelect("CONCAT(user.first_name, ' ', user.last_name)", 'full_name')
       .take(perPage)
       .skip(skip);
 
@@ -452,7 +448,8 @@ export class UserService {
         '(user.first_name LIKE :search OR ' +
           'user.last_name LIKE :search OR ' +
           'user.email LIKE :search OR ' +
-          'user.mobile_number LIKE :search)',
+          'user.mobile_number LIKE :search OR' +
+          ` CONCAT(user.first_name,' ',user.last_name) LIKE :search)`,
         { search: `%${search}%` },
       );
     }
@@ -729,7 +726,7 @@ export class UserService {
 
     if (search) {
       queryBuilder.andWhere(
-        '(user.first_name LIKE :search OR user.last_name LIKE :search OR user.email LIKE :search OR user.mobile_number LIKE :search)',
+        `(user.first_name LIKE :search OR user.last_name LIKE :search OR user.email LIKE :search OR user.mobile_number LIKE :search OR CONCAT(user.first_name , ' ', user.last_name) LIKE :search )`,
         { search: `%${search}%` },
       );
     }
