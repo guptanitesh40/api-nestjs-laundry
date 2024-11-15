@@ -364,7 +364,6 @@ export class UserService {
     }
 
     const updatedData = { ...user, ...updateUserDto };
-
     if (imagePath) {
       updatedData.image = imagePath;
     }
@@ -381,11 +380,7 @@ export class UserService {
 
     await this.userRepository.update(user_id, updatedData);
 
-    const userdata = await this.userRepository.findOne({
-      where: { user_id, deleted_at: null },
-    });
-
-    const updatedUser = appendBaseUrlToImages([userdata])[0];
+    const updatedUser = appendBaseUrlToImages([updatedData])[0];
     return {
       statusCode: 200,
       message: 'User updated successfully',
@@ -444,6 +439,7 @@ export class UserService {
       .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
       .where('user.deleted_at IS NULL')
       .select(['user', 'companyMapping.company_id', 'branchMapping.branch_id'])
+      .addSelect("CONCAT(user.first_name, ' ', user.last_name)", 'full_name')
       .take(perPage)
       .skip(skip);
 
@@ -461,20 +457,7 @@ export class UserService {
     let sortColumn = 'user.created_at';
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 
-    const validSortColumns = [
-      'user.user_id',
-      'user.first_name',
-      'user.last_name',
-      `CONCAT(user.first_name, ' ', user.last_name) AS full_name`,
-      'user.email',
-      'user.mobile_number',
-      'user.role_id',
-      'user.created_at',
-      'companyMapping.company_id',
-      'branchMapping.branch_id',
-    ];
-
-    if (sort_by && validSortColumns.includes(sort_by)) {
+    if (sort_by) {
       sortColumn = sort_by;
     }
 

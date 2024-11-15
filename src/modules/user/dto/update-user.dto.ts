@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import {
   IsArray,
   IsDecimal,
@@ -27,6 +28,7 @@ export class UpdateUserDto {
   mobile_number?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseInt(value))
   @IsEnum(Gender)
   gender: Gender;
 
