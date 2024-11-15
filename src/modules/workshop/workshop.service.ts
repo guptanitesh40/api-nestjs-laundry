@@ -4,7 +4,7 @@ import { Response } from 'src/dto/response.dto';
 import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
 import { Workshop } from 'src/entities/workshop.entity';
 import { Role } from 'src/enum/role.enum';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { UserService } from '../user/user.service';
 import { CreateWorkshopDto } from './dto/create-workshop.dto';
 import { UpdateWorkshopDto } from './dto/update-workshop.dto';
@@ -17,6 +17,7 @@ export class WorkshopService {
     @InjectRepository(WorkshopManagerMapping)
     private workshopManagerRepository: Repository<WorkshopManagerMapping>,
     private readonly userService: UserService,
+    private dataSource: DataSource,
   ) {}
 
   async create(createWorkshopDto: CreateWorkshopDto): Promise<Response> {
@@ -60,6 +61,7 @@ export class WorkshopService {
         'workshop.workshopManagerMappings',
         'workshopManagerMapping',
       )
+      .leftJoinAndSelect('workshopManagerMapping.user', 'user')
       .where('workshop.deleted_at IS NULL')
       .select([
         'workshop.workshop_id',
@@ -70,6 +72,8 @@ export class WorkshopService {
         'workshop.created_at',
         'workshop.updated_at',
         'workshopManagerMapping.user_id',
+        'user.first_name',
+        'user.last_name',
       ])
       .getMany();
 
@@ -87,9 +91,15 @@ export class WorkshopService {
         'workshop.workshopManagerMappings',
         'workshopManagerMapping',
       )
+      .leftJoinAndSelect('workshopManagerMapping.user', 'user')
       .where('workshop.workshop_id = :id', { id })
       .andWhere('workshop.deleted_at IS NULL')
-      .select(['workshop', 'workshopManagerMapping.user_id'])
+      .select([
+        'workshop',
+        'workshopManagerMapping.user_id',
+        'user.first_name',
+        'user.last_name',
+      ])
       .getOne();
 
     if (!result) {
@@ -107,61 +117,74 @@ export class WorkshopService {
     id: number,
     updateWorkshopDto: UpdateWorkshopDto,
   ): Promise<Response> {
-    const workshop = await this.workshopRepository.findOne({
-      where: { workshop_id: id, deleted_at: null },
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.startTransaction();
 
-    if (!workshop) {
-      return {
-        statusCode: 404,
-        message: 'Workshop not found',
-        data: null,
-      };
-    }
-
-    const { user_ids, ...workshopFieldsToUpdate } = updateWorkshopDto;
-    await this.workshopRepository.update(id, workshopFieldsToUpdate);
-
-    let workshopMappings = [];
-    const userIds = [];
-
-    if (user_ids) {
-      await this.workshopManagerRepository.delete({ workshop_id: id });
-
-      const users = await this.userService.findUsersByIds(user_ids);
-
-      for (const user of users) {
-        if (user.role_id === Role.WORKSHOP_MANAGER) {
-          workshopMappings.push(
-            this.workshopManagerRepository.create({
-              workshop_id: workshop.workshop_id,
-              user_id: user.user_id,
-            }),
-          );
-          userIds.push(user.user_id);
-        }
-      }
-    } else {
-      workshopMappings = await this.workshopManagerRepository.find({
-        where: { workshop_id: workshop.workshop_id },
-        select: ['user_id'],
+    try {
+      const workshop = await queryRunner.manager.findOne(Workshop, {
+        where: { workshop_id: id, deleted_at: null },
       });
-      userIds.push(...workshopMappings.map((mapping) => mapping.user_id));
+
+      if (!workshop) {
+        await queryRunner.rollbackTransaction();
+        return {
+          statusCode: 404,
+          message: 'Workshop not found',
+          data: null,
+        };
+      }
+
+      const { user_ids, ...workshopFieldsToUpdate } = updateWorkshopDto;
+
+      let workshopMappings = [];
+      if (updateWorkshopDto.user_ids) {
+        await queryRunner.manager.delete(WorkshopManagerMapping, {
+          workshop_id: id,
+        });
+
+        const users = await this.userService.findUsersByIds(user_ids);
+
+        for (const user of users) {
+          if (user.role_id === Role.WORKSHOP_MANAGER) {
+            workshopMappings.push(
+              queryRunner.manager.create(WorkshopManagerMapping, {
+                workshop_id: workshop.workshop_id,
+                user_id: user.user_id,
+              }),
+            );
+          }
+        }
+      } else {
+        workshopMappings = await queryRunner.manager.find(
+          WorkshopManagerMapping,
+          {
+            where: { workshop_id: workshop.workshop_id },
+            select: ['user_id'],
+          },
+        );
+      }
+
+      if (workshopMappings.length > 0) {
+        await queryRunner.manager.save(
+          WorkshopManagerMapping,
+          workshopMappings,
+        );
+      }
+      await queryRunner.manager.update(Workshop, id, workshopFieldsToUpdate);
+
+      await queryRunner.commitTransaction();
+
+      return {
+        statusCode: 200,
+        message: 'Workshop updated successfully',
+        data: { workshop, workshopMappings },
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
-
-    if (workshopMappings.length > 0) {
-      await this.workshopManagerRepository.save(workshopMappings);
-    }
-
-    const updatedWorkshop = await this.workshopRepository.findOne({
-      where: { workshop_id: id, deleted_at: null },
-    });
-
-    return {
-      statusCode: 200,
-      message: 'Workshop updated successfully',
-      data: { updatedWorkshop, userIds },
-    };
   }
 
   async delete(id: number): Promise<Response> {
