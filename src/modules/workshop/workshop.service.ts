@@ -27,18 +27,20 @@ export class WorkshopService {
     const workshopMappings = [];
     const userIds = [];
 
-    if (createWorkshopDto.user_ids) {
-      for (const userId of createWorkshopDto.user_ids) {
-        const user = await this.userService.findUserById(userId);
+    if (createWorkshopDto.user_ids && createWorkshopDto.user_ids.length > 0) {
+      const users = await this.userService.findUsersByIds(
+        createWorkshopDto.user_ids,
+      );
 
-        if (user && user.role_id === Role.WORKSHOP_MANAGER) {
+      for (const user of users) {
+        if (user.role_id === Role.WORKSHOP_MANAGER) {
           workshopMappings.push(
             this.workshopManagerRepository.create({
               workshop_id: result.workshop_id,
-              user_id: userId,
+              user_id: user.user_id,
             }),
           );
-          userIds.push(userId);
+          userIds.push(user.user_id);
         }
       }
     }
@@ -49,7 +51,7 @@ export class WorkshopService {
 
     return {
       statusCode: 201,
-      message: 'Category added Successfully',
+      message: 'Workshop added Successfully',
       data: { result, user_ids: userIds },
     };
   }
