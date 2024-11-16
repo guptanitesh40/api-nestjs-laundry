@@ -130,7 +130,7 @@ export class UserController {
       ? FilePath.USER_ID_PROOF + '/' + idProofFile.filename
       : null;
 
-    return await this.userService.update(
+    return await this.userService.editUser(
       user.user_id,
       updateUserDto,
       imagePath,
