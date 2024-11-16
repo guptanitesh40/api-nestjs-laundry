@@ -54,6 +54,10 @@ export class CouponService {
     const queryBuilder = this.couponRepository
       .createQueryBuilder('coupon')
       .where('coupon.deleted_at IS NULL')
+      .andWhere(
+        'coupon.start_time <= :currentDate AND coupon.end_time >= :currentDate',
+        { currentDate: new Date() },
+      )
       .take(perPage)
       .skip(skip);
 
@@ -169,7 +173,11 @@ export class CouponService {
     }
 
     const currentDate = new Date();
+
     if (currentDate < coupon.start_time || currentDate > coupon.end_time) {
+      await this.couponRepository.update(coupon.coupon_id, {
+        deleted_at: new Date(),
+      });
       throw new BadRequestException('Coupon is not valid at this time');
     }
 
@@ -178,6 +186,9 @@ export class CouponService {
     });
 
     if (totalCouponUsedCount >= coupon.total_usage_count) {
+      await this.couponRepository.update(coupon.coupon_id, {
+        deleted_at: new Date(),
+      });
       throw new BadRequestException('Coupon usage limit reached');
     }
 
