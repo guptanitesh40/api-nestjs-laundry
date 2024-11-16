@@ -188,7 +188,7 @@ export class UserService {
 
     createUserDto.created_by_user_id = admin_id;
 
-    if (createUserDto.role_id === Role.Vendor) {
+    if (createUserDto.role_id === Role.VENDOR) {
       createUserDto.vendor_code = crypto.randomBytes(6).toString('hex');
       const expiryDays = createUserDto.vendor_code_expiry as unknown as number;
       createUserDto.vendor_code_expiry = this.getVendorCodeExpiry(expiryDays);
@@ -349,12 +349,12 @@ export class UserService {
     };
   }
 
-  async update(
+  async editUser(
     user_id: number,
     updateUserDto: UpdateUserDto,
     imagePath?: string,
     idProofPath?: string,
-  ): Promise<Response> {
+  ): Promise<any> {
     const user = await this.userRepository.findOne({
       where: { user_id, deleted_at: null },
     });
@@ -364,13 +364,15 @@ export class UserService {
     }
 
     const updatedData = { ...user, ...updateUserDto };
+
     if (imagePath) {
-      updatedData.image = imagePath;
+      updatedData.image = this.appendBaseUrl(imagePath);
     }
 
     if (idProofPath) {
-      updatedData.id_proof = idProofPath;
+      updatedData.id_proof = this.appendBaseUrl(idProofPath);
     }
+
     if (updateUserDto.password) {
       const salt = await bcrypt.genSalt(10);
       updatedData.password = await bcrypt.hash(updateUserDto.password, salt);
@@ -380,14 +382,18 @@ export class UserService {
 
     await this.userRepository.update(user_id, updatedData);
 
-    const updatedUser = appendBaseUrlToImages([updatedData])[0];
     return {
       statusCode: 200,
       message: 'User updated successfully',
       data: {
-        user: { userdata: updatedUser },
+        user: { updatedData },
       },
     };
+  }
+
+  private appendBaseUrl(path: string): string {
+    const baseUrl = process.env.BASE_URL;
+    return baseUrl ? `${baseUrl}/${path}` : path;
   }
 
   async getUserById(user_id: number): Promise<Response> {

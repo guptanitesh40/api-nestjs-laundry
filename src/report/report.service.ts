@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Feedback } from 'src/entities/feedback.entity';
 import { OrderDetail } from 'src/entities/order.entity';
 import { User } from 'src/entities/user.entity';
 import { OrderStatus } from 'src/enum/order-status.eum';
@@ -15,6 +16,8 @@ export class ReportService {
     private readonly orderRepository: Repository<OrderDetail>,
     @InjectRepository(User)
     private readonly userRespository: Repository<User>,
+    @InjectRepository(Feedback)
+    private readonly feedbackRepository: Repository<Feedback>,
   ) {}
 
   private formattedDateToSQL(dateStr: string): string {
@@ -404,5 +407,87 @@ export class ReportService {
       month: row.month,
       loginCount: Number(row.loginCount),
     }));
+  }
+
+  async getSalesBookingReport(
+    startDate?: string,
+    endDate?: string,
+  ): Promise<
+    { day: string; bookingsCount: number; totalSalesAmount: number }[]
+  > {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(startDate, endDate);
+
+    let queryBuilder = this.orderRepository
+      .createQueryBuilder('orders')
+      .select("DATE_FORMAT(orders.created_at, '%b-%Y') AS day")
+      .addSelect('COUNT(*) AS bookingsCount')
+      .addSelect('SUM(orders.total) AS totalSalesAmount')
+      .where('orders.deleted_at IS NULL');
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    } else {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at >= NOW() - INTERVAL 6 MONTH',
+      );
+    }
+
+    const result = await queryBuilder
+      .groupBy('day')
+      .orderBy('day', 'DESC')
+      .getRawMany();
+
+    return result.map(
+      (row: {
+        day: string;
+        bookingsCount: string;
+        totalSalesAmount: string;
+      }) => ({
+        day: row.day,
+        bookingsCount: Number(row.bookingsCount),
+        totalSalesAmount: Number(row.totalSalesAmount),
+      }),
+    );
+  }
+
+  async getFeedbackTrends(
+    startDate?: string,
+    endDate?: string,
+  ): Promise<{ month: string; rating: number; count: number }[]> {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(startDate, endDate);
+
+    let queryBuilder = this.feedbackRepository
+      .createQueryBuilder('feedback')
+      .select("DATE_FORMAT(feedback.created_at, '%Y-%b') AS month")
+      .addSelect('feedback.rating', 'rating')
+      .addSelect('COUNT(feedback.feedback_id)', 'count')
+      .where('feedback.deleted_at IS NULL');
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder = queryBuilder.andWhere(
+        'feedback.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    }
+
+    const result = await queryBuilder
+      .groupBy('month')
+      .addGroupBy('feedback.rating')
+      .orderBy('month', 'ASC')
+      .addOrderBy('feedback.rating', 'ASC')
+      .getRawMany();
+
+    return result.map(
+      (row: { month: string; rating: string; count: string }) => ({
+        month: row.month,
+        rating: Number(row.rating),
+        count: Number(row.count),
+      }),
+    );
   }
 }

@@ -86,4 +86,20 @@ export class ReportController {
   ) {
     return this.reportService.getCustomerActivityReport(startDate, endDate);
   }
+
+  @Get('sales-booking')
+  async getSalesBookingReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getSalesBookingReport(startDate, endDate);
+  }
+
+  @Get('customers-feedback')
+  async getFeedbacks(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getFeedbackTrends(startDate, endDate);
+  }
 }
