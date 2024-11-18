@@ -77,6 +77,10 @@ export class CreateOrderDto {
   @IsOptional()
   @IsNumber()
   kasar_amount?: number;
+
+  @IsOptional()
+  @IsNumber()
+  branch_id?: number;
 }
 
 export class OrderItemDto {

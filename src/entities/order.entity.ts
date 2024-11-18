@@ -13,6 +13,7 @@ import {
 } from 'typeorm';
 import { UserAddress } from './address.entity';
 import { BaseEntity } from './base.entity';
+import { Branch } from './branch.entity';
 import { Feedback } from './feedback.entity';
 import { Note } from './note.entity';
 import { OrderItem } from './order-item.entity';
@@ -133,4 +134,12 @@ export class OrderDetail extends BaseEntity {
   @Column({ type: 'varchar', nullable: true })
   @IsOptional()
   pickup_comment?: string;
+
+  @ManyToOne(() => Branch, (branch) => branch.orders, { nullable: false })
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
+
+  @Column({ nullable: true })
+  @IsOptional()
+  branch_id?: number;
 }

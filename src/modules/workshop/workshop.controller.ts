@@ -6,13 +6,21 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
+import { Role } from 'src/enum/role.enum';
+import { RolesGuard } from '../auth/guard/role.guard';
 import { CreateWorkshopDto } from './dto/create-workshop.dto';
 import { UpdateWorkshopDto } from './dto/update-workshop.dto';
 import { WorkshopService } from './workshop.service';
 
 @Controller('workshops')
+@UseGuards(RolesGuard)
+@UseGuards(AuthGuard('jwt'))
+@Roles(Role.SUPER_ADMIN)
 export class WorkshopController {
   constructor(private readonly workshopService: WorkshopService) {}
 

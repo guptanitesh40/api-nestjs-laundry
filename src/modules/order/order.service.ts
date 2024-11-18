@@ -12,6 +12,7 @@ import * as pdf from 'html-pdf';
 import path, { join } from 'path';
 import { Response } from 'src/dto/response.dto';
 import { UserAddress } from 'src/entities/address.entity';
+import { Branch } from 'src/entities/branch.entity';
 import { Category } from 'src/entities/category.entity';
 import { OrderItem } from 'src/entities/order-item.entity';
 import { OrderDetail } from 'src/entities/order.entity';
@@ -95,7 +96,17 @@ export class OrderService {
 
       const user = await this.userService.findUserById(createOrderDto.user_id);
 
+      const branch = await queryRunner.manager.findOne(Branch, {
+        where: { branch_id: createOrderDto.branch_id, deleted_at: null },
+      });
+      if (!branch) {
+        throw new NotFoundException(
+          `Branch with id ${createOrderDto.branch_id} not found`,
+        );
+      }
+
       const address_details = `${address.building_number}, ${address.area}, ${address.city}, ${address.state}, ${address.country} - ${address.pincode}`;
+
       const settingKeys = [
         'estimate_pickup_normal_hour',
         'estimate_pickup_express_hour',
@@ -115,9 +126,9 @@ export class OrderService {
         createOrderDto.sub_total +
         createOrderDto.shipping_charges +
         (createOrderDto.express_delivery_charges || 0);
-
       const paid_amount = createOrderDto.paid_amount || 0;
       let kasar_amount = 0;
+
       if (
         createOrderDto.payment_type === PaymentType.CASH_ON_DELIVERY &&
         createOrderDto.payment_status === PaymentStatus.FULL_PAYMENT_RECEIVED
@@ -144,7 +155,6 @@ export class OrderService {
       const uniquePriceKeys = createOrderDto.items.map(
         (item) => `${item.category_id}_${item.product_id}_${item.service_id}`,
       );
-
       const pricesResponse = await this.priceService.findAll(uniquePriceKeys);
 
       const orderItemsMap = new Map();
@@ -215,6 +225,7 @@ export class OrderService {
         kasar_amount,
         estimated_pickup_time,
         estimated_delivery_time: estimated_delivery_date,
+        branch_id: createOrderDto.branch_id,
       });
 
       const savedOrder = await queryRunner.manager.save(order);
@@ -245,12 +256,14 @@ export class OrderService {
       }
 
       await queryRunner.commitTransaction();
+
       const orderDetail = {
         order_id: savedOrder.order_id,
         total: savedOrder.total,
         created_at: savedOrder.created_at,
         address_details: savedOrder.address_details,
         items: orderItems.length,
+        branch_id: savedOrder.branch_id,
         user: {
           first_name: user.first_name,
           last_name: user.last_name,
@@ -304,6 +317,7 @@ export class OrderService {
       .innerJoinAndSelect('items.category', 'category')
       .innerJoinAndSelect('items.product', 'product')
       .innerJoinAndSelect('items.service', 'service')
+      .innerJoinAndSelect('order.branch', 'branch')
       .where('order.deleted_at IS NULL')
       .select([
         'order',
@@ -320,6 +334,8 @@ export class OrderService {
         'service.service_id',
         'service.name',
         'service.image',
+        'branch.branch_id',
+        'branch.branch_name',
       ])
       .take(perPage)
       .skip(skip);
@@ -370,21 +386,45 @@ export class OrderService {
   }
 
   async findOne(order_id: number): Promise<Response> {
-    const order = await this.orderRepository.findOne({
-      where: { order_id: order_id },
-      relations: ['user'],
-    });
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoinAndSelect('order.items', 'items')
+      .innerJoinAndSelect('order.user', 'user')
+      .innerJoinAndSelect('items.category', 'category')
+      .innerJoinAndSelect('items.product', 'product')
+      .innerJoinAndSelect('items.service', 'service')
+      .innerJoinAndSelect('order.branch', 'branch')
+      .where('order.order_id = :order_id', { order_id })
+      .andWhere('order.deleted_at IS NULL')
+      .select([
+        'order',
+        'user.first_name',
+        'user.last_name',
+        'user.mobile_number',
+        'user.email',
+        'items.item_id',
+        'category.category_id',
+        'category.name',
+        'product.product_id',
+        'product.name',
+        'product.image',
+        'service.service_id',
+        'service.name',
+        'service.image',
+        'branch.branch_id',
+        'branch.branch_name',
+      ]);
+
+    const order = await queryBuilder.getOne();
 
     if (!order) {
       throw new NotFoundException(`Order with id ${order_id} not found`);
     }
 
-    const result = this.mapOrderToResponse(order);
-
     return {
       statusCode: 200,
       message: 'Order retrieved successfully',
-      data: result,
+      data: order,
     };
   }
 
@@ -392,6 +432,7 @@ export class OrderService {
     order_id: number,
     updateOrderDto: UpdateOrderDto,
   ): Promise<Response> {
+    const queryRunner = this.dataSource.createQueryRunner();
     const order = await this.orderRepository.findOne({
       where: { order_id },
     });
@@ -412,6 +453,18 @@ export class OrderService {
       order.address_details = `${address.building_number}, ${address.area}, ${address.city}, ${address.state}, ${address.country} - ${address.pincode}`;
     }
 
+    if (updateOrderDto.branch_id) {
+      const branch = await queryRunner.manager.findOne(Branch, {
+        where: { branch_id: updateOrderDto.branch_id, deleted_at: null },
+      });
+      if (!branch) {
+        throw new NotFoundException(
+          `Branch with id ${updateOrderDto.branch_id} not found`,
+        );
+      }
+      order.branch_id = updateOrderDto.branch_id;
+    }
+
     const settingKeys = ['gst_percentage'];
     const settingsResponse = await this.settingService.findAll(settingKeys);
     const settings = settingsResponse.data;
@@ -423,11 +476,10 @@ export class OrderService {
       sub_total +
       (updateOrderDto.shipping_charges || 0) +
       (updateOrderDto.express_delivery_charges || 0);
-
     order.sub_total = sub_total;
     order.gst = gst_amount;
     order.total = total;
-    Object.assign(order, orderUpdates);
+    order.branch_id, Object.assign(order, orderUpdates);
 
     const updatedOrder = await this.dataSource.manager.save(order);
 
@@ -477,6 +529,7 @@ export class OrderService {
       message: 'Order updated successfully',
       data: {
         order_id: updatedOrder.order_id,
+        branch_id: updatedOrder.branch_id,
         total: updatedOrder.total,
         address_details: updatedOrder.address_details,
         items: items ? items.length : 0,
