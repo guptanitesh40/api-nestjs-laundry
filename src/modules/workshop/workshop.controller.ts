@@ -20,7 +20,7 @@ import { WorkshopService } from './workshop.service';
 @Controller('workshops')
 @UseGuards(RolesGuard)
 @UseGuards(AuthGuard('jwt'))
-@Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+@Roles(Role.SUPER_ADMIN)
 export class WorkshopController {
   constructor(private readonly workshopService: WorkshopService) {}
 
