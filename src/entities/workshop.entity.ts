@@ -24,4 +24,5 @@ export class Workshop extends BaseEntity {
 
   @Column({ type: 'decimal', nullable: true })
   mobile_number: number;
+  
 }
