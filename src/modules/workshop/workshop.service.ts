@@ -161,7 +161,8 @@ export class WorkshopService {
         'user.first_name',
         'user.last_name',
       ])
-      .getOne();
+      .addSelect("CONCAT(user.first_name, ' ', user.last_name)", 'full_name')
+      .getRawOne();
 
     if (!result) {
       throw new NotFoundException('Workshop not found');
