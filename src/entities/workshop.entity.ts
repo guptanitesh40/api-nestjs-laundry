@@ -10,12 +10,6 @@ export class Workshop extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   workshop_name: string;
 
-  @OneToMany(
-    () => WorkshopManagerMapping,
-    (workshopManagerMapping) => workshopManagerMapping.workshop,
-  )
-  workshopManagerMappings: WorkshopManagerMapping[];
-
   @Column({ type: 'varchar', length: 255, nullable: true })
   email: string;
 
@@ -24,4 +18,10 @@ export class Workshop extends BaseEntity {
 
   @Column({ type: 'decimal', nullable: true })
   mobile_number: number;
+
+  @OneToMany(
+    () => WorkshopManagerMapping,
+    (workshopManagerMapping) => workshopManagerMapping.workshop,
+  )
+  workshopManagerMappings: WorkshopManagerMapping[];
 }
