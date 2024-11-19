@@ -102,4 +102,15 @@ export class ReportController {
   ) {
     return this.reportService.getFeedbackTrends(startDate, endDate);
   }
+
+  @Get('branch-wise-sales-collections')
+  async getBranchWiseSalesAndCollectionReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getBranchWiseSalesAndCollectionsReport(
+      startDate,
+      endDate,
+    );
+  }
 }

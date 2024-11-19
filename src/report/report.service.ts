@@ -490,4 +490,43 @@ export class ReportService {
       }),
     );
   }
+
+  async getBranchWiseSalesAndCollectionsReport(
+    startDate?: string,
+    endDate?: string,
+  ): Promise<
+    {
+      branchID: string;
+      branchName: string;
+      totalSales: number;
+      totalCollection: number;
+    }[]
+  > {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(startDate, endDate);
+
+    let queryBuilder = this.orderRepository
+      .createQueryBuilder('orders')
+      .innerJoin('orders.branch', 'branch')
+      .select('orders.branch_id', 'branchId')
+      .addSelect('branch.branch_name', 'branchName')
+      .addSelect('SUM(orders.total)', 'totalSales')
+      .addSelect('SUM(orders.paid_amount)', 'totalCollection')
+      .where('orders.deleted_at IS NULL')
+      .andWhere('orders.branch_id IS NOT NULL')
+      .groupBy('orders.branch_id')
+      .addGroupBy('branch.branch_name')
+      .orderBy('totalSales', 'DESC');
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    }
+
+    const result = await queryBuilder.getRawMany();
+
+    return result;
+  }
 }
