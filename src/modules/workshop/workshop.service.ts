@@ -4,7 +4,8 @@ import { Response } from 'src/dto/response.dto';
 import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
 import { Workshop } from 'src/entities/workshop.entity';
 import { Role } from 'src/enum/role.enum';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
+import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { UserService } from '../user/user.service';
 import { CreateWorkshopDto } from './dto/create-workshop.dto';
 import { UpdateWorkshopDto } from './dto/update-workshop.dto';
@@ -56,8 +57,15 @@ export class WorkshopService {
     };
   }
 
-  async findAll(): Promise<Response> {
-    const workshops = await this.workshopRepository
+  async findAll(paginationQueryDto: PaginationQueryDto): Promise<Response> {
+    const { per_page, page_number, search, sort_by, order } =
+      paginationQueryDto;
+
+    const pageNumber = page_number ?? 1;
+    const perPage = per_page ?? 10;
+    const skip = (pageNumber - 1) * perPage;
+
+    const workshopQuery = this.workshopRepository
       .createQueryBuilder('workshop')
       .leftJoinAndSelect(
         'workshop.workshopManagerMappings',
@@ -65,24 +73,75 @@ export class WorkshopService {
       )
       .leftJoinAndSelect('workshopManagerMapping.user', 'user')
       .where('workshop.deleted_at IS NULL')
-      .select([
-        'workshop.workshop_id',
-        'workshop.workshop_name',
-        'workshop.email',
-        'workshop.address',
-        'workshop.mobile_number',
-        'workshop.created_at',
-        'workshop.updated_at',
-        'workshopManagerMapping.user_id',
-        'user.first_name',
-        'user.last_name',
-      ])
-      .getMany();
+      .select(['workshop', 'workshopManagerMapping.user_id'])
+      .addSelect("CONCAT(user.first_name, ' ', user.last_name)", 'full_name')
+      .take(perPage)
+      .skip(skip);
+
+    if (search) {
+      workshopQuery.andWhere(
+        '(workshop.workshop_name LIKE :search OR ' +
+          'workshop.address LIKE :search OR ' +
+          'workshop.email LIKE :search OR ' +
+          'workshop.mobile_number LIKE :search OR ' +
+          `CONCAT(user.first_name, ' ' ,user.last_name) LIKE :search)`,
+        { search: `%${search}%` },
+      );
+    }
+
+    let sortColumn = 'workshop.created_at';
+    let sortOrder: 'ASC' | 'DESC' = 'DESC';
+
+    if (sort_by) {
+      sortColumn = sort_by;
+    }
+
+    if (order) {
+      sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    }
+
+    workshopQuery.orderBy(sortColumn, sortOrder);
+
+    const [workshops, total] = await workshopQuery.getManyAndCount();
+
+    const workshopIds = workshops.map((workshop) => workshop.workshop_id);
+
+    const workshopManagerMappings = await this.workshopManagerRepository.find({
+      where: { workshop_id: In(workshopIds) },
+      relations: ['user'],
+      select: ['workshop_id', 'user_id', 'user'],
+    });
+
+    const workshopManagerMap = new Map<
+      number,
+      { user_id: number; full_name: string }[]
+    >();
+
+    workshopManagerMappings.forEach((mapping) => {
+      const fullName = `${mapping.user.first_name} ${mapping.user.last_name}`;
+      if (!workshopManagerMap.has(mapping.workshop_id)) {
+        workshopManagerMap.set(mapping.workshop_id, []);
+      }
+      workshopManagerMap.get(mapping.workshop_id)?.push({
+        user_id: mapping.user_id,
+        full_name: fullName,
+      });
+    });
+
+    const workshopsWithMappings = workshops.map((workshop) => ({
+      ...workshop,
+      workshop_managers: workshopManagerMap.get(workshop.workshop_id) || [],
+    }));
 
     return {
       statusCode: 200,
       message: 'Workshops retrieved successfully',
-      data: { workshops },
+      data: {
+        workshops: workshopsWithMappings,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+      },
     };
   }
 

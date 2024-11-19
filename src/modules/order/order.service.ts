@@ -57,28 +57,6 @@ export class OrderService {
     private dataSource: DataSource,
   ) {}
 
-  private mapOrderToResponse(order: OrderDetail) {
-    return {
-      order_id: order.order_id,
-      description: order.description,
-      coupon_code: order.coupon_code,
-      express_delivery_charges: order.express_delivery_charges,
-      sub_total: order.sub_total,
-      shipping_charge: order.shipping_charges,
-      total: order.total,
-      address_details: order.address_details,
-      order_status: order.order_status,
-      payment_status: order.payment_status,
-      payment_type: order.payment_type,
-      transaction_id: order.transaction_id,
-
-      item_field: `product_id,  service_id,  category_id :price`,
-      items: order.items.map((item) => ({
-        item_details: `${item.product_id}_${item.service_id}_${item.category_id} : ${item.price}`,
-      })),
-    };
-  }
-
   async create(createOrderDto: CreateOrderDto): Promise<Response> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
