@@ -8,8 +8,8 @@ import { addDays, addHours } from 'date-fns';
 import ejs from 'ejs';
 import * as fs from 'fs';
 import { writeFileSync } from 'fs';
-import * as pdf from 'html-pdf';
 import path, { join } from 'path';
+import puppeteer, { Browser } from 'puppeteer';
 import { Response } from 'src/dto/response.dto';
 import { UserAddress } from 'src/entities/address.entity';
 import { Branch } from 'src/entities/branch.entity';
@@ -929,15 +929,25 @@ export class OrderService {
       const templateContent = fs.readFileSync(htmlTemplatePath, 'utf-8');
       const htmlContent = ejs.render(templateContent, refundData);
 
-      const pdfOptions = { format: 'A4', orientation: 'portrait' };
-      const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-        pdf.create(htmlContent, pdfOptions).toBuffer((err, buffer) => {
-          if (err) reject(err);
-          resolve(buffer);
-        });
+      const browser: Browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+        ],
       });
 
-      return Buffer.from(pdfBuffer);
+      const page = await browser.newPage();
+      await page.setContent(htmlContent);
+      const pdfBufferUint8: Uint8Array = await page.pdf({
+        format: 'A4',
+        landscape: false,
+      });
+
+      const pdfBuffer: Buffer = Buffer.from(pdfBufferUint8);
+      await browser.close();
+      return pdfBuffer;
     } catch (error) {
       throw new BadRequestException(
         `Failed to generate refund receipt: ${error.message}`,
@@ -986,23 +996,34 @@ export class OrderService {
       '..',
       'src/templates/label-template.ejs',
     );
-    const outputPath = path.join(__dirname, '..', '..', '..', 'pdf/labels.pdf');
 
-    return new Promise((resolve, reject) => {
-      ejs.renderFile(templatePath, data, (err, html) => {
-        if (err) {
-          return reject(err);
-        }
-
-        pdf
-          .create(html, { format: 'Letter' })
-          .toFile(outputPath, (err, res) => {
-            if (err) {
-              return reject(err);
-            }
-            resolve(res.filename);
-          });
-      });
+    const browser: Browser = await puppeteer.launch({
+      headless: true,
     });
+
+    const page = await browser.newPage();
+
+    try {
+      const htmlContent = await ejs.renderFile(templatePath, data);
+      await page.setContent(htmlContent);
+      const pdfBuffer = await page.pdf({ format: 'Letter' });
+
+      const outputPath = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'pdf/labels.pdf',
+      );
+      fs.writeFileSync(outputPath, pdfBuffer);
+
+      await browser.close();
+      return outputPath;
+    } catch (error) {
+      await browser.close();
+      throw new BadRequestException(
+        `Failed to generate order labels: ${error.message}`,
+      );
+    }
   }
 }

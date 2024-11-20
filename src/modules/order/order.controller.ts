@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -167,20 +168,27 @@ export class OrderController {
   async refundOrder(
     @Body() refundOrderDto: RefundOrderDto,
   ): Promise<StreamableFile> {
-    const order: OrderDetail =
-      await this.orderService.createRefund(refundOrderDto);
-    const pdfBuffer = await this.orderService.generateRefundReceipt(
-      order.order_id,
-    );
+    try {
+      const order: OrderDetail =
+        await this.orderService.createRefund(refundOrderDto);
+      const pdfBuffer = await this.orderService.generateRefundReceipt(
+        order.order_id,
+      );
 
-    const filePath = join(
-      process.cwd(),
-      `pdf/refund-receipt-${order.order_id}.pdf`,
-    );
+      const filePath = join(
+        process.cwd(),
+        `pdf/refund-receipt-${order.order_id}.pdf`,
+      );
 
-    writeFileSync(filePath, pdfBuffer);
+      writeFileSync(filePath, pdfBuffer);
 
-    const file = createReadStream(filePath);
-    return new StreamableFile(file, { type: 'application/pdf' });
+      const file = createReadStream(filePath);
+
+      return new StreamableFile(file, { type: 'application/pdf' });
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to process refund: ${error.message}`,
+      );
+    }
   }
 }
