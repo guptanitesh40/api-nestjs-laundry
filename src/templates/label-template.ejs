@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Labels</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    .label-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+    .label {
+      width: 1.4in;
+      height: 1.8in;
+      border: 1px solid #000;
+      margin: 5px; 
+      box-sizing: border-box;
+      padding: 5px;
+      text-align: center;
+    }
+    .logo {
+      height: 20px; 
+      margin-bottom: 10px;
+    }
+    .order-number,
+    .company-name {
+      font-weight: bold;
+      font-size: 12px; 
+      margin-bottom: 5px; 
+    }
+    .details {
+      font-size: 8px;
+      margin-bottom: 1px; 
+    }
+    .remarks {
+      font-size: 7px; 
+      margin-top: 4px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="label-container">
+    <% items.forEach((item, index) => { %>
+      <div class="label">
+        <img src="<%= logoUrl %>" alt="Company Logo" class="logo">
+        <div class="company-name">SIKKA CLEANERS</div>
+        <div class="order-number">Order #: <%= orderNumber %></div>
+        <div class="details">Date: <%= date %></div>
+        <div class="details">Customer: <%= customerName %></div>
+        <div class="details">Item: <%= index + 1 %>/<%= items.length %></div>
+        <div class="details">Service: <%= item.serviceName %></div>
+        <% if (item.remarks) { %>
+          <div class="remarks">Remarks: <%= item.remarks %></div>
+        <% } %>
+      </div>
+    <% }); %>
+  </div>
+</body>
+</html>

@@ -93,7 +93,7 @@ export class WorkshopService {
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 
     if (sort_by) {
-      sortColumn = sort_by;
+      sortColumn = `workshop.${sort_by}`;
     }
 
     if (order) {
