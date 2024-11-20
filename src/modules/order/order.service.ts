@@ -23,7 +23,7 @@ import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CouponService } from '../coupon/coupon.service';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { NotificationService } from '../notification/notification.service';
@@ -233,6 +233,8 @@ export class OrderService {
         }
       }
 
+      await this.generateOrderLabels(queryRunner, savedOrder.order_id);
+
       await queryRunner.commitTransaction();
 
       const orderDetail = {
@@ -250,7 +252,6 @@ export class OrderService {
       };
 
       await this.notificationService.sendOrderNotification(orderDetail);
-
       return {
         statusCode: 201,
         message: 'Order details added successfully',
@@ -942,5 +943,66 @@ export class OrderService {
         `Failed to generate refund receipt: ${error.message}`,
       );
     }
+  }
+
+  async generateOrderLabels(
+    queryRunner: QueryRunner,
+    orderId: number,
+  ): Promise<string> {
+    const baseUrl = process.env.BASE_URL;
+
+    const order = await queryRunner.manager
+      .createQueryBuilder(OrderDetail, 'order')
+      .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.items', 'item')
+      .leftJoinAndSelect('item.service', 'service')
+      .where('order.order_id = :orderId', { orderId })
+      .getOne();
+
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
+
+    const logoUrl = `${baseUrl}/images/logo/logo2.png`;
+    const customerName = `${order.user.first_name} ${order.user.last_name}`;
+    const date = new Date(order.created_at).toLocaleDateString();
+    const items = order.items.map((item) => ({
+      serviceName: item.service?.name || 'Unknown Service',
+      remarks: item.description || 'No remarks provided',
+    }));
+
+    const data = {
+      logoUrl,
+      orderNumber: order.order_id,
+      date,
+      customerName,
+      items,
+    };
+
+    const templatePath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/templates/label-template.ejs',
+    );
+    const outputPath = path.join(__dirname, '..', '..', '..', 'pdf/labels.pdf');
+
+    return new Promise((resolve, reject) => {
+      ejs.renderFile(templatePath, data, (err, html) => {
+        if (err) {
+          return reject(err);
+        }
+
+        pdf
+          .create(html, { format: 'Letter' })
+          .toFile(outputPath, (err, res) => {
+            if (err) {
+              return reject(err);
+            }
+            resolve(res.filename);
+          });
+      });
+    });
   }
 }

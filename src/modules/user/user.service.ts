@@ -464,7 +464,7 @@ export class UserService {
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 
     if (sort_by) {
-      sortColumn = sort_by;
+      sortColumn = `user.${sort_by}`;
     }
 
     if (order) {
