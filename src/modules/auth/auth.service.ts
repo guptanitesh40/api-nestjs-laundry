@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
 import { Response } from '../../dto/response.dto';
@@ -32,6 +32,25 @@ export class AuthService {
       delete responseData.data.user.password;
     }
     return responseData;
+  }
+
+  async validateToken(token: string): Promise<Response> {
+    try {
+      const decoded = this.jwtService.verify(token);
+
+      const user = await this.userService.findUserById(decoded.user_id);
+
+      if (!user) {
+        throw new UnauthorizedException('invalid or expire token');
+      }
+      return {
+        statusCode: 200,
+        message: 'user data retrived successfully',
+        data: user,
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid or expire token');
+    }
   }
 
   async generateJwtToken(user) {

@@ -296,7 +296,7 @@ export class OrderService {
       .innerJoinAndSelect('items.category', 'category')
       .innerJoinAndSelect('items.product', 'product')
       .innerJoinAndSelect('items.service', 'service')
-      .innerJoinAndSelect('order.branch', 'branch')
+      .leftJoinAndSelect('order.branch', 'branch')
       .where('order.deleted_at IS NULL')
       .select([
         'order',
