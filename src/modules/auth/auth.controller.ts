@@ -64,4 +64,9 @@ export class AuthController {
   getSuperAdminResource() {
     return { message: 'This is a Super Admin resource' };
   }
+
+  @Post('validate-token')
+  async validateToken(@Body('token') token: string): Promise<Response> {
+    return this.authService.validateToken(token);
+  }
 }
