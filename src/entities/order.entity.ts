@@ -18,6 +18,7 @@ import { Feedback } from './feedback.entity';
 import { Note } from './note.entity';
 import { OrderItem } from './order-item.entity';
 import { User } from './user.entity';
+import { Workshop } from './workshop.entity';
 
 @Entity({ name: 'orders' })
 export class OrderDetail extends BaseEntity {
@@ -85,7 +86,7 @@ export class OrderDetail extends BaseEntity {
   @Column({ type: 'int', default: PaymentType.ONLINE_PAYMENT })
   payment_type: PaymentType;
 
-  @Column({ type: 'int', default: OrderStatus.PENDING })
+  @Column({ type: 'int', default: OrderStatus.PICKUP_PENDING })
   order_status: OrderStatus;
 
   @Column({
@@ -106,6 +107,13 @@ export class OrderDetail extends BaseEntity {
 
   @Column({ nullable: true })
   delivery_boy_id: number;
+
+  @ManyToOne(() => User, (user) => user.ordersAsPickupBoy)
+  @JoinColumn({ name: 'pickup_boy_id' })
+  pickup_boy: User;
+
+  @Column({ nullable: true })
+  pickup_boy_id: number;
 
   @Column({ type: 'date', nullable: true })
   estimated_delivery_time: Date;
@@ -142,4 +150,13 @@ export class OrderDetail extends BaseEntity {
   @Column({ nullable: true })
   @IsOptional()
   branch_id?: number;
+
+  @ManyToOne(() => Workshop, (workshop) => workshop.orders, {
+    nullable: false,
+  })
+  @JoinColumn({ name: 'workshop_id' })
+  workshop: Workshop;
+
+  @Column({ nullable: true })
+  workshop_id: number;
 }
