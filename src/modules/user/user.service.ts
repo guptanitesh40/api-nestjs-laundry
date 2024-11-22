@@ -699,7 +699,8 @@ export class UserService {
         'first_name',
         'last_name',
         'mobile_number',
-        'commission_percentage',
+        'image',
+        'id_proof',
       ],
     });
   }

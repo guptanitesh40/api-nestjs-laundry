@@ -1,3 +1,4 @@
+import { IsOptional, IsString } from 'class-validator';
 import {
   Column,
   Entity,
@@ -14,13 +15,14 @@ export class Note extends BaseEntity {
   @PrimaryGeneratedColumn()
   note_id: number;
 
-  @ManyToOne(() => OrderDetail)
+  @ManyToOne(() => OrderDetail, (orderDetail) => orderDetail.notes)
   @JoinColumn({ name: 'order_id' })
   order: OrderDetail;
+
   @Column()
   order_id: number;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, (user) => user.notes)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
@@ -30,6 +32,8 @@ export class Note extends BaseEntity {
   @Column({ type: 'text' })
   text_note: string;
 
-  @Column()
-  image: string;
+  @Column({ nullable: true })
+  @IsOptional()
+  @IsString()
+  image?: string;
 }
