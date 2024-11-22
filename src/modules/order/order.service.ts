@@ -385,10 +385,15 @@ export class OrderService {
       .innerJoinAndSelect('items.product', 'product')
       .innerJoinAndSelect('items.service', 'service')
       .innerJoinAndSelect('order.branch', 'branch')
+      .leftJoinAndSelect('order.notes', 'notes')
+      .leftJoinAndSelect('notes.user', 'note_user')
       .where('order.order_id = :order_id', { order_id })
       .andWhere('order.deleted_at IS NULL')
       .select([
         'order',
+        'notes',
+        'note_user.first_name',
+        'note_user.last_name',
         'user.first_name',
         'user.last_name',
         'user.mobile_number',
