@@ -23,6 +23,10 @@ import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
+import {
+  getAdminOrderStatusLabel,
+  getCustomerOrderStatusLabel,
+} from 'src/utils/order-status.helper';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CouponService } from '../coupon/coupon.service';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
@@ -350,8 +354,16 @@ export class OrderService {
     }
 
     queryBuilder.orderBy(sortColumn, sortOrder);
+    const [orders, total]: any = await queryBuilder.getManyAndCount();
 
-    const [orders, total] = await queryBuilder.getManyAndCount();
+    orders.map((order) => {
+      order.order_status_name = getAdminOrderStatusLabel(
+        order.order_status,
+        order.branch_id,
+        order.pickup_boy_id,
+        order.workshop_id,
+      );
+    });
     return {
       statusCode: 200,
       message: 'Orders retrieved successfully',
@@ -421,6 +433,10 @@ export class OrderService {
     }
 
     const { address_id, items, ...orderUpdates } = updateOrderDto;
+
+    if (PaymentType.CASH_ON_DELIVERY && PaymentStatus.FULL_PAYMENT_RECEIVED) {
+      orderUpdates.kasar_amount = order.total - updateOrderDto.paid_amount;
+    }
 
     if (address_id) {
       const address = await this.dataSource.manager.findOne(UserAddress, {
@@ -694,13 +710,29 @@ export class OrderService {
 
     queryBuilder.orderBy(sortColumn, sortOrder);
 
-    const [result, total] = await queryBuilder.getManyAndCount();
+    const [result, total]: any = await queryBuilder.getManyAndCount();
+
+    result.map((order) => {
+      order.order_status_name = getCustomerOrderStatusLabel(
+        order.order_status,
+        order.branch_id,
+        order.pickup_boy_id,
+        order.workshop_id,
+      );
+    });
 
     const inProgressCountOrder = this.orderRepository
       .createQueryBuilder('order')
       .where('order.user_id=:userId', { userId: user_id })
-      .andWhere('order.order_status=:status', {
-        status: OrderStatus.WORK_IN_PROGRESS,
+      .andWhere('order.order_status IN(:statuses)', {
+        statuses: [
+          OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
+          OrderStatus.WORKSHOP_RECEIVED_ITEMS,
+          OrderStatus.WORKSHOP_MOVED_TO_IN_PROCESS,
+          OrderStatus.WORKSHOP_MARKS_AS_COMPLETED,
+          OrderStatus.BRANCH_RECEIVED_ITEMS,
+          OrderStatus.BRANCH_ASSIGN_DELIVERY_BOY,
+        ],
       })
       .andWhere('order.deleted_at IS NULL');
     const inProgressCount = await inProgressCountOrder.getCount();
@@ -772,11 +804,11 @@ export class OrderService {
 
   async pickupOrder(
     order_id: number,
-    delivery_boy_id: number,
+    pickup_boy_id: number,
     comment: string,
   ): Promise<Response> {
     const order = await this.orderRepository.findOne({
-      where: { order_id, delivery_boy_id },
+      where: { order_id, pickup_boy_id },
     });
 
     if (!order) {
@@ -784,7 +816,7 @@ export class OrderService {
     }
 
     order.pickup_comment = comment;
-    order.order_status = OrderStatus.READY_TO_DELIVERY;
+    order.order_status = OrderStatus.ITEMS_RECEIVED_AT_BRANCH;
 
     await this.orderRepository.save(order);
 

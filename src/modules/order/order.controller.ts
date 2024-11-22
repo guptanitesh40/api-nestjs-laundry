@@ -55,10 +55,10 @@ export class OrderController {
     @Param('order_id', ParseIntPipe) order_id: number,
     @Body('comment') comment: string,
   ): Promise<Response> {
-    const delivery_boy_id = req.user.user_id;
+    const pickup_boy_id = req.user.user_id;
     return await this.orderService.pickupOrder(
       order_id,
-      delivery_boy_id,
+      pickup_boy_id,
       comment,
     );
   }
