@@ -78,14 +78,9 @@ export class OrderService {
 
       const user = await this.userService.findUserById(createOrderDto.user_id);
 
-      const branch = await queryRunner.manager.findOne(Branch, {
+      await queryRunner.manager.findOne(Branch, {
         where: { branch_id: createOrderDto.branch_id, deleted_at: null },
       });
-      if (!branch) {
-        throw new NotFoundException(
-          `Branch with id ${createOrderDto.branch_id} not found`,
-        );
-      }
 
       const address_details = `${address.building_number}, ${address.area}, ${address.city}, ${address.state}, ${address.country} - ${address.pincode}`;
 
@@ -384,7 +379,7 @@ export class OrderService {
       .innerJoinAndSelect('items.category', 'category')
       .innerJoinAndSelect('items.product', 'product')
       .innerJoinAndSelect('items.service', 'service')
-      .innerJoinAndSelect('order.branch', 'branch')
+      .leftJoinAndSelect('order.branch', 'branch')
       .leftJoinAndSelect('order.notes', 'notes')
       .leftJoinAndSelect('notes.user', 'note_user')
       .where('order.order_id = :order_id', { order_id })
@@ -411,16 +406,23 @@ export class OrderService {
         'branch.branch_name',
       ]);
 
-    const order = await queryBuilder.getOne();
+    const orders: any = await queryBuilder.getOne();
 
-    if (!order) {
+    if (!orders) {
       throw new NotFoundException(`Order with id ${order_id} not found`);
     }
+
+    orders.order_status_name = getAdminOrderStatusLabel(
+      orders.order_status,
+      orders.branch_id,
+      orders.pickup_boy_id,
+      orders.workshop_id,
+    );
 
     return {
       statusCode: 200,
       message: 'Order retrieved successfully',
-      data: order,
+      data: orders,
     };
   }
 
