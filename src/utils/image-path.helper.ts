@@ -21,3 +21,28 @@ export function appendBaseUrlToLogo<T extends { logo: string }>(
     return item;
   });
 }
+
+export function appendBaseUrlToNestedImages(order: any): any {
+  const baseUrl = process.env.BASE_URL || '';
+
+  order.items = appendBaseUrlToImages(order.items);
+  order.items.forEach((item: any) => {
+    if (item.product) {
+      item.product = appendBaseUrlToImages([item.product])[0];
+    }
+    if (item.service) {
+      item.service = appendBaseUrlToImages([item.service])[0];
+    }
+  });
+
+  if (order.notes && Array.isArray(order.notes)) {
+    order.notes = order.notes.map((note: any) => {
+      if (note.image) {
+        note.image = `${baseUrl}/${note.image}`;
+      }
+      return note;
+    });
+  }
+
+  return order;
+}
