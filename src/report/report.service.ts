@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Response } from 'src/dto/response.dto';
 import { Feedback } from 'src/entities/feedback.entity';
 import { OrderDetail } from 'src/entities/order.entity';
 import { User } from 'src/entities/user.entity';
@@ -528,5 +529,60 @@ export class ReportService {
     const result = await queryBuilder.getRawMany();
 
     return result;
+  }
+
+  async getSalesReport(filterDto: {
+    company_id?: number;
+    branch_id?: number;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<Response> {
+    const { company_id, branch_id, start_date, end_date } = filterDto;
+
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(start_date, end_date);
+
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.branch', 'branch')
+      .leftJoinAndSelect('branch.company', 'company')
+      .select([
+        'branch.branch_name AS branch_name',
+        'company.company_name AS company_name',
+        "DATE_FORMAT(order.created_at, '%Y-%m') AS month",
+        'SUM(order.total) AS total_sales',
+        'SUM(order.paid_amount) AS total_collection',
+        '(SUM(order.total) - SUM(order.paid_amount)) AS unpaid_Amount',
+      ])
+      .groupBy('branch.branch_id, company.company_id, month')
+      .orderBy('company.company_name', 'ASC')
+      .addOrderBy('branch.branch_name', 'ASC')
+      .addOrderBy('month', 'ASC');
+
+    if (company_id) {
+      queryBuilder.andWhere('company.company_id = :company_id', { company_id });
+    }
+
+    if (branch_id) {
+      queryBuilder.andWhere('branch.branch_id = :branch_id', { branch_id });
+    }
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder.andWhere(
+        'order.created_at BETWEEN :start_date AND :end_date',
+        {
+          start_date: formattedStartDate,
+          end_date: formattedEndDate,
+        },
+      );
+    }
+
+    const report = await queryBuilder.getRawMany();
+
+    return {
+      statusCode: 200,
+      message: 'Sales report fetched successfully',
+      data: report,
+    };
   }
 }
