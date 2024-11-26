@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateNoteDto {
   @IsNotEmpty()
@@ -11,5 +11,7 @@ export class CreateNoteDto {
   @IsNotEmpty()
   text_note: string;
 
-  image: string;
+  @IsArray()
+  @IsString({ each: true })
+  images: string[] = [];
 }

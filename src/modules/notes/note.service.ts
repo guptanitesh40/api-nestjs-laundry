@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Note } from 'src/entities/note.entity';
-import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
+import { appendBaseUrlToArrayImages } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
@@ -16,14 +16,14 @@ export class NotesService {
 
   async create(
     createNoteDto: CreateNoteDto,
-    imagePath?: string,
+    imagePaths?: string[],
   ): Promise<Response> {
     const note = this.notesRepository.create({
       ...createNoteDto,
-      image: imagePath,
+      images: imagePaths,
     });
     const result = await this.notesRepository.save(note);
-    const Note = appendBaseUrlToImages([result])[0];
+    const Note = appendBaseUrlToArrayImages([result])[0];
     return {
       statusCode: 201,
       message: 'note added successfully',
@@ -35,7 +35,7 @@ export class NotesService {
     const note = await this.notesRepository.find({
       where: { deleted_at: null },
     });
-    const Note = appendBaseUrlToImages(note);
+    const Note = appendBaseUrlToArrayImages(note);
 
     return {
       statusCode: 200,
@@ -55,7 +55,7 @@ export class NotesService {
         data: null,
       };
     }
-    const Note = appendBaseUrlToImages([note])[0];
+    const Note = appendBaseUrlToArrayImages([note])[0];
 
     return {
       statusCode: 200,
@@ -67,7 +67,7 @@ export class NotesService {
   async update(
     note_id: number,
     updateNoteDto: UpdateNoteDto,
-    imagePath?: string,
+    imagePath?: string[],
   ): Promise<Response> {
     const note = await this.notesRepository.findOne({
       where: { note_id, deleted_at: null },
@@ -83,7 +83,7 @@ export class NotesService {
       ...updateNoteDto,
     };
     if (imagePath) {
-      updatedata.image = imagePath;
+      updatedata.images = imagePath;
     }
 
     await this.notesRepository.update(note_id, updatedata);
@@ -91,7 +91,7 @@ export class NotesService {
       where: { note_id, deleted_at: null },
     });
 
-    const Note = appendBaseUrlToImages([update_note])[0];
+    const Note = appendBaseUrlToArrayImages([update_note])[0];
 
     return {
       statusCode: 200,
@@ -112,7 +112,7 @@ export class NotesService {
       };
     }
 
-    const Note = appendBaseUrlToImages([note])[0];
+    const Note = appendBaseUrlToArrayImages([note])[0];
     note.deleted_at = new Date();
     await this.notesRepository.save(note);
 

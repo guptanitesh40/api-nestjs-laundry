@@ -10,6 +10,18 @@ export function appendBaseUrlToImages<T extends { image?: string }>(
   });
 }
 
+export function appendBaseUrlToArrayImages<T extends { images?: string[] }>(
+  items: T[],
+): T[] {
+  const baseUrl = process.env.BASE_URL || '';
+  return items.map((item) => {
+    if (item.images && item.images.length > 0) {
+      item.images = item.images.map((image) => `${baseUrl}/${image}`);
+    }
+    return item;
+  });
+}
+
 export function appendBaseUrlToLogo<T extends { logo: string }>(
   items: T[],
 ): T[] {

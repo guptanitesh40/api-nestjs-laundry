@@ -396,7 +396,7 @@ export class OrderService {
         'user.last_name',
         'user.mobile_number',
         'user.email',
-        'items.item_id',
+        'items',
         'category.category_id',
         'category.name',
         'product.product_id',

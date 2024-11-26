@@ -8,12 +8,12 @@ import {
   Param,
   Post,
   Put,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { FilePath } from 'src/constants/FilePath';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
@@ -32,17 +32,24 @@ export class NotesController {
   constructor(private readonly notesService: NotesService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('image', fileUpload(FilePath.NOTE_IMAGES)))
+  @UseInterceptors(
+    FilesInterceptor('images', 10, fileUpload(FilePath.NOTE_IMAGES)),
+  )
   async create(
     @Body() createNoteDto: CreateNoteDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Response> {
-    if (!file) {
-      throw new HttpException('File nust be provide ', HttpStatus.BAD_REQUEST);
+    if (!files || files.length === 0) {
+      throw new HttpException(
+        'At least one file must be provided',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    const imagePath = FilePath.NOTE_IMAGES + '/' + file.filename;
-    return await this.notesService.create(createNoteDto, imagePath);
+    const imagePaths = files.map(
+      (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
+    );
+    return await this.notesService.create(createNoteDto, imagePaths);
   }
 
   @Get()
@@ -56,14 +63,18 @@ export class NotesController {
   }
 
   @Put(':id')
-  @UseInterceptors(FileInterceptor('image', fileUpload(FilePath.NOTE_IMAGES)))
+  @UseInterceptors(
+    FilesInterceptor('images', 10, fileUpload(FilePath.NOTE_IMAGES)),
+  )
   async update(
     @Param('id') id: number,
     @Body() updateNoteDto: UpdateNoteDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Response> {
-    const imagePath = file ? FilePath.NOTE_IMAGES + '/' + file.filename : null;
-    return await this.notesService.update(id, updateNoteDto, imagePath);
+    const imagePaths = files.map(
+      (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
+    );
+    return await this.notesService.update(id, updateNoteDto, imagePaths);
   }
 
   @Delete(':id')
