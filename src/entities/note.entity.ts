@@ -32,8 +32,8 @@ export class Note extends BaseEntity {
   @Column({ type: 'text' })
   text_note: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'simple-array', nullable: true })
   @IsOptional()
-  @IsString()
-  image?: string;
+  @IsString({ each: true })
+  images?: string[];
 }
