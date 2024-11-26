@@ -3,8 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
-  HttpStatus,
   Param,
   Post,
   Put,
@@ -39,13 +37,6 @@ export class NotesController {
     @Body() createNoteDto: CreateNoteDto,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Response> {
-    if (!files || files.length === 0) {
-      throw new HttpException(
-        'At least one file must be provided',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
     const imagePaths = files.map(
       (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
     );

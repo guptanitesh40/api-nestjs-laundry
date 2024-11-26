@@ -23,6 +23,7 @@ import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import {
+  appendBaseUrlToArrayImages,
   appendBaseUrlToImages,
   appendBaseUrlToNestedImages,
 } from 'src/utils/image-path.helper';
@@ -421,12 +422,12 @@ export class OrderService {
       orders.pickup_boy_id,
       orders.workshop_id,
     );
-    const order = appendBaseUrlToNestedImages(orders);
-
+    const order = appendBaseUrlToNestedImages({ ...orders });
+    const notes = appendBaseUrlToArrayImages(orders.notes);
     return {
       statusCode: 200,
       message: 'Order retrieved successfully',
-      data: { orders: order },
+      data: { orders: order, notes },
     };
   }
 
