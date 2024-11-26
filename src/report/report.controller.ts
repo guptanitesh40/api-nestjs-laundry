@@ -1,6 +1,7 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/decorator/roles.decorator';
+import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from 'src/modules/auth/guard/role.guard';
 import { ReportService } from './report.service';
@@ -112,5 +113,18 @@ export class ReportController {
       startDate,
       endDate,
     );
+  }
+
+  @Get('sales-report')
+  async getSalesReport(
+    @Query()
+    filterDto: {
+      company_id?: number;
+      branch_id?: number;
+      start_date?: string;
+      end_date?: string;
+    },
+  ): Promise<Response> {
+    return await this.reportService.getSalesReport(filterDto);
   }
 }
