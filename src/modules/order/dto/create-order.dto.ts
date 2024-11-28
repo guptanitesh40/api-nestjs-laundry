@@ -81,6 +81,10 @@ export class CreateOrderDto {
   @IsOptional()
   @IsNumber()
   branch_id?: number;
+
+  @IsOptional()
+  @IsNumber()
+  workshop_id?: number;
 }
 
 export class OrderItemDto {

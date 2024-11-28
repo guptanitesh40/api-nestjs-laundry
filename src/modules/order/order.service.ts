@@ -23,7 +23,6 @@ import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import {
-  appendBaseUrlToArrayImages,
   appendBaseUrlToImages,
   appendBaseUrlToNestedImages,
 } from 'src/utils/image-path.helper';
@@ -38,6 +37,7 @@ import { NotificationService } from '../notification/notification.service';
 import { PriceService } from '../price/price.service';
 import { SettingService } from '../settings/setting.service';
 import { UserService } from '../user/user.service';
+import { WorkshopService } from '../workshop/workshop.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -62,6 +62,7 @@ export class OrderService {
     private readonly notificationService: NotificationService,
     private readonly settingService: SettingService,
     private readonly priceService: PriceService,
+    private readonly workshopService: WorkshopService,
     private dataSource: DataSource,
   ) {}
 
@@ -422,12 +423,12 @@ export class OrderService {
       orders.pickup_boy_id,
       orders.workshop_id,
     );
-    const order = appendBaseUrlToNestedImages({ ...orders });
-    const notes = appendBaseUrlToArrayImages(orders.notes);
+    const order = appendBaseUrlToNestedImages(orders);
+
     return {
       statusCode: 200,
       message: 'Order retrieved successfully',
-      data: { orders: order, notes },
+      data: { orders: order },
     };
   }
 
@@ -814,19 +815,60 @@ export class OrderService {
     };
   }
 
-  async pickupOrder(
+  async assignWorkshop(
     order_id: number,
-    pickup_boy_id: number,
-    comment: string,
+    workshop_id: number,
   ): Promise<Response> {
     const order = await this.orderRepository.findOne({
-      where: { order_id, pickup_boy_id },
+      where: { order_id },
     });
 
     if (!order) {
       throw new NotFoundException(`Order with id ${order_id} not found`);
     }
 
+    const workshop = await this.workshopService.findOne(workshop_id);
+
+    if (!workshop) {
+      throw new NotFoundException(`Workshop with id ${workshop_id} not found`);
+    }
+
+    order.workshop_id = workshop_id;
+    order.order_status = OrderStatus.WORKSHOP_MARKS_AS_COMPLETED;
+
+    await this.orderRepository.save(order);
+
+    return {
+      statusCode: 200,
+      message: 'Workshop assigned successfully',
+    };
+  }
+
+  async assignPickupBoy(
+    order_id: number,
+    pickup_boy_id: number,
+    comment: string,
+  ): Promise<Response> {
+    const order = await this.orderRepository.findOne({
+      where: { order_id },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${order_id} not found`);
+    }
+
+    const pickupBoy = await this.userService.findOneByRole(
+      pickup_boy_id,
+      Role.DELIVERY_BOY,
+    );
+
+    if (!pickupBoy) {
+      throw new NotFoundException(
+        `Pickup boy with id ${pickup_boy_id} not found`,
+      );
+    }
+
+    order.pickup_boy_id = pickupBoy.user_id;
     order.pickup_comment = comment;
     order.order_status = OrderStatus.ITEMS_RECEIVED_AT_BRANCH;
 
