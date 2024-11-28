@@ -16,26 +16,31 @@ export const getAdminOrderStatusLabel = (
       return AdminOrderStatus.READY_TO_PICKUP;
 
     case 2:
-      if (!workshopId) return AdminOrderStatus.PICKUP_COMPLETE;
+      return AdminOrderStatus.RECEIVED_BY_PICKUP_BOY;
 
     case 3:
-      return AdminOrderStatus.PICKUP_COMPLETE;
+      return AdminOrderStatus.ITEMS_RECEIVED_AT_BRANCH;
 
     case 4:
-      return AdminOrderStatus.WORK_IN_PROGRESS;
+      if (!workshopId) return AdminOrderStatus.ASSIGN_WORKSHOP;
 
     case 5:
-      return AdminOrderStatus.ON_THE_WAY_TO_BRANCH;
+      return AdminOrderStatus.RECEIVED_AT_WORKSHOP;
 
     case 6:
-      return AdminOrderStatus.WORK_COMPLETED;
+      return AdminOrderStatus.WORK_IN_PROGRESS;
 
     case 7:
-      return AdminOrderStatus.READY_FOR_DELIVERY;
+      return AdminOrderStatus.ON_THE_WAY_TO_BRANCH;
 
     case 8:
-      return AdminOrderStatus.DELIVERED;
+      return AdminOrderStatus.WORK_COMPLETED;
 
+    case 9:
+      return AdminOrderStatus.READY_FOR_DELIVERY;
+
+    case 10:
+      return AdminOrderStatus.DELIVERED;
     default:
       return '';
   }
@@ -70,7 +75,13 @@ export const getCustomerOrderStatusLabel = (
       return CustomerOrderStatus.IN_PROCESS;
 
     case 8:
-      return CustomerOrderStatus.DELIVERED;
+      return CustomerOrderStatus.IN_PROCESS;
+
+    case 9:
+      return CustomerOrderStatus.IN_PROCESS;
+
+    case 10:
+      return CustomerOrderStatus.READY_FOR_DELIVERY;
 
     default:
       return '';

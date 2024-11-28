@@ -13,6 +13,7 @@ import { NotificationModule } from '../notification/notification.module';
 import { PriceModule } from '../price/price.module';
 import { SettingModule } from '../settings/setting.module';
 import { UsersModule } from '../user/user.module';
+import { WorkshopModule } from '../workshop/workshop.module';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 
@@ -32,6 +33,7 @@ import { OrderService } from './order.service';
     UsersModule,
     SettingModule,
     PriceModule,
+    WorkshopModule,
     forwardRef(() => NotificationModule),
   ],
   providers: [OrderService],
