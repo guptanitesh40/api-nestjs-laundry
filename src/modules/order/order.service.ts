@@ -591,13 +591,13 @@ export class OrderService {
     };
   }
 
-  async updateOrderStatus(orderId: number, status: OrderStatus): Promise<any> {
+  async updateOrderStatus(order_id: number, status: OrderStatus): Promise<any> {
     const order = await this.orderRepository.findOne({
-      where: { order_id: orderId },
+      where: { order_id: order_id },
     });
 
     if (!order) {
-      throw new NotFoundException(`Order with id ${orderId} not found`);
+      throw new NotFoundException(`Order with id ${order_id} not found`);
     }
 
     order.order_status = status;
@@ -608,7 +608,7 @@ export class OrderService {
     return {
       statusCode: 200,
       message: 'Order status updated successfully',
-      orderId: orderId,
+      orderId: order_id,
       orderStatus: status,
       adminStatus: adminStatus,
     };
