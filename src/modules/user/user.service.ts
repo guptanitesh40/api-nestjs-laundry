@@ -20,7 +20,7 @@ import { SignupDto } from 'src/modules/auth/dto/signup.dto';
 import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
 import twilio from 'twilio';
 import { In, MoreThan, Repository } from 'typeorm';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { UserFilterDto } from '../dto/users-filter.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -431,9 +431,18 @@ export class UserService {
     };
   }
 
-  async getAllUsers(paginationQueryDto: PaginationQueryDto): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order } =
-      paginationQueryDto;
+  async getAllUsers(userFilterDto: UserFilterDto): Promise<Response> {
+    const {
+      per_page,
+      page_number,
+      search,
+      sort_by,
+      order,
+      role,
+      gender,
+      branch_id,
+      company_id,
+    } = userFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
@@ -458,6 +467,24 @@ export class UserService {
           ` CONCAT(user.first_name,' ',user.last_name) LIKE :search)`,
         { search: `%${search}%` },
       );
+    }
+
+    if (role) {
+      userQuery.andWhere('user.role = :role', { role });
+    }
+
+    if (gender) {
+      userQuery.andWhere('user.gender = :gender', { gender });
+    }
+
+    if (branch_id) {
+      userQuery.andWhere('branchMapping.branch_id = :branch_id', { branch_id });
+    }
+
+    if (company_id) {
+      userQuery.andWhere('companyMapping.company_id = :company_id', {
+        company_id,
+      });
     }
 
     let sortColumn = 'user.created_at';

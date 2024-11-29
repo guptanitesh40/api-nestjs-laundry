@@ -10,7 +10,7 @@ import { Coupon } from 'src/entities/coupon.entity';
 import { OrderDetail } from 'src/entities/order.entity';
 import { DiscountType } from 'src/enum/coupon_type.enum';
 import { Repository } from 'typeorm';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { CouponFiltrerDto } from '../dto/coupon-filter.dto';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { ApplyCouponDto } from './dto/create.verify-coupon.dto';
 import { UpdateCouponDto } from './dto/update-coupon.dto';
@@ -43,9 +43,16 @@ export class CouponService {
     }
   }
 
-  async findAll(paginationQueryDto: PaginationQueryDto): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order } =
-      paginationQueryDto;
+  async findAll(couponFiltrerDto: CouponFiltrerDto): Promise<Response> {
+    const {
+      per_page,
+      page_number,
+      search,
+      sort_by,
+      order,
+      coupon_type,
+      discount_type,
+    } = couponFiltrerDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
@@ -73,6 +80,18 @@ export class CouponService {
           'coupon.end_time LIKE :search)',
         { search: `%${search}%` },
       );
+    }
+
+    if (coupon_type) {
+      queryBuilder.andWhere('coupon.coupon_type = :coupon_type', {
+        coupon_type,
+      });
+    }
+
+    if (discount_type) {
+      queryBuilder.andWhere('coupon.discount_type = :discount_type', {
+        discount_type,
+      });
     }
 
     let sortColumn = 'coupon.created_at';

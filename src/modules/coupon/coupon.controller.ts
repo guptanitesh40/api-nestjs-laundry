@@ -14,7 +14,7 @@ import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from '../auth/guard/role.guard';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { CouponFiltrerDto } from '../dto/coupon-filter.dto';
 import { CouponService } from './coupon.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { ApplyCouponDto } from './dto/create.verify-coupon.dto';
@@ -34,9 +34,9 @@ export class CouponController {
 
   @Get('admin/coupon')
   async findAll(
-    @Query() paginationQueryDto: PaginationQueryDto,
+    @Query() couponFiltrerDto: CouponFiltrerDto,
   ): Promise<Response> {
-    return this.couponService.findAll(paginationQueryDto);
+    return this.couponService.findAll(couponFiltrerDto);
   }
 
   @Post('coupon/apply')

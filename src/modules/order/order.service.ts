@@ -32,6 +32,7 @@ import {
 } from 'src/utils/order-status.helper';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CouponService } from '../coupon/coupon.service';
+import { OrderFilterDto } from '../dto/orders-filter.dto';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { NotificationService } from '../notification/notification.service';
 import { PriceService } from '../price/price.service';
@@ -286,8 +287,21 @@ export class OrderService {
     };
   }
 
-  async findAll(paginationQuery: PaginationQueryDto): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order } = paginationQuery;
+  async findAll(orderFilterDto: OrderFilterDto): Promise<Response> {
+    const {
+      per_page,
+      page_number,
+      search,
+      sort_by,
+      order,
+      orderstatus,
+      customer_id,
+      branch_id,
+      pickup_boy_id,
+      delivery_boy_id,
+      payment_type,
+      payment_status,
+    } = orderFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
@@ -336,6 +350,38 @@ export class OrderService {
       );
     }
 
+    if (orderstatus) {
+      queryBuilder.andWhere('order.order_status = :orderstatus', {
+        orderstatus,
+      });
+    }
+    if (customer_id) {
+      queryBuilder.andWhere('order.user_id = :customer_id', { customer_id });
+    }
+    if (branch_id) {
+      queryBuilder.andWhere('order.branch_id = :branch_id', { branch_id });
+    }
+    if (pickup_boy_id) {
+      queryBuilder.andWhere('order.pickup_boy_id = :pickup_boy_id', {
+        pickup_boy_id,
+      });
+    }
+    if (delivery_boy_id) {
+      queryBuilder.andWhere('order.delivery_boy_id = :delivery_boy_id', {
+        delivery_boy_id,
+      });
+    }
+    if (payment_type) {
+      queryBuilder.andWhere('order.payment_type = :payment_type', {
+        payment_type,
+      });
+    }
+    if (payment_status) {
+      queryBuilder.andWhere('order.payment_status = :payment_status', {
+        payment_status,
+      });
+    }
+
     let sortColumn = 'order.created_at';
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 
@@ -354,6 +400,7 @@ export class OrderService {
     }
 
     queryBuilder.orderBy(sortColumn, sortOrder);
+
     const [orders, total]: any = await queryBuilder.getManyAndCount();
 
     orders.map((order) => {
@@ -545,7 +592,7 @@ export class OrderService {
     };
   }
 
-  async updateOrderStatus(order_id: number, status: number): Promise<Response> {
+  async updateOrderStatus(order_id: number, status: OrderStatus): Promise<any> {
     const order = await this.orderRepository.findOne({
       where: { order_id: order_id },
     });
@@ -557,9 +604,14 @@ export class OrderService {
     order.order_status = status;
     await this.orderRepository.save(order);
 
+    const adminStatus = getAdminOrderStatusLabel(status);
+
     return {
       statusCode: 200,
       message: 'Order status updated successfully',
+      orderId: order_id,
+      orderStatus: status,
+      adminStatus: adminStatus,
     };
   }
 

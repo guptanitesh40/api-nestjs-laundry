@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Branch } from 'src/entities/branch.entity';
 import { Repository } from 'typeorm';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { BranchFilterDto } from '../dto/branch-filter.dto';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-brach.dto';
 
@@ -25,9 +25,16 @@ export class BranchService {
     };
   }
 
-  async findAll(paginationQueryDto: PaginationQueryDto): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order } =
-      paginationQueryDto;
+  async findAll(branchFilterDto: BranchFilterDto): Promise<Response> {
+    const {
+      per_page,
+      page_number,
+      search,
+      sort_by,
+      order,
+      company_name,
+      branch_manager,
+    } = branchFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
@@ -49,10 +56,31 @@ export class BranchService {
 
     if (search) {
       queryBuilder.andWhere(
-        '(branch.branch_name LIKE :search OR branch.branch_address LIKE :search OR user.first_name LIKE :search OR user.last_name LIKE  :search OR branch.branch_email LIKE :search OR branch.branch_registration_number LIKE :search OR company.company_name LIKE :search)',
+        `(branch.branch_name LIKE :search 
+            OR branch.branch_address LIKE :search 
+            OR user.first_name LIKE :search 
+            OR user.last_name LIKE :search 
+            OR branch.branch_email LIKE :search 
+            OR branch.branch_registration_number LIKE :search 
+            OR company.company_name LIKE :search 
+            OR CONCAT(user.first_name, ' ', user.last_name) LIKE :search)`,
         { search: `%${search}%` },
       );
     }
+
+    if (company_name) {
+      queryBuilder.andWhere('company.company_name = :company_name', {
+        company_name,
+      });
+    }
+
+    if (branch_manager) {
+      queryBuilder.andWhere(
+        `CONCAT(user.first_name, ' ', user.last_name) = :branch_manager`,
+        { branch_manager },
+      );
+    }
+
     let sortColumn = 'branch.created_at';
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 

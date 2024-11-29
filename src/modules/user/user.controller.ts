@@ -28,7 +28,7 @@ import { OtpType } from 'src/enum/otp.enum';
 import { Role } from 'src/enum/role.enum';
 import { fileUpload } from 'src/multer/image-upload';
 import { RolesGuard } from '../auth/guard/role.guard';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { UserFilterDto } from '../dto/users-filter.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -195,10 +195,8 @@ export class UserController {
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN)
-  async getAllUsers(
-    @Query() paginationQueryDto: PaginationQueryDto,
-  ): Promise<Response> {
-    return await this.userService.getAllUsers(paginationQueryDto);
+  async getAllUsers(@Query() userFilterDto: UserFilterDto): Promise<Response> {
+    return await this.userService.getAllUsers(userFilterDto);
   }
 
   @Delete(':id')
