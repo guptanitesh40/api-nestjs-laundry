@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Branch } from 'src/entities/branch.entity';
 import { Repository } from 'typeorm';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { BranchFilterDto } from '../dto/branch-filter.dto';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-brach.dto';
 
@@ -25,7 +25,7 @@ export class BranchService {
     };
   }
 
-  async findAll(paginationQueryDto: PaginationQueryDto): Promise<Response> {
+  async findAll(branchFilterDto: BranchFilterDto): Promise<Response> {
     const {
       per_page,
       page_number,
@@ -34,7 +34,7 @@ export class BranchService {
       order,
       company_name,
       branch_manager,
-    } = paginationQueryDto;
+    } = branchFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;

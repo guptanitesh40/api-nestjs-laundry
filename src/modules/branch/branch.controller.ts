@@ -14,7 +14,7 @@ import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from '../auth/guard/role.guard';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { BranchFilterDto } from '../dto/branch-filter.dto';
 import { BranchService } from './branch.service';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-brach.dto';
@@ -32,8 +32,8 @@ export class BranchController {
   }
 
   @Get()
-  async findAll(@Query() paginationQueryDto: PaginationQueryDto) {
-    return this.branchService.findAll(paginationQueryDto);
+  async findAll(@Query() branchFilterDto: BranchFilterDto) {
+    return this.branchService.findAll(branchFilterDto);
   }
 
   @Get(':id')

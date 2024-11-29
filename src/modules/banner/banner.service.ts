@@ -4,7 +4,7 @@ import { Response } from 'src/dto/response.dto';
 import { Banner } from 'src/entities/banner.entity';
 import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { BannerFilterDto } from '../dto/banner-filter.dto';
 import { CreateBannerDto } from './dto/create-banner.dto';
 import { UpdateBannerDto } from './dto/update-banner.dto';
 
@@ -47,9 +47,9 @@ export class BannerService {
     };
   }
 
-  async findAll(paginationQueryDto: PaginationQueryDto): Promise<Response> {
+  async findAll(bannerFilterDto: BannerFilterDto): Promise<Response> {
     const { per_page, page_number, search, sort_by, order, banner_type } =
-      paginationQueryDto;
+      bannerFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;

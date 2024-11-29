@@ -20,7 +20,7 @@ import { SignupDto } from 'src/modules/auth/dto/signup.dto';
 import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
 import twilio from 'twilio';
 import { In, MoreThan, Repository } from 'typeorm';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { UserFilterDto } from '../dto/users-filter.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -431,7 +431,7 @@ export class UserService {
     };
   }
 
-  async getAllUsers(paginationQueryDto: PaginationQueryDto): Promise<Response> {
+  async getAllUsers(userFilterDto: UserFilterDto): Promise<Response> {
     const {
       per_page,
       page_number,
@@ -442,7 +442,7 @@ export class UserService {
       gender,
       branch_id,
       company_id,
-    } = paginationQueryDto;
+    } = userFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;

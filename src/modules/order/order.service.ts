@@ -32,6 +32,7 @@ import {
 } from 'src/utils/order-status.helper';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CouponService } from '../coupon/coupon.service';
+import { OrderFilterDto } from '../dto/orders-filter.dto';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { NotificationService } from '../notification/notification.service';
 import { PriceService } from '../price/price.service';
@@ -286,7 +287,7 @@ export class OrderService {
     };
   }
 
-  async findAll(paginationQuery: PaginationQueryDto): Promise<Response> {
+  async findAll(orderFilterDto: OrderFilterDto): Promise<Response> {
     const {
       per_page,
       page_number,
@@ -300,7 +301,7 @@ export class OrderService {
       delivery_boy_id,
       payment_type,
       payment_status,
-    } = paginationQuery;
+    } = orderFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;

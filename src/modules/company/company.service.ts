@@ -4,7 +4,7 @@ import { Response } from 'src/dto/response.dto';
 import { Company } from 'src/entities/company.entity';
 import { appendBaseUrlToLogo } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { CompanyFilterDto } from '../dto/company-filter.dto';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 
@@ -37,9 +37,9 @@ export class CompanyService {
     };
   }
 
-  async findAll(paginationQueryDto: PaginationQueryDto): Promise<Response> {
+  async findAll(companyFilterDto: CompanyFilterDto): Promise<Response> {
     const { per_page, page_number, search, sort_by, order, company_ownedby } =
-      paginationQueryDto;
+      companyFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
