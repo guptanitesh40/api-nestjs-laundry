@@ -38,7 +38,7 @@ export class CompanyService {
   }
 
   async findAll(paginationQueryDto: PaginationQueryDto): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order } =
+    const { per_page, page_number, search, sort_by, order, company_ownedby } =
       paginationQueryDto;
 
     const pageNumber = page_number ?? 1;
@@ -57,6 +57,13 @@ export class CompanyService {
         { search: `%${search}%` },
       );
     }
+
+    if (company_ownedby) {
+      queryBuilder.andWhere('company.company_ownedby = :company_ownedby', {
+        company_ownedby,
+      });
+    }
+
     let sortColumn = 'company.created_at';
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 

@@ -114,13 +114,14 @@ export class OrderController {
     return this.orderService.updateOrder(id, updateOrderDto);
   }
 
-  @Patch('admin/orders/:order_id/update-status/')
+  @Patch('admin/orders/:order_id/update-status')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async updateOrderStatus(
-    @Param('order_id', ParseIntPipe) order_id: number,
-    @Body('status') status: number,
-  ): Promise<Response> {
-    return this.orderService.updateOrderStatus(order_id, status);
+    @Param('order_id') orderId: number,
+    @Body() updateOrderStatusDto: UpdateOrderDto,
+  ): Promise<any> {
+    const { order_status } = updateOrderStatusDto;
+    return this.orderService.updateOrderStatus(orderId, order_status);
   }
 
   @Patch('admin/orders/:order_id/update-payment-status')

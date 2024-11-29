@@ -48,7 +48,7 @@ export class BannerService {
   }
 
   async findAll(paginationQueryDto: PaginationQueryDto): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order } =
+    const { per_page, page_number, search, sort_by, order, banner_type } =
       paginationQueryDto;
 
     const pageNumber = page_number ?? 1;
@@ -65,6 +65,12 @@ export class BannerService {
         '(banner.title LIKE :search OR banner.description LIKE :search OR banner.image LIKE :search)',
         { search: `%${search}%` },
       );
+    }
+
+    if (banner_type) {
+      queryBuilder.andWhere('banner.banner_type = :banner_type', {
+        banner_type,
+      });
     }
 
     let sortColumn = 'banner.created_at';

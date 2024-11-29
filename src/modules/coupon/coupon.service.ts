@@ -44,8 +44,15 @@ export class CouponService {
   }
 
   async findAll(paginationQueryDto: PaginationQueryDto): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order } =
-      paginationQueryDto;
+    const {
+      per_page,
+      page_number,
+      search,
+      sort_by,
+      order,
+      coupon_type,
+      discount_type,
+    } = paginationQueryDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
@@ -73,6 +80,18 @@ export class CouponService {
           'coupon.end_time LIKE :search)',
         { search: `%${search}%` },
       );
+    }
+
+    if (coupon_type) {
+      queryBuilder.andWhere('coupon.coupon_type = :coupon_type', {
+        coupon_type,
+      });
+    }
+
+    if (discount_type) {
+      queryBuilder.andWhere('coupon.discount_type = :discount_type', {
+        discount_type,
+      });
     }
 
     let sortColumn = 'coupon.created_at';
