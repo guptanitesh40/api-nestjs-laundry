@@ -469,21 +469,21 @@ export class UserService {
       );
     }
 
-    if (role && role.length > 0) {
+    if (role) {
       userQuery.andWhere('user.role IN (:...roles)', { roles: role });
     }
 
-    if (gender && gender.length > 0) {
+    if (gender) {
       userQuery.andWhere('user.gender IN (:...genders)', { genders: gender });
     }
 
-    if (branch_id && branch_id.length > 0) {
+    if (branch_id) {
       userQuery.andWhere('branchMapping.branch_id IN (:...branchIds)', {
         branchIds: branch_id,
       });
     }
 
-    if (company_id && company_id.length > 0) {
+    if (company_id) {
       userQuery.andWhere('companyMapping.company_id IN (:...companyIds)', {
         companyIds: company_id,
       });

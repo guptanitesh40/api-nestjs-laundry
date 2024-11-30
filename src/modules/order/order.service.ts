@@ -350,7 +350,7 @@ export class OrderService {
       );
     }
 
-    if (orderstatus && orderstatus.length > 0) {
+    if (orderstatus) {
       queryBuilder.andWhere('order.order_status IN (:...ordersstatus)', {
         ordersstatus: orderstatus,
       });
