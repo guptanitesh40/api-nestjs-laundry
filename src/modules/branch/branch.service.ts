@@ -69,15 +69,15 @@ export class BranchService {
     }
 
     if (company_name) {
-      queryBuilder.andWhere('company.company_name = :company_name', {
-        company_name,
+      queryBuilder.andWhere('company.company_name In (:...companyName)', {
+        companyName: company_name,
       });
     }
 
     if (branch_manager) {
       queryBuilder.andWhere(
-        `CONCAT(user.first_name, ' ', user.last_name) = :branch_manager`,
-        { branch_manager },
+        `CONCAT(user.first_name, ' ', user.last_name) In (:...branchManager)`,
+        { branchManager: branch_manager },
       );
     }
 

@@ -83,14 +83,14 @@ export class CouponService {
     }
 
     if (coupon_type) {
-      queryBuilder.andWhere('coupon.coupon_type = :coupon_type', {
-        coupon_type,
+      queryBuilder.andWhere('coupon.coupon_type In (:...couponType)', {
+        couponType: coupon_type,
       });
     }
 
     if (discount_type) {
-      queryBuilder.andWhere('coupon.discount_type = :discount_type', {
-        discount_type,
+      queryBuilder.andWhere('coupon.discount_type In (:...discountType)', {
+        discountType: discount_type,
       });
     }
 

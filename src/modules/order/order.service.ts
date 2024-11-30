@@ -351,34 +351,44 @@ export class OrderService {
     }
 
     if (orderstatus) {
-      queryBuilder.andWhere('order.order_status = :orderstatus', {
-        orderstatus,
+      queryBuilder.andWhere('order.order_status IN (:...ordersstatus)', {
+        ordersstatus: orderstatus,
       });
     }
+
     if (customer_id) {
-      queryBuilder.andWhere('order.user_id = :customer_id', { customer_id });
+      queryBuilder.andWhere('order.user_id IN (:...customerId)', {
+        customerId: customer_id,
+      });
     }
+
     if (branch_id) {
-      queryBuilder.andWhere('order.branch_id = :branch_id', { branch_id });
+      queryBuilder.andWhere('order.branch_id In (:...branchId)', {
+        branchId: branch_id,
+      });
     }
+
     if (pickup_boy_id) {
-      queryBuilder.andWhere('order.pickup_boy_id = :pickup_boy_id', {
-        pickup_boy_id,
+      queryBuilder.andWhere('order.pickup_boy_id In (:...pickupBoyId)', {
+        pickupBoyId: pickup_boy_id,
       });
     }
+
     if (delivery_boy_id) {
-      queryBuilder.andWhere('order.delivery_boy_id = :delivery_boy_id', {
-        delivery_boy_id,
+      queryBuilder.andWhere('order.delivery_boy_id In(:...deliveryBoyId)', {
+        deliveryBoyId: delivery_boy_id,
       });
     }
+
     if (payment_type) {
-      queryBuilder.andWhere('order.payment_type = :payment_type', {
-        payment_type,
+      queryBuilder.andWhere('order.payment_type In(:...paymentType)', {
+        paymentType: payment_type,
       });
     }
+
     if (payment_status) {
-      queryBuilder.andWhere('order.payment_status = :payment_status', {
-        payment_status,
+      queryBuilder.andWhere('order.payment_status In(:...paymentStatus)', {
+        paymentStatus: payment_status,
       });
     }
 

@@ -68,8 +68,8 @@ export class BannerService {
     }
 
     if (banner_type) {
-      queryBuilder.andWhere('banner.banner_type = :banner_type', {
-        banner_type,
+      queryBuilder.andWhere('banner.banner_type In (:...bannerType)', {
+        bannerType: banner_type,
       });
     }
 

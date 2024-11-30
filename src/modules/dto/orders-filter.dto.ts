@@ -1,40 +1,25 @@
-import { Type } from 'class-transformer';
-import { IsNumber, IsOptional } from 'class-validator';
+import { applyNumberArrayValidation } from 'src/utils/validation-helper';
 import { PaginationQueryDto } from './pagination-query.dto';
 
 export class OrderFilterDto extends PaginationQueryDto {
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  orderstatus?: number;
+  @applyNumberArrayValidation()
+  orderstatus?: number[];
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  customer_id?: number;
+  @applyNumberArrayValidation()
+  customer_id?: number[];
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  branch_id?: number;
+  @applyNumberArrayValidation()
+  branch_id?: number[];
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  pickup_boy_id?: number;
+  @applyNumberArrayValidation()
+  pickup_boy_id?: number[];
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  delivery_boy_id?: number;
+  @applyNumberArrayValidation()
+  delivery_boy_id?: number[];
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  payment_type?: number;
+  @applyNumberArrayValidation()
+  payment_type?: number[];
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  payment_status?: number;
+  @applyNumberArrayValidation()
+  payment_status?: number[];
 }
