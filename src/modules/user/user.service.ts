@@ -463,27 +463,29 @@ export class UserService {
         '(user.first_name LIKE :search OR ' +
           'user.last_name LIKE :search OR ' +
           'user.email LIKE :search OR ' +
-          'user.mobile_number LIKE :search OR' +
-          ` CONCAT(user.first_name,' ',user.last_name) LIKE :search)`,
+          'user.mobile_number LIKE :search OR ' +
+          `CONCAT(user.first_name,' ',user.last_name) LIKE :search)`,
         { search: `%${search}%` },
       );
     }
 
-    if (role) {
-      userQuery.andWhere('user.role = :role', { role });
+    if (role && role.length > 0) {
+      userQuery.andWhere('user.role IN (:...roles)', { roles: role });
     }
 
-    if (gender) {
-      userQuery.andWhere('user.gender = :gender', { gender });
+    if (gender && gender.length > 0) {
+      userQuery.andWhere('user.gender IN (:...genders)', { genders: gender });
     }
 
-    if (branch_id) {
-      userQuery.andWhere('branchMapping.branch_id = :branch_id', { branch_id });
+    if (branch_id && branch_id.length > 0) {
+      userQuery.andWhere('branchMapping.branch_id IN (:...branchIds)', {
+        branchIds: branch_id,
+      });
     }
 
-    if (company_id) {
-      userQuery.andWhere('companyMapping.company_id = :company_id', {
-        company_id,
+    if (company_id && company_id.length > 0) {
+      userQuery.andWhere('companyMapping.company_id IN (:...companyIds)', {
+        companyIds: company_id,
       });
     }
 

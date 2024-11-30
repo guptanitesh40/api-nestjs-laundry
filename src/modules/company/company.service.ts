@@ -59,8 +59,8 @@ export class CompanyService {
     }
 
     if (company_ownedby) {
-      queryBuilder.andWhere('company.company_ownedby = :company_ownedby', {
-        company_ownedby,
+      queryBuilder.andWhere('company.company_ownedby In (:...companyOwnedby)', {
+        companyOwnedby: company_ownedby,
       });
     }
 

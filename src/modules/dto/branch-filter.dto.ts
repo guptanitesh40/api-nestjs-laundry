@@ -1,15 +1,10 @@
-import { Type } from 'class-transformer';
-import { IsNumber, IsOptional } from 'class-validator';
+import { applyNumberArrayValidation } from 'src/utils/validation-helper';
 import { PaginationQueryDto } from './pagination-query.dto';
 
 export class BranchFilterDto extends PaginationQueryDto {
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  company_name?: number;
+  @applyNumberArrayValidation(true)
+  company_name?: string[];
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  branch_manager?: number;
+  @applyNumberArrayValidation(true)
+  branch_manager?: string[];
 }
