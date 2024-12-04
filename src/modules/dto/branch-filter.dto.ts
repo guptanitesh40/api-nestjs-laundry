@@ -2,9 +2,9 @@ import { applyNumberArrayValidation } from 'src/utils/validation-helper';
 import { PaginationQueryDto } from './pagination-query.dto';
 
 export class BranchFilterDto extends PaginationQueryDto {
-  @applyNumberArrayValidation(true)
-  company_name?: string[];
+  @applyNumberArrayValidation()
+  company_id?: number[];
 
-  @applyNumberArrayValidation(true)
-  branch_manager?: string[];
+  @applyNumberArrayValidation()
+  branch_manager_id?: number[];
 }

@@ -6,5 +6,5 @@ export class CouponFiltrerDto extends PaginationQueryDto {
   coupon_type?: number[];
 
   @applyNumberArrayValidation()
-  discount_type?: number[];
+  discount_type?: number;
 }
