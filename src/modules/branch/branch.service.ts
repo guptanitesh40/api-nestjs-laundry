@@ -32,8 +32,8 @@ export class BranchService {
       search,
       sort_by,
       order,
-      company_name,
-      branch_manager,
+      company_id,
+      branch_manager_id,
     } = branchFilterDto;
 
     const pageNumber = page_number ?? 1;
@@ -50,6 +50,7 @@ export class BranchService {
         'company.company_name',
         'user.first_name',
         'user.last_name',
+        'user.user_id',
       ])
       .take(perPage)
       .skip(skip);
@@ -68,17 +69,16 @@ export class BranchService {
       );
     }
 
-    if (company_name) {
-      queryBuilder.andWhere('company.company_name In (:...companyName)', {
-        companyName: company_name,
+    if (company_id) {
+      queryBuilder.andWhere('company.company_id In (:...companyIds)', {
+        companyIds: company_id,
       });
     }
 
-    if (branch_manager) {
-      queryBuilder.andWhere(
-        `CONCAT(user.first_name, ' ', user.last_name) In (:...branchManager)`,
-        { branchManager: branch_manager },
-      );
+    if (branch_manager_id) {
+      queryBuilder.andWhere('user.user_id In (:...userIds)', {
+        userIds: branch_manager_id,
+      });
     }
 
     let sortColumn = 'branch.created_at';

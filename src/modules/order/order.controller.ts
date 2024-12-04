@@ -49,6 +49,14 @@ export class OrderController {
     );
   }
 
+  @Get('admin/orders/workshop')
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  async getAllWorkshopOrders(
+    @Query() paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
+    return this.orderService.getAllAssignWorkshopOrders(paginationQueryDto);
+  }
+
   @Post('orders')
   @Roles(Role.CUSTOMER)
   async create(@Body() createOrderDto: CreateOrderDto): Promise<Response> {

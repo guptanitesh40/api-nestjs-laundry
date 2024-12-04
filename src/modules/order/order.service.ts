@@ -960,6 +960,76 @@ export class OrderService {
     };
   }
 
+  async getAllAssignWorkshopOrders(
+    paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
+    const { per_page, page_number, search, sort_by, order } =
+      paginationQueryDto;
+
+    const pageNumber = page_number ?? 1;
+    const perPage = per_page ?? 10;
+    const skip = (pageNumber - 1) * perPage;
+
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.items', 'items')
+      .innerJoinAndSelect('order.workshop', 'workshop')
+      .innerJoinAndSelect('workshop.workshopManagerMappings', 'mapping')
+      .leftJoinAndSelect('mapping.user', 'user')
+      .select([
+        'order',
+        'workshop',
+        'items',
+        'mapping.workshop_manager_mapping_id',
+        'user.first_name',
+        'user.last_name',
+      ])
+      .take(perPage)
+      .skip(skip);
+
+    if (search) {
+      queryBuilder.where(
+        'order.order_id LIKE :search OR workshop.workshop_name LIKE :search',
+        { search: `%${search}%` },
+      );
+    }
+
+    let sortColumn = 'order.created_at';
+    let sortOrder: 'ASC' | 'DESC' = 'DESC';
+
+    if (sort_by) {
+      const sortableColumns: { [key: string]: string } = {
+        first_name: 'user.first_name',
+        last_name: 'user.last_name',
+        email: 'user.email',
+        mobile_number: 'user.mobile_number',
+        workshop_name: 'workshop.workshop_name',
+        workshop_id: 'workshop.workshop_id',
+      };
+
+      sortColumn = sortableColumns[sort_by] ?? `order.${sort_by}`;
+    }
+
+    if (order) {
+      sortOrder = order.toUpperCase() as 'ASC' | 'DESC';
+    }
+
+    queryBuilder.orderBy(sortColumn, sortOrder);
+
+    const [workshopOrders, total]: any = await queryBuilder.getManyAndCount();
+
+    return {
+      statusCode: 200,
+      message: 'All assigned orders with workshop',
+      data: {
+        workshopOrders,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+      },
+    };
+  }
+
   async createRefund(refundOrderDto: RefundOrderDto): Promise<OrderDetail> {
     const order = await this.orderRepository.findOne({
       where: { order_id: refundOrderDto.order_id },
