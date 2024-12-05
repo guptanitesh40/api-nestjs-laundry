@@ -2,7 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Feedback } from 'src/entities/feedback.entity';
-import { Repository } from 'typeorm';
+import { IsPublish } from 'src/enum/is_publish.enum';
+import { Not, Repository } from 'typeorm';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 
 @Injectable()
@@ -23,11 +24,40 @@ export class FeedbackService {
     }
 
     const feedback = this.feedbackRepository.create(createFeedbackDto);
-    const result = this.feedbackRepository.save(feedback);
+    const result = await this.feedbackRepository.save(feedback);
+
     return {
       statusCode: 200,
       message: 'Feedback added successfully',
       data: result,
+    };
+  }
+
+  async getFeedBacksByStatus(status: IsPublish): Promise<Response> {
+    const feedbacks = await this.feedbackRepository.find({
+      where: {
+        is_publish: status,
+      },
+    });
+
+    return {
+      statusCode: 200,
+      message: 'Feedbacks retrived successfully',
+      data: feedbacks,
+    };
+  }
+
+  async getAllFeedbacks(): Promise<Response> {
+    const approvedFeedbacks = await this.feedbackRepository.find({
+      where: {
+        is_publish: Not(IsPublish.NONE),
+      },
+    });
+
+    return {
+      statusCode: 200,
+      message: 'Approved feedbacks fetch successfully',
+      data: approvedFeedbacks,
     };
   }
 }
