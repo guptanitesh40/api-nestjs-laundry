@@ -41,6 +41,12 @@ export const getAdminOrderStatusLabel = (
 
     case 10:
       return AdminOrderStatus.DELIVERED;
+
+    case 11:
+      return AdminOrderStatus.ITEMS_CANCELLED;
+
+    case 12:
+      return AdminOrderStatus.ITEMS_RETURNED;
     default:
       return '';
   }
@@ -83,6 +89,11 @@ export const getCustomerOrderStatusLabel = (
     case 10:
       return CustomerOrderStatus.READY_FOR_DELIVERY;
 
+    case 11:
+      return AdminOrderStatus.ITEMS_CANCELLED;
+
+    case 12:
+      return AdminOrderStatus.ITEMS_RETURNED;
     default:
       return '';
   }
