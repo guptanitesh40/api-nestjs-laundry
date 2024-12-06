@@ -21,12 +21,20 @@ export class ReportController {
     return this.reportService.getTotalOrderReport(startDate, endDate);
   }
 
-  @Get('delivery-status-report')
-  async getDeliveryStatusReport(
+  @Get('delivery-completed-report')
+  async getDeliveryCompletedReport(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.reportService.getDeliveryStatusReport(startDate, endDate);
+    return this.reportService.getDeliveryCompletedReport(startDate, endDate);
+  }
+
+  @Get('delivery-pending-report')
+  async getDeliveryPendingReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getDeliveryPendingReport(startDate, endDate);
   }
 
   @Get('payment-type-report')

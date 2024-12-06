@@ -41,7 +41,9 @@ export class ReportService {
   async getTotalOrderReport(
     startDate?: string,
     endDate?: string,
-  ): Promise<{ day: string; count: number }[]> {
+  ): Promise<
+    { day: string; count: number; totalAmount: number; pendingAmount: number }[]
+  > {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       this.convertDateParameters(startDate, endDate);
 
@@ -49,6 +51,8 @@ export class ReportService {
       .createQueryBuilder('orders')
       .select("DATE_FORMAT(orders.created_at, '%b-%Y') AS day")
       .addSelect('COUNT(*) AS count')
+      .addSelect('SUM(orders.total) AS totalAmount')
+      .addSelect('SUM(orders.total - orders.paid_amount) AS pendingAmount')
       .where('orders.deleted_at IS NULL');
 
     if (formattedStartDate && formattedEndDate) {
@@ -67,13 +71,22 @@ export class ReportService {
       .orderBy('day', 'DESC')
       .getRawMany();
 
-    return result.map((row: { day: string; count: string }) => ({
-      day: row.day,
-      count: Number(row.count),
-    }));
+    return result.map(
+      (row: {
+        day: string;
+        count: string;
+        totalAmount: string;
+        pendingAmount: string;
+      }) => ({
+        day: row.day,
+        count: Number(row.count),
+        totalAmount: Number(row.totalAmount),
+        pendingAmount: Number(row.pendingAmount),
+      }),
+    );
   }
 
-  async getDeliveryStatusReport(
+  async getDeliveryCompletedReport(
     startDate?: string,
     endDate?: string,
   ): Promise<{ month: string; status: string; count: number }[]> {
@@ -107,6 +120,51 @@ export class ReportService {
     const result = await queryBuilder
       .groupBy('month')
       .addGroupBy('status')
+      .orderBy('month', 'ASC')
+      .getRawMany();
+
+    return result.map(
+      (row: { month: string; status: string; count: string }) => ({
+        month: row.month,
+        status: row.status,
+        count: Number(row.count),
+      }),
+    );
+  }
+
+  async getDeliveryPendingReport(
+    startDate?: string,
+    endDate?: string,
+  ): Promise<{ month: string; status: string; count: number }[]> {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(startDate, endDate);
+
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('orders')
+      .select("DATE_FORMAT(orders.created_at,'%y-%b') AS month")
+      .addSelect(`'Pending' AS status`)
+      .addSelect('COUNT(*)', 'count')
+      .where('orders.deleted_at IS NULL')
+      .andWhere('orders.order_status NOT IN (:...completedStatuses)', {
+        completedStatuses: [
+          OrderStatus.DELIVERY_BOY_MARKS_AS_COMPLETED,
+          OrderStatus.DELIVERED,
+          OrderStatus.CANCELLED,
+          OrderStatus.RETURNED,
+        ],
+      });
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder.andWhere(
+        'orders.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    } else {
+      queryBuilder.andWhere('orders.created_at >= NOW() - INTERVAL 6 MONTH');
+    }
+
+    const result = await queryBuilder
+      .groupBy('month')
       .orderBy('month', 'ASC')
       .getRawMany();
 
@@ -319,7 +377,7 @@ export class ReportService {
 
     let queryBuilder = this.userRespository
       .createQueryBuilder('user')
-      .select("DATE_FORMAT(user.created_at, '%y-%b') AS month")
+      .select("DATE_FORMAT(user.created_at, '%Y-%m-%d') AS month")
       .addSelect('COUNT(*) AS notActiveCount')
       .where('user.deleted_at IS NULL')
       .andWhere(
