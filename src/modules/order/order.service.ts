@@ -315,6 +315,18 @@ export class OrderService {
       .innerJoinAndSelect('items.product', 'product')
       .innerJoinAndSelect('items.service', 'service')
       .leftJoinAndSelect('order.branch', 'branch')
+      .leftJoin('order.pickup_boy', 'pickupBoy')
+      .addSelect([
+        'pickupBoy.user_id',
+        'pickupBoy.first_name',
+        'pickupBoy.last_name',
+      ])
+      .leftJoin('order.delivery_boy', 'deliveryBoy')
+      .addSelect([
+        'deliveryBoy.user_id',
+        'deliveryBoy.first_name',
+        'deliveryBoy.last_name',
+      ])
       .where('order.deleted_at IS NULL')
       .select([
         'order',
@@ -420,7 +432,22 @@ export class OrderService {
         order.pickup_boy_id,
         order.workshop_id,
       );
+
+      order.pickup_boy = order.pickup_boy_id
+        ? {
+            id: order.pickup_boy_id,
+            name: `${order.user?.first_name || ''} ${order.user?.last_name || ''}`.trim(),
+          }
+        : null;
+
+      order.delivery_boy = order.delivery_boy_id
+        ? {
+            id: order.delivery_boy_id,
+            name: `${order.user?.first_name || ''} ${order.user?.last_name || ''}`.trim(),
+          }
+        : null;
     });
+
     return {
       statusCode: 200,
       message: 'Orders retrieved successfully',
@@ -444,6 +471,18 @@ export class OrderService {
       .leftJoinAndSelect('order.branch', 'branch')
       .leftJoinAndSelect('order.notes', 'notes')
       .leftJoinAndSelect('notes.user', 'note_user')
+      .leftJoin('order.pickup_boy', 'pickupBoy')
+      .addSelect([
+        'pickupBoy.user_id',
+        'pickupBoy.first_name',
+        'pickupBoy.last_name',
+      ])
+      .leftJoin('order.delivery_boy', 'deliveryBoy')
+      .addSelect([
+        'deliveryBoy.user_id',
+        'deliveryBoy.first_name',
+        'deliveryBoy.last_name',
+      ])
       .where('order.order_id = :order_id', { order_id })
       .andWhere('order.deleted_at IS NULL')
       .select([
@@ -480,6 +519,23 @@ export class OrderService {
       orders.pickup_boy_id,
       orders.workshop_id,
     );
+
+    orders.pickup_boy = orders.pickup_boy_id
+      ? {
+          pickup_boy__id: orders.pickup_boy_id,
+          pickup_boy_name:
+            `${orders.user?.first_name || ''} ${orders.user?.last_name || ''}  `.trim(),
+        }
+      : null;
+
+    orders.delivery_boy = orders.delivery_boy_id
+      ? {
+          delivery_boy_id: orders.delivery_boy_id,
+          delivery_boy_name:
+            `${orders.user?.first_name || ''} ${orders.user?.last_name || ''}`.trim(),
+        }
+      : null;
+
     const order = appendBaseUrlToNestedImages(orders);
 
     return {
