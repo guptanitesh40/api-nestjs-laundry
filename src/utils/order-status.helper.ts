@@ -1,6 +1,7 @@
 import {
   AdminOrderStatus,
   CustomerOrderStatus,
+  WorkshopOrderStatus,
 } from 'src/enum/order-status.eum';
 
 export const getAdminOrderStatusLabel = (
@@ -23,18 +24,19 @@ export const getAdminOrderStatusLabel = (
 
     case 4:
       if (!workshopId) return AdminOrderStatus.ASSIGN_WORKSHOP;
-
-    case 5:
       return AdminOrderStatus.RECEIVED_AT_WORKSHOP;
 
-    case 6:
+    case 5:
       return AdminOrderStatus.WORK_IN_PROGRESS;
+
+    case 6:
+      return AdminOrderStatus.WORK_COMPLETED;
 
     case 7:
       return AdminOrderStatus.ON_THE_WAY_TO_BRANCH;
 
     case 8:
-      return AdminOrderStatus.WORK_COMPLETED;
+      return AdminOrderStatus.ASSIGN_DELIVERY_BOY;
 
     case 9:
       return AdminOrderStatus.READY_FOR_DELIVERY;
@@ -84,10 +86,10 @@ export const getCustomerOrderStatusLabel = (
       return CustomerOrderStatus.IN_PROCESS;
 
     case 9:
-      return CustomerOrderStatus.IN_PROCESS;
+      return CustomerOrderStatus.READY_FOR_DELIVERY;
 
     case 10:
-      return CustomerOrderStatus.READY_FOR_DELIVERY;
+      return CustomerOrderStatus.DELIVERED;
 
     case 11:
       return AdminOrderStatus.ITEMS_CANCELLED;
@@ -96,5 +98,21 @@ export const getCustomerOrderStatusLabel = (
       return AdminOrderStatus.ITEMS_RETURNED;
     default:
       return '';
+  }
+};
+
+export const getWorkshopOrdersStatusLabel = (orderStatus: number): string => {
+  switch (orderStatus) {
+    case 4:
+      return WorkshopOrderStatus.ORDER_RECEIVED;
+
+    case 5:
+      return WorkshopOrderStatus.IN_PROGRESS;
+
+    case 6:
+      return WorkshopOrderStatus.COMPLETED;
+
+    case 7:
+      return WorkshopOrderStatus.ON_THE_WAY;
   }
 };

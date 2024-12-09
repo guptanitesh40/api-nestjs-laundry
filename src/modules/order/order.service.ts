@@ -952,7 +952,7 @@ export class OrderService {
     }
 
     order.workshop_id = workshop_id;
-    order.order_status = OrderStatus.WORKSHOP_MARKS_AS_COMPLETED;
+    order.order_status = OrderStatus.WORKSHOP_RECEIVED_ITEMS;
 
     await this.orderRepository.save(order);
 

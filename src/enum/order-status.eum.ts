@@ -24,6 +24,7 @@ export enum AdminOrderStatus {
   RECEIVED_AT_WORKSHOP = 'Received At Workshop',
   WORK_IN_PROGRESS = 'Work In Progress',
   ON_THE_WAY_TO_BRANCH = 'On The Way To Branch',
+  ASSIGN_DELIVERY_BOY = 'Assign Delivery Boy',
   WORK_COMPLETED = 'Work Completed',
   READY_FOR_DELIVERY = 'Ready For Delivery',
   DELIVERED = 'Delivered',
