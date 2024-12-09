@@ -52,9 +52,9 @@ export class OrderController {
   @Get('admin/orders/workshop')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async getAllWorkshopOrders(
-    @Query() paginationQueryDto: PaginationQueryDto,
+    @Query() orderFilterDto: OrderFilterDto,
   ): Promise<Response> {
-    return this.orderService.getAllAssignWorkshopOrders(paginationQueryDto);
+    return this.orderService.getAllAssignWorkshopOrders(orderFilterDto);
   }
 
   @Post('orders')

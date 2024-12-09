@@ -22,4 +22,10 @@ export class OrderFilterDto extends PaginationQueryDto {
 
   @applyNumberArrayValidation()
   payment_status?: number[];
+
+  @applyNumberArrayValidation()
+  workshop_id?: number[];
+
+  @applyNumberArrayValidation()
+  workshop_manager_id?: number[];
 }

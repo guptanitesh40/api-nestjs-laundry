@@ -29,6 +29,7 @@ import {
 import {
   getAdminOrderStatusLabel,
   getCustomerOrderStatusLabel,
+  getWorkshopOrdersStatusLabel,
 } from 'src/utils/order-status.helper';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CouponService } from '../coupon/coupon.service';
@@ -468,6 +469,9 @@ export class OrderService {
       .innerJoinAndSelect('items.category', 'category')
       .innerJoinAndSelect('items.product', 'product')
       .innerJoinAndSelect('items.service', 'service')
+      .leftJoinAndSelect('order.workshop', 'workshop')
+      .leftJoinAndSelect('workshop.workshopManagerMappings', 'mapping')
+      .leftJoinAndSelect('mapping.user', 'manager_user')
       .leftJoinAndSelect('order.branch', 'branch')
       .leftJoinAndSelect('order.notes', 'notes')
       .leftJoinAndSelect('notes.user', 'note_user')
@@ -503,6 +507,10 @@ export class OrderService {
         'service.service_id',
         'service.name',
         'service.image',
+        'workshop',
+        'mapping.workshop_manager_mapping_id',
+        'manager_user.first_name',
+        'manager_user.last_name',
         'branch.branch_id',
         'branch.branch_name',
       ]);
@@ -518,6 +526,10 @@ export class OrderService {
       orders.branch_id,
       orders.pickup_boy_id,
       orders.workshop_id,
+    );
+
+    orders.workshop_status_name = getWorkshopOrdersStatusLabel(
+      orders.order_status,
     );
 
     orders.pickup_boy = orders.pickup_boy_id
@@ -1017,10 +1029,23 @@ export class OrderService {
   }
 
   async getAllAssignWorkshopOrders(
-    paginationQueryDto: PaginationQueryDto,
+    orderFilterDto: OrderFilterDto,
   ): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order } =
-      paginationQueryDto;
+    const {
+      per_page,
+      page_number,
+      search,
+      sort_by,
+      order,
+      orderstatus,
+      customer_id,
+      branch_id,
+      pickup_boy_id,
+      payment_type,
+      payment_status,
+      workshop_id,
+      workshop_manager_id,
+    } = orderFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
@@ -1029,16 +1054,25 @@ export class OrderService {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'items')
+      .innerJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.branch', 'branch')
       .innerJoinAndSelect('order.workshop', 'workshop')
       .innerJoinAndSelect('workshop.workshopManagerMappings', 'mapping')
-      .leftJoinAndSelect('mapping.user', 'user')
+      .leftJoinAndSelect('mapping.user', 'manager_user')
       .select([
         'order',
         'workshop',
         'items',
-        'mapping.workshop_manager_mapping_id',
         'user.first_name',
         'user.last_name',
+        'user.mobile_number',
+        'user.email',
+        'branch.branch_id',
+        'branch.branch_name',
+        'mapping.workshop_manager_mapping_id',
+        'manager_user.user_id',
+        'manager_user.first_name',
+        'manager_user.last_name',
       ])
       .take(perPage)
       .skip(skip);
@@ -1048,6 +1082,54 @@ export class OrderService {
         'order.order_id LIKE :search OR workshop.workshop_name LIKE :search',
         { search: `%${search}%` },
       );
+    }
+
+    if (orderstatus) {
+      queryBuilder.andWhere('order.order_status IN (:...ordersStatus)', {
+        ordersstatus: OrderStatus,
+      });
+    }
+
+    if (customer_id) {
+      queryBuilder.andWhere('order.user_id IN (:...customerId)', {
+        customerId: customer_id,
+      });
+    }
+
+    if (branch_id) {
+      queryBuilder.andWhere('order.branch_id In (:...branchId)', {
+        branchId: branch_id,
+      });
+    }
+
+    if (pickup_boy_id) {
+      queryBuilder.andWhere('order.pickup_boy_id In (:...pickupBoyId)', {
+        pickupBoyId: pickup_boy_id,
+      });
+    }
+
+    if (payment_type) {
+      queryBuilder.andWhere('order.payment_type In (:...paymentType)', {
+        paymentType: payment_type,
+      });
+    }
+
+    if (payment_status) {
+      queryBuilder.andWhere('order.payment_status In (:...paymentStatus)', {
+        paymenStatus: payment_status,
+      });
+    }
+
+    if (workshop_id) {
+      queryBuilder.andWhere('workshop.workshop_id In(:...workshopId)', {
+        workshopId: workshop_id,
+      });
+    }
+
+    if (workshop_manager_id) {
+      queryBuilder.andWhere('manager_user.user_id In(:...workshopManagerId)', {
+        workshopManagerId: workshop_manager_id,
+      });
     }
 
     let sortColumn = 'order.created_at';
@@ -1073,6 +1155,12 @@ export class OrderService {
     queryBuilder.orderBy(sortColumn, sortOrder);
 
     const [workshopOrders, total]: any = await queryBuilder.getManyAndCount();
+
+    workshopOrders.map((order) => {
+      order.workshop_status_name = getWorkshopOrdersStatusLabel(
+        order.order_status,
+      );
+    });
 
     return {
       statusCode: 200,
