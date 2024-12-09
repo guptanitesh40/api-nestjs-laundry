@@ -150,7 +150,6 @@ export class ReportService {
           OrderStatus.DELIVERY_BOY_MARKS_AS_COMPLETED,
           OrderStatus.DELIVERED,
           OrderStatus.CANCELLED,
-          OrderStatus.RETURNED,
         ],
       });
 

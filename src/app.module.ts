@@ -11,6 +11,7 @@ import { BranchModule } from './modules/branch/branch.module';
 import { CartModule } from './modules/cart/cart.module';
 import { CategoryModule } from './modules/categories/category.module';
 import { CompanyModule } from './modules/company/company.module';
+import { ContactUsModule } from './modules/contact-us/contact-us.module';
 import { CouponModule } from './modules/coupon/coupon.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
@@ -57,6 +58,7 @@ import { ReportModule } from './report/report.module';
     FeedbackModule,
     ReportModule,
     WorkshopModule,
+    ContactUsModule,
   ],
   controllers: [AppController],
   providers: [AppService, IsUniqueConstraint],

@@ -10,7 +10,6 @@ export enum OrderStatus {
   DELIVERY_BOY_MARKS_AS_COMPLETED = 9,
   DELIVERED = 10,
   CANCELLED = 11,
-  RETURNED = 12,
 }
 
 export enum AdminOrderStatus {
@@ -28,8 +27,7 @@ export enum AdminOrderStatus {
   WORK_COMPLETED = 'Work Completed',
   READY_FOR_DELIVERY = 'Ready For Delivery',
   DELIVERED = 'Delivered',
-  ITEMS_CANCELLED = 'Items Cancelled',
-  ITEMS_RETURNED = 'Items Returned',
+  ORDER_CANCELLED = 'Items Cancelled',
 }
 
 export enum CustomerOrderStatus {
@@ -38,8 +36,7 @@ export enum CustomerOrderStatus {
   IN_PROCESS = 'In Process',
   READY_FOR_DELIVERY = 'Ready For Delivery',
   DELIVERED = 'Delivered',
-  ITEMS_CANCELLED = 'Items Cancelled',
-  ITEMS_RETURNED = 'Items Returned',
+  ORDER_CANCELLED = 'Items Cancelled',
 }
 
 export enum WorkshopOrderStatus {

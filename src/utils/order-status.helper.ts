@@ -45,10 +45,8 @@ export const getAdminOrderStatusLabel = (
       return AdminOrderStatus.DELIVERED;
 
     case 11:
-      return AdminOrderStatus.ITEMS_CANCELLED;
+      return AdminOrderStatus.ORDER_CANCELLED;
 
-    case 12:
-      return AdminOrderStatus.ITEMS_RETURNED;
     default:
       return '';
   }
@@ -68,7 +66,7 @@ export const getCustomerOrderStatusLabel = (
       if (!workshopId) return CustomerOrderStatus.PICKUP_COMPLETE;
 
     case 3:
-      return CustomerOrderStatus.IN_PROCESS;
+      return CustomerOrderStatus.PICKUP_COMPLETE;
 
     case 4:
       return CustomerOrderStatus.IN_PROCESS;
@@ -92,10 +90,8 @@ export const getCustomerOrderStatusLabel = (
       return CustomerOrderStatus.DELIVERED;
 
     case 11:
-      return AdminOrderStatus.ITEMS_CANCELLED;
+      return AdminOrderStatus.ORDER_CANCELLED;
 
-    case 12:
-      return AdminOrderStatus.ITEMS_RETURNED;
     default:
       return '';
   }
