@@ -1079,7 +1079,14 @@ export class OrderService {
 
     if (search) {
       queryBuilder.where(
-        'order.order_id LIKE :search OR workshop.workshop_name LIKE :search',
+        '(order.description LIKE :search OR ' +
+          'order.coupon_code LIKE :search OR ' +
+          'order.address_details LIKE :search OR ' +
+          'user.first_name LIKE :search OR ' +
+          'user.last_name LIKE :search OR ' +
+          'user.email LIKE :search OR ' +
+          'user.mobile_number LIKE :search OR ' +
+          'workshop.workshop_name LIKE :search)',
         { search: `%${search}%` },
       );
     }
@@ -1157,7 +1164,7 @@ export class OrderService {
     }
 
     if (order) {
-      sortOrder = order.toUpperCase() as 'ASC' | 'DESC';
+      sortOrder = order;
     }
 
     queryBuilder.orderBy(sortColumn, sortOrder);
