@@ -1088,6 +1088,14 @@ export class OrderService {
       queryBuilder.andWhere('order.order_status IN (:...ordersStatus)', {
         ordersstatus: OrderStatus,
       });
+    } else {
+      queryBuilder.andWhere(
+        'order.order_status BETWEEN :minStatus AND :maxStatus',
+        {
+          minStatus: OrderStatus.PICKUP_PENDING,
+          maxStatus: OrderStatus.WORKSHOP_MARKS_AS_COMPLETED,
+        },
+      );
     }
 
     if (customer_id) {

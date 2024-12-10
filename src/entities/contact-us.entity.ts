@@ -12,6 +12,9 @@ export class ContactUs extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   email: string;
 
+  @Column({ type: 'decimal', nullable: true })
+  mobile_number: number;
+
   @Column({ type: 'varchar', nullable: true })
   message?: string;
 }

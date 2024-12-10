@@ -39,6 +39,9 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Patch('change-password')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.CUSTOMER)
   async changePassword(
     @Request() req,
     @Body() changePasswordDto: ChangePasswordDto,
