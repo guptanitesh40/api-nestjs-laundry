@@ -738,6 +738,7 @@ export class OrderService {
     }
 
     order.delivery_boy_id = deliveryBoy.user_id;
+    order.order_status = OrderStatus.DELIVERY_BOY_MARKS_AS_COMPLETED;
 
     await this.orderRepository.save(order);
 
@@ -1000,7 +1001,7 @@ export class OrderService {
 
     order.pickup_boy_id = pickupBoy.user_id;
     order.pickup_comment = comment;
-    order.order_status = OrderStatus.ITEMS_RECEIVED_AT_BRANCH;
+    order.order_status = OrderStatus.ITEMS_RECEIVED_BY_PICKUP_BOY;
 
     await this.orderRepository.save(order);
 
