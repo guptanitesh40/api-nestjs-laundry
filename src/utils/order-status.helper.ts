@@ -33,7 +33,7 @@ export const getAdminOrderStatusLabel = (
       return AdminOrderStatus.WORK_COMPLETED;
 
     case 7:
-      return AdminOrderStatus.ON_THE_WAY_TO_BRANCH;
+      return AdminOrderStatus.BRANCH_RECEIVED_ITEMS;
 
     case 8:
       return AdminOrderStatus.ASSIGN_DELIVERY_BOY;
@@ -107,8 +107,5 @@ export const getWorkshopOrdersStatusLabel = (orderStatus: number): string => {
 
     case 6:
       return WorkshopOrderStatus.COMPLETED;
-
-    case 7:
-      return WorkshopOrderStatus.ON_THE_WAY;
   }
 };

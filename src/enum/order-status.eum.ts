@@ -22,7 +22,7 @@ export enum AdminOrderStatus {
   ASSIGN_WORKSHOP = 'Assign Workshop',
   RECEIVED_AT_WORKSHOP = 'Received At Workshop',
   WORK_IN_PROGRESS = 'Work In Progress',
-  ON_THE_WAY_TO_BRANCH = 'On The Way To Branch',
+  BRANCH_RECEIVED_ITEMS = 'Branch Received Items',
   ASSIGN_DELIVERY_BOY = 'Assign Delivery Boy',
   WORK_COMPLETED = 'Work Completed',
   READY_FOR_DELIVERY = 'Ready For Delivery',
@@ -40,7 +40,6 @@ export enum CustomerOrderStatus {
 }
 
 export enum WorkshopOrderStatus {
-  ON_THE_WAY = 'On The Way',
   ORDER_RECEIVED = 'Order Received',
   IN_PROGRESS = 'In Progress',
   COMPLETED = 'Completed',
