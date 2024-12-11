@@ -41,7 +41,7 @@ export class PriceController {
   }
 
   @Post('download-pdf')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.CUSTOMER)
   async downloadPDF(): Promise<StreamableFile> {
     const pdfBuffer = await this.priceService.generatePriceListPDF();
 
