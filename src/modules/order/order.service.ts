@@ -517,6 +517,12 @@ export class OrderService {
         'manager_user.last_name',
         'branch.branch_id',
         'branch.branch_name',
+        'pickupBoy.user_id',
+        'pickupBoy.first_name',
+        'pickupBoy.last_name',
+        'deliveryBoy.user_id',
+        'deliveryBoy.first_name',
+        'deliveryBoy.last_name',
       ]);
 
     const orders: any = await queryBuilder.getOne();
@@ -541,7 +547,7 @@ export class OrderService {
       ? {
           pickup_boy__id: orders.pickup_boy_id,
           pickup_boy_name:
-            `${orders.user?.first_name || ''} ${orders.user?.last_name || ''}  `.trim(),
+            `${orders.pickup_boy?.first_name || ''} ${orders.pickup_boy?.last_name || ''}  `.trim(),
         }
       : null;
 
@@ -549,7 +555,7 @@ export class OrderService {
       ? {
           delivery_boy_id: orders.delivery_boy_id,
           delivery_boy_name:
-            `${orders.user?.first_name || ''} ${orders.user?.last_name || ''}`.trim(),
+            `${orders.delivery_boy?.first_name || ''} ${orders.delivery_boy?.last_name || ''}`.trim(),
         }
       : null;
 
@@ -770,7 +776,6 @@ export class OrderService {
         'user.mobile_number',
         'user.email',
         'items',
-        'COUNT(items.item_id) AS total_item',
         'category.category_id',
         'category.name',
         'product.product_id',
@@ -815,7 +820,7 @@ export class OrderService {
 
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
-      .leftJoinAndSelect('order.items', 'items')
+      .innerJoinAndSelect('order.items', 'items')
       .where('order.user_id = :userId', { userId: user_id })
       .andWhere('order.deleted_at IS NULL')
       .select([
@@ -828,11 +833,11 @@ export class OrderService {
         'order.payment_status',
         'order.estimated_delivery_time',
         'order.created_at',
-        'COUNT(items.item_id) AS total_item',
+        'items',
         '(order.total-COALESCE(order.paid_amount,0)-COALESCE(order.kasar_amount,0)) AS pending_amount',
+        'COUNT(items.item_id) AS total_items',
       ])
-
-      .groupBy('order.order_id')
+      .groupBy('order.order_id,items.item_id')
       .take(perPage)
       .skip(skip);
 
@@ -869,6 +874,8 @@ export class OrderService {
         order.pickup_boy_id,
         order.workshop_id,
       );
+      order.total_item = order.total_items;
+      console.log(order.total_item);
     });
 
     const inProgressCountOrder = this.orderRepository
