@@ -19,6 +19,7 @@ import { MobileApiModule } from './modules/mobileapi/mobileapi.module';
 import { NotesModule } from './modules/notes/note.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { OrderModule } from './modules/order/order.module';
+import { PriceContentModule } from './modules/price-content/price-content.module';
 import { PriceModule } from './modules/price/price.module';
 import { ProductModule } from './modules/products/product.module';
 import { ServicesModule } from './modules/services/services.module';
@@ -59,6 +60,7 @@ import { ReportModule } from './report/report.module';
     ReportModule,
     WorkshopModule,
     ContactUsModule,
+    PriceContentModule,
   ],
   controllers: [AppController],
   providers: [AppService, IsUniqueConstraint],

@@ -435,6 +435,7 @@ export class OrderService {
         order.branch_id,
         order.pickup_boy_id,
         order.workshop_id,
+        order.created_by_user_id,
       );
 
       order.pickup_boy = order.pickup_boy_id
@@ -529,6 +530,7 @@ export class OrderService {
       orders.branch_id,
       orders.pickup_boy_id,
       orders.workshop_id,
+      orders.created_by_user_id,
     );
 
     orders.workshop_status_name = getWorkshopOrdersStatusLabel(
@@ -768,6 +770,7 @@ export class OrderService {
         'user.mobile_number',
         'user.email',
         'items',
+        'COUNT(items.item_id) AS total_item',
         'category.category_id',
         'category.name',
         'product.product_id',
@@ -795,7 +798,7 @@ export class OrderService {
     return {
       statusCode: 200,
       message: 'Order retrived successfully',
-      data: order,
+      data: { order },
     };
   }
 
@@ -1096,8 +1099,8 @@ export class OrderService {
     }
 
     if (orderstatus) {
-      queryBuilder.andWhere('order.order_status IN (:...ordersStatus)', {
-        ordersstatus: OrderStatus,
+      queryBuilder.andWhere('order.order_status IN (:...ordersStatuses)', {
+        ordersStatuses: orderstatus,
       });
     } else {
       queryBuilder.andWhere(
@@ -1135,7 +1138,7 @@ export class OrderService {
 
     if (payment_status) {
       queryBuilder.andWhere('order.payment_status In (:...paymentStatus)', {
-        paymenStatus: payment_status,
+        paymentStatus: payment_status,
       });
     }
 
