@@ -278,7 +278,10 @@ export class OrderService {
     await this.userService.findOneByRole(createOrderDto.user_id, Role.CUSTOMER);
     createOrderDto.created_by_user_id = admin_id;
 
+    createOrderDto.order_status = OrderStatus.ITEMS_RECEIVED_AT_BRANCH;
+
     const result = await this.create(createOrderDto);
+
     return {
       statusCode: 201,
       message: 'Order created successfully',
