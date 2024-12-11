@@ -16,12 +16,14 @@ export class PriceContentService {
   async create(
     createPriceContentDto: CreatePriceContentDto,
   ): Promise<Response> {
-    const category = this.priceContentRepository.create(createPriceContentDto);
-    const result = await this.priceContentRepository.save(category);
+    const priceContent = this.priceContentRepository.create(
+      createPriceContentDto,
+    );
+    const result = await this.priceContentRepository.save(priceContent);
 
     return {
       statusCode: 201,
-      message: 'category added successfully',
+      message: 'price content added successfully',
       data: result,
     };
   }
@@ -31,7 +33,7 @@ export class PriceContentService {
 
     return {
       statusCode: 200,
-      message: 'category service retrived',
+      message: 'price content retrived successfully',
       data: result,
     };
   }
@@ -41,11 +43,11 @@ export class PriceContentService {
       where: { price_content_id: id, deleted_at: null },
     });
     if (!result) {
-      throw new NotFoundException(`CategoryService with ID ${id} not found`);
+      throw new NotFoundException(`price content with ID ${id} not found`);
     }
     return {
       statusCode: 200,
-      message: 'category serice retrived ',
+      message: 'price content retrived ',
       data: result,
     };
   }
@@ -54,41 +56,41 @@ export class PriceContentService {
     id: number,
     updatePriceContentDto: UpdatePriceContentDto,
   ): Promise<Response> {
-    const category = await this.priceContentRepository.findOne({
+    const priceContent = await this.priceContentRepository.findOne({
       where: { price_content_id: id, deleted_at: null },
     });
 
-    if (!category) {
-      throw new NotFoundException(`CategoryService not found`);
+    if (!priceContent) {
+      throw new NotFoundException(`price content not found`);
     }
 
     await this.priceContentRepository.update(id, updatePriceContentDto);
 
-    const category_service = await this.priceContentRepository.findOne({
+    const price_content = await this.priceContentRepository.findOne({
       where: { price_content_id: id, deleted_at: null },
     });
 
     return {
       statusCode: 200,
-      message: 'category service updated successfully',
-      data: category_service,
+      message: 'price content updated successfully',
+      data: price_content,
     };
   }
 
   async delete(id: number): Promise<Response> {
-    const category = await this.priceContentRepository.findOne({
+    const priceContent = await this.priceContentRepository.findOne({
       where: { price_content_id: id, deleted_at: null },
     });
-    if (!category) {
-      throw new NotFoundException('category service not found');
+    if (!priceContent) {
+      throw new NotFoundException('price content not found');
     }
-    category.deleted_at = new Date();
-    await this.priceContentRepository.save(category);
+    priceContent.deleted_at = new Date();
+    await this.priceContentRepository.save(priceContent);
 
     return {
       statusCode: 200,
-      message: 'category service deleted successfully',
-      data: category,
+      message: 'price content deleted successfully',
+      data: priceContent,
     };
   }
 }
