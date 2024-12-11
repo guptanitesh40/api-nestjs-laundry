@@ -798,7 +798,7 @@ export class OrderService {
     return {
       statusCode: 200,
       message: 'Order retrived successfully',
-      data: { order },
+      data: order,
     };
   }
 
