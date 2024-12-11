@@ -874,8 +874,6 @@ export class OrderService {
         order.pickup_boy_id,
         order.workshop_id,
       );
-      order.total_item = order.total_items;
-      console.log(order.total_item);
     });
 
     const inProgressCountOrder = this.orderRepository
