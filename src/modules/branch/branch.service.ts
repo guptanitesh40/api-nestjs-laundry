@@ -139,14 +139,6 @@ export class BranchService {
       },
     });
 
-    if (!result) {
-      return {
-        statusCode: 404,
-        message: 'Branches not found',
-        data: null,
-      };
-    }
-
     return {
       statusCode: 200,
       message: 'Branches retrieved successfully',

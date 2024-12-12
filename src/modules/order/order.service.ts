@@ -1035,7 +1035,6 @@ export class OrderService {
       throw new NotFoundException(`Branch with id ${branch_id} not found`);
     }
 
-    order.order_status = OrderStatus.PICKUP_PENDING;
     order.branch_id = branch.branch_id;
 
     await this.orderRepository.save(order);
