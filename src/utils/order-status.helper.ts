@@ -13,7 +13,7 @@ export const getAdminOrderStatusLabel = (
 ): string => {
   switch (orderStatus) {
     case 1:
-      if (!branchId) return AdminOrderStatus.ASSIGN_BRANCH;
+      if (!branchId && !createAdmin) return AdminOrderStatus.ASSIGN_BRANCH;
       if (!pickupBoyId) return AdminOrderStatus.ASSIGN_PICKUP_BOY;
       return AdminOrderStatus.READY_TO_PICKUP;
 
@@ -21,10 +21,7 @@ export const getAdminOrderStatusLabel = (
       return AdminOrderStatus.RECEIVED_BY_PICKUP_BOY;
 
     case 3:
-      if (!createAdmin) {
-        return AdminOrderStatus.ITEMS_RECEIVED_AT_BRANCH;
-      }
-      return AdminOrderStatus.PICKUP_COMPLETE;
+      return AdminOrderStatus.ITEMS_RECEIVED_AT_BRANCH;
 
     case 4:
       if (!workshopId) return AdminOrderStatus.ASSIGN_WORKSHOP;

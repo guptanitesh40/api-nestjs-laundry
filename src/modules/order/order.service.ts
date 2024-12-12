@@ -278,8 +278,6 @@ export class OrderService {
     await this.userService.findOneByRole(createOrderDto.user_id, Role.CUSTOMER);
     createOrderDto.created_by_user_id = admin_id;
 
-    createOrderDto.order_status = OrderStatus.ITEMS_RECEIVED_AT_BRANCH;
-
     const result = await this.create(createOrderDto);
 
     return {
@@ -690,6 +688,69 @@ export class OrderService {
       throw new NotFoundException(`Order with id ${order_id} not found`);
     }
 
+    switch (status) {
+      case OrderStatus.ITEMS_RECEIVED_BY_PICKUP_BOY:
+        if (order.order_status !== OrderStatus.PICKUP_PENDING) {
+          throw new BadRequestException(
+            'Cannot mark as Items Received by Pickup Boy. Previous status must be Pickup Pending.',
+          );
+        }
+        break;
+
+      case OrderStatus.ITEMS_RECEIVED_AT_BRANCH:
+        if (order.order_status !== OrderStatus.ITEMS_RECEIVED_BY_PICKUP_BOY) {
+          throw new BadRequestException(
+            'Cannot mark as Items Received at Branch. Previous status must be Items Received by Pickup Boy.',
+          );
+        }
+        break;
+
+      case OrderStatus.WORKSHOP_RECEIVED_ITEMS:
+        if (order.order_status !== OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
+          throw new BadRequestException(
+            'Cannot mark as Workshop Received Items. Previous status must be Items Received at Branch.',
+          );
+        }
+        break;
+
+      case OrderStatus.WORKSHOP_MOVED_TO_IN_PROCESS:
+        if (order.order_status !== OrderStatus.WORKSHOP_RECEIVED_ITEMS) {
+          throw new BadRequestException(
+            'Cannot mark as Workshop In Process. Previous status must be Workshop Received Items.',
+          );
+        }
+        break;
+
+      case OrderStatus.WORKSHOP_MARKS_AS_COMPLETED:
+        if (order.order_status !== OrderStatus.WORKSHOP_MOVED_TO_IN_PROCESS) {
+          throw new BadRequestException(
+            'Cannot mark as Workshop Completed. Previous status must be Workshop In Process.',
+          );
+        }
+        break;
+
+      case OrderStatus.DELIVERED:
+        if (
+          order.order_status !== OrderStatus.DELIVERY_BOY_MARKS_AS_COMPLETED
+        ) {
+          throw new BadRequestException(
+            'Cannot mark as Delivered. Previous status must be Delivery Boy Marks As Completed.',
+          );
+        }
+        break;
+
+      case OrderStatus.CANCELLED:
+        if (order.order_status === OrderStatus.DELIVERED) {
+          throw new BadRequestException(
+            'Cannot cancel an order that has been delivered.',
+          );
+        }
+        break;
+
+      default:
+        break;
+    }
+
     order.order_status = status;
     await this.orderRepository.save(order);
 
@@ -954,6 +1015,33 @@ export class OrderService {
       statusCode: 200,
       message: 'Orders with assigned delivery boys retrieved successfully',
       data: ordersWithAssignedDeliveryBoys,
+    };
+  }
+
+  async assignBranch(order_id: number, branch_id: number): Promise<Response> {
+    const order = await this.orderRepository.findOne({
+      where: { order_id: order_id },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${order_id} not found`);
+    }
+
+    const branch = await this.orderRepository.findOne({
+      where: { branch_id: branch_id },
+    });
+
+    if (!branch) {
+      throw new NotFoundException(`Branch with id ${branch_id} not found`);
+    }
+
+    order.branch_id = branch.branch_id;
+
+    await this.orderRepository.save(order);
+
+    return {
+      statusCode: 200,
+      message: 'Branch assigned successfully',
     };
   }
 

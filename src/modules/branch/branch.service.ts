@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Branch } from 'src/entities/branch.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { BranchFilterDto } from '../dto/branch-filter.dto';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-brach.dto';
@@ -131,20 +131,17 @@ export class BranchService {
     };
   }
 
-  async getBranchesByCompanyId(company_id: number): Promise<Response> {
+  async getBranchesByCompanyIds(company_ids: number[]): Promise<Response> {
     const result = await this.branchRepository.find({
-      where: { company_id: company_id, deleted_at: null },
+      where: {
+        company_id: In(company_ids),
+        deleted_at: null,
+      },
     });
-    if (!result) {
-      return {
-        statusCode: 404,
-        message: 'Branch not found',
-        data: null,
-      };
-    }
+
     return {
       statusCode: 200,
-      message: 'Branch retrived successfully',
+      message: 'Branches retrieved successfully',
       data: result,
     };
   }

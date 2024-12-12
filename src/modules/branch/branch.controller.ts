@@ -31,6 +31,13 @@ export class BranchController {
     return await this.branchService.create(createBranchDto);
   }
 
+  @Get('companies')
+  async getBranchesByCompanyIds(
+    @Query('company_ids') company_ids: number[],
+  ): Promise<Response> {
+    return await this.branchService.getBranchesByCompanyIds(company_ids);
+  }
+
   @Get()
   async findAll(@Query() branchFilterDto: BranchFilterDto) {
     return this.branchService.findAll(branchFilterDto);
@@ -39,13 +46,6 @@ export class BranchController {
   @Get(':id')
   async findOne(@Param('id') id: number): Promise<Response> {
     return await this.branchService.findOne(id);
-  }
-
-  @Get('company/:company_id')
-  async getBranchesByCompanyId(
-    @Param('company_id') company_id: number,
-  ): Promise<Response> {
-    return await this.branchService.getBranchesByCompanyId(company_id);
   }
 
   @Put(':id')

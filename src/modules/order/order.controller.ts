@@ -168,6 +168,15 @@ export class OrderController {
     return this.orderService.assignDeliveryBoy(order_id, delivery_boy_id);
   }
 
+  @Patch('admin/orders/assign-branch')
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  async assignBranch(
+    @Body('order_id', ParseIntPipe) order_id: number,
+    @Body('branch_id', ParseIntPipe) branch_id: number,
+  ): Promise<Response> {
+    return this.orderService.assignBranch(order_id, branch_id);
+  }
+
   @Delete('admin/order/:order_id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async deleteOrder(
