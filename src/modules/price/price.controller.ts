@@ -17,31 +17,34 @@ import { CreatePriceDto } from './dto/create-price.dto';
 import { PriceService } from './price.service';
 
 @Controller('prices')
-@UseGuards(RolesGuard)
-@UseGuards(AuthGuard('jwt'))
 export class PriceController {
   constructor(private readonly priceService: PriceService) {}
 
   @Post()
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async create(@Body() createPriceDto: CreatePriceDto): Promise<Response> {
     return await this.priceService.create(createPriceDto);
   }
 
   @Get()
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async findAll(): Promise<Response> {
     return await this.priceService.findAll();
   }
 
   @Get('customer')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Roles(Role.CUSTOMER)
   async getAll(): Promise<any[]> {
     return await this.priceService.getAll();
   }
 
   @Post('download-pdf')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.CUSTOMER)
   async downloadPDF(): Promise<StreamableFile> {
     const pdfBuffer = await this.priceService.generatePriceListPDF();
 
