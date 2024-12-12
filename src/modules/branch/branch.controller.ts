@@ -33,7 +33,7 @@ export class BranchController {
 
   @Get('companies')
   async getBranchesByCompanyIds(
-    @Query('company_ids') company_ids: number[],
+    @Query('company_ids') company_ids: number | number[],
   ): Promise<Response> {
     return await this.branchService.getBranchesByCompanyIds(company_ids);
   }

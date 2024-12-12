@@ -131,10 +131,14 @@ export class BranchService {
     };
   }
 
-  async getBranchesByCompanyIds(company_ids: number[]): Promise<Response> {
+  async getBranchesByCompanyIds(
+    company_ids: number | number[],
+  ): Promise<Response> {
+    const idsArray = Array.isArray(company_ids) ? company_ids : [company_ids];
+
     const result = await this.branchRepository.find({
       where: {
-        company_id: In(company_ids),
+        company_id: In(idsArray),
         deleted_at: null,
       },
     });
