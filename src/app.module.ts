@@ -1,9 +1,11 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { dataSourceOptions } from './database/data-source';
+import { NullTransformInterceptor } from './interceptors/transform-response.interceptor';
 import { AddressModule } from './modules/address/address.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BannerModule } from './modules/banner/banner.module';
@@ -63,7 +65,14 @@ import { ReportModule } from './report/report.module';
     PriceContentModule,
   ],
   controllers: [AppController],
-  providers: [AppService, IsUniqueConstraint],
+  providers: [
+    AppService,
+    IsUniqueConstraint,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: NullTransformInterceptor,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
