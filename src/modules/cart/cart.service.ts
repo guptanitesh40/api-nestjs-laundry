@@ -5,6 +5,7 @@ import { Cart } from 'src/entities/cart.entity';
 import { Price } from 'src/entities/price.entity';
 import { Repository } from 'typeorm';
 import { AddCartDto } from './dto/cart.dto';
+import { UpdateCartDto } from './dto/update-cart.dto';
 
 @Injectable()
 export class CartService {
@@ -65,7 +66,10 @@ export class CartService {
     };
   }
 
-  async updateCart(cart_id: number, quantity: number): Promise<Response> {
+  async updateCart(
+    cart_id: number,
+    updateCartDto: UpdateCartDto,
+  ): Promise<Response> {
     const cart = await this.cartRepository.findOne({
       where: { cart_id: cart_id },
     });
@@ -73,9 +77,11 @@ export class CartService {
       throw new NotFoundException('Cart not found');
     }
 
-    cart.quantity = quantity;
+    await this.cartRepository.update(cart_id, updateCartDto);
 
-    const updated = await this.cartRepository.save(cart);
+    const updated = await this.cartRepository.findOne({
+      where: { cart_id: cart_id, deleted_at: null },
+    });
 
     return {
       statusCode: 200,
