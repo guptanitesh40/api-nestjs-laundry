@@ -1,3 +1,4 @@
+import { IsOptional } from 'class-validator';
 import {
   Column,
   Entity,
@@ -48,4 +49,8 @@ export class Cart extends BaseEntity {
 
   @Column({ type: 'int' })
   quantity: number;
+
+  @Column({ type: 'varchar', nullable: true })
+  @IsOptional()
+  description?: string;
 }

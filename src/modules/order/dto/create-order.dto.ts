@@ -60,7 +60,7 @@ export class CreateOrderDto {
   @IsOptional()
   @IsNumber()
   @IsEnum(OrderStatus)
-  order_status: OrderStatus;
+  order_status?: OrderStatus;
 
   @IsOptional()
   @IsNumber()

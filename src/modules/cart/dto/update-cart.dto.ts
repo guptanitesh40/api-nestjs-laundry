@@ -5,4 +5,7 @@ export class UpdateCartDto {
   @IsOptional()
   @Min(1)
   quantity?: number;
+
+  @IsOptional()
+  description?: string;
 }

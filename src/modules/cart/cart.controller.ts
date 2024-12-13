@@ -17,6 +17,7 @@ import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from '../auth/guard/role.guard';
 import { CartService } from './cart.service';
 import { AddCartDto } from './dto/cart.dto';
+import { UpdateCartDto } from './dto/update-cart.dto';
 
 @Controller('carts')
 @UseGuards(RolesGuard)
@@ -43,9 +44,9 @@ export class CartController {
   @Put(':cart_id')
   async updateCart(
     @Param('cart_id') cart_id: number,
-    @Body('quantity') quantity: number,
+    @Body() updateCartDto: UpdateCartDto,
   ): Promise<Response> {
-    return this.cartService.updateCart(cart_id, quantity);
+    return this.cartService.updateCart(cart_id, updateCartDto);
   }
 
   @Delete(':cart_id')
