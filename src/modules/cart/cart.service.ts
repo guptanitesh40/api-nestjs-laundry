@@ -70,23 +70,16 @@ export class CartService {
     cart_id: number,
     updateCartDto: UpdateCartDto,
   ): Promise<Response> {
-    const cart = await this.cartRepository.findOne({
-      where: { cart_id: cart_id },
-    });
-    if (!cart) {
-      throw new NotFoundException('Cart not found');
-    }
-
     await this.cartRepository.update(cart_id, updateCartDto);
 
-    const updated = await this.cartRepository.findOne({
-      where: { cart_id: cart_id, deleted_at: null },
+    const cart = await this.cartRepository.findOne({
+      where: { cart_id: cart_id },
     });
 
     return {
       statusCode: 200,
       message: 'Cart updated successfully',
-      data: updated,
+      data: cart,
     };
   }
 
