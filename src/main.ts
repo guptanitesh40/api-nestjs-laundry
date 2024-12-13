@@ -28,7 +28,7 @@ async function bootstrap() {
       },
     }),
   );
-
+  app.useStaticAssets(join(__dirname, '..', 'pdf'), { prefix: '/pdf' });
   app.useStaticAssets(join(__dirname, '..', 'images'), {
     index: false,
     prefix: '/images',
