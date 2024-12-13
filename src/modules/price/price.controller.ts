@@ -1,13 +1,6 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  StreamableFile,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { createReadStream, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
@@ -44,14 +37,16 @@ export class PriceController {
     return await this.priceService.getAll();
   }
 
-  @Post('download-pdf')
-  async downloadPDF(): Promise<StreamableFile> {
+  @Get('download-pdf')
+  async downloadPDF(): Promise<{ url: string }> {
     const pdfBuffer = await this.priceService.generatePriceListPDF();
+    const baseUrl = process.env.BASE_URL;
+    const fileName = 'priceList.pdf';
+    const filePath = join(process.cwd(), 'pdf', fileName);
 
-    const filePath = join(process.cwd(), 'pdf/priceList.pdf');
     writeFileSync(filePath, pdfBuffer);
 
-    const file = createReadStream(filePath);
-    return new StreamableFile(file, { type: 'application/pdf' });
+    const fileUrl = `${baseUrl}/pdf/${fileName}`;
+    return { url: fileUrl };
   }
 }
