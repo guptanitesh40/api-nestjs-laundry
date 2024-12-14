@@ -27,6 +27,8 @@ export class NullTransformInterceptor implements NestInterceptor {
       for (const key in data) {
         if (data[key] === null) {
           transformed[key] = numericKeys.includes(key) ? 0 : '';
+        } else if (data[key] instanceof Date) {
+          transformed[key] = data[key].toISOString();
         } else if (typeof data[key] === 'object') {
           transformed[key] = this.transform(data[key]);
         } else {

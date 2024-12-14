@@ -47,6 +47,7 @@ export class CartService {
       .select([
         'cart.cart_id as cart_id',
         'cart.quantity as quantity',
+        'cart.description as description',
         'cart.product_id as product_id',
         'product.name as product_name',
         `CONCAT('${BASE_URL}/', product.image) as product_image`,
@@ -98,6 +99,20 @@ export class CartService {
       statusCode: 200,
       message: 'Cart removed successfully',
       data: null,
+    };
+  }
+
+  async removeCartByUser(user_id: number): Promise<Response> {
+    const cart = await this.cartRepository.findOne({
+      where: { user_id: user_id },
+    });
+
+    await this.cartRepository.delete({ user_id: user_id });
+
+    return {
+      statusCode: 200,
+      message: 'Cart removed successfully',
+      data: cart,
     };
   }
 }
