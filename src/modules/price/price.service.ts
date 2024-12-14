@@ -219,7 +219,6 @@ export class PriceService {
     const base_url = process.env.BASE_URL;
 
     const prices = await this.getAll();
-    // console.log(prices);
     const templatePath = path.join(
       __dirname,
       '..',
