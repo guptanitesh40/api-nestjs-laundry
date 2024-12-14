@@ -50,7 +50,12 @@ export class PriceService {
 
         await queryRunner.manager.insert(Price, createPriceDto.prices);
       }
+
       await queryRunner.commitTransaction();
+      const pdfBuffer = await this.generatePriceListPDF();
+      const fileName = 'priceList.pdf';
+      const filePath = path.join(process.cwd(), 'pdf', fileName);
+      fs.writeFileSync(filePath, pdfBuffer);
 
       return {
         statusCode: 201,
@@ -214,7 +219,6 @@ export class PriceService {
     const base_url = process.env.BASE_URL;
 
     const prices = await this.getAll();
-
     const templatePath = path.join(
       __dirname,
       '..',

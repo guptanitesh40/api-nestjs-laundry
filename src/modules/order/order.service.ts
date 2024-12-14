@@ -32,6 +32,7 @@ import {
   getWorkshopOrdersStatusLabel,
 } from 'src/utils/order-status.helper';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
+import { CartService } from '../cart/cart.service';
 import { CouponService } from '../coupon/coupon.service';
 import { OrderFilterDto } from '../dto/orders-filter.dto';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
@@ -65,6 +66,7 @@ export class OrderService {
     private readonly settingService: SettingService,
     private readonly priceService: PriceService,
     private readonly workshopService: WorkshopService,
+    private readonly cartService: CartService,
     private dataSource: DataSource,
   ) {}
 
@@ -191,7 +193,6 @@ export class OrderService {
         coupon_discount = couponValidation.data.discountAmount;
         calculatedSubTotal -= coupon_discount;
       }
-
       if (calculatedSubTotal !== createOrderDto.sub_total) {
         throw new Error(
           'Sub-total mismatch: Please verify item prices and quantities.',
@@ -238,6 +239,7 @@ export class OrderService {
           });
         }
       }
+      await this.cartService.removeCartByUser(user.user_id);
 
       await this.generateOrderLabels(queryRunner, savedOrder.order_id);
 
@@ -256,7 +258,6 @@ export class OrderService {
           mobile_number: user.mobile_number,
         },
       };
-
       await this.notificationService.sendOrderNotification(orderDetail);
       return {
         statusCode: 201,
