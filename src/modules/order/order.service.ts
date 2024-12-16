@@ -1190,7 +1190,7 @@ export class OrderService {
         'order.order_status BETWEEN :minStatus AND :maxStatus',
         {
           minStatus: OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
-          maxStatus: OrderStatus.WORKSHOP_RECEIVED_ITEMS,
+          maxStatus: OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
         },
       );
     }
