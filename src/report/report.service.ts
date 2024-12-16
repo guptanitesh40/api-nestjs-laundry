@@ -97,13 +97,13 @@ export class ReportService {
       .createQueryBuilder('orders')
       .select("DATE_FORMAT(orders.created_at,'%y-%b') AS month")
       .addSelect(
-        `CASE WHEN orders.order_status = ${OrderStatus.DELIVERY_BOY_MARKS_AS_COMPLETED} THEN 'Completed' ELSE 'Pending' END`,
+        `CASE WHEN orders.order_status = ${OrderStatus.DELIVERED} THEN 'Completed' ELSE 'Pending' END`,
         'status',
       )
       .addSelect('COUNT(*)', 'count')
       .where('orders.deleted_at IS NULL')
       .andWhere('orders.order_status IN (:...statuses)', {
-        statuses: [OrderStatus.DELIVERY_BOY_MARKS_AS_COMPLETED],
+        statuses: [OrderStatus.DELIVERED],
       });
 
     if (formattedStartDate && formattedEndDate) {
@@ -147,9 +147,7 @@ export class ReportService {
       .where('orders.deleted_at IS NULL')
       .andWhere('orders.order_status NOT IN (:...completedStatuses)', {
         completedStatuses: [
-          OrderStatus.DELIVERY_BOY_MARKS_AS_COMPLETED,
-          OrderStatus.DELIVERED,
-          OrderStatus.CANCELLED,
+          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
         ],
       });
 
