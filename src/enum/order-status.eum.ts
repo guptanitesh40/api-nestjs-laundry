@@ -13,24 +13,6 @@ export enum OrderStatus {
   CANCELLED = 12,
 }
 
-export enum AdminOrderStatus {
-  ORDER_PLACED = 'Order Placed',
-  BRANCH_ASSIGNED = 'Branch Assigned',
-  READY_TO_PICKUP = 'Ready to Pickup',
-  RECEIVED_BY_PICKUP_BOY = 'Received by Pickup Boy',
-  PICKUP_COMPLETE = 'Pickup Complete',
-  ITEMS_RECEIVED_AT_BRANCH = 'Items Received at Branch',
-  ASSIGN_WORKSHOP = 'Assign Workshop',
-  ORDER_RECEIVED_AT_WORKSHOP = 'Order Received at Workshop',
-  WORK_IN_PROGRESS = 'Work In Progress',
-  WORK_COMPLETED = 'Work Completed by Workshop',
-  ORDER_COMPLETED = 'Order Completed (Received at Branch)',
-  ASSIGN_DELIVERY_BOY = 'Assign Delivery Boy',
-  READY_FOR_DELIVERY = 'Ready for Delivery',
-  DELIVERED = 'Delivered',
-  ORDER_CANCELLED = 'Order Cancelled',
-}
-
 export enum CustomerOrderStatus {
   WAITING_FOR_PICKUP = 'Waiting For Pickup',
   PICKUP_COMPLETE = 'Pickup Completed',
