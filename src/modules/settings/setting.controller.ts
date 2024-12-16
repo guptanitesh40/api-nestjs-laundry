@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Put, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
@@ -20,13 +20,13 @@ export class SettingController {
   }
 
   @Get('admin/settings')
-  async findAll(): Promise<Response> {
-    return await this.settingService.findAll();
+  async findAll(@Query('keys') keys?: string[]): Promise<Response> {
+    return await this.settingService.findAll(keys);
   }
 
   @Get('settings')
   @Roles(Role.CUSTOMER)
-  async getAll(): Promise<Response> {
-    return await this.settingService.findAll();
+  async getAll(@Query('keys') keys?: string[]): Promise<Response> {
+    return await this.settingService.findAll(keys);
   }
 }
