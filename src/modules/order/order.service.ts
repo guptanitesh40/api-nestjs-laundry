@@ -27,8 +27,8 @@ import {
   appendBaseUrlToNestedImages,
 } from 'src/utils/image-path.helper';
 import {
-  getAdminOrderStatusLabel,
   getCustomerOrderStatusLabel,
+  getOrderStatusDetails,
   getWorkshopOrdersStatusLabel,
 } from 'src/utils/order-status.helper';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
@@ -429,14 +429,7 @@ export class OrderService {
     const [orders, total]: any = await queryBuilder.getManyAndCount();
 
     orders.map((order) => {
-      order.order_status_name = getAdminOrderStatusLabel(
-        order.order_status,
-        order.branch_id,
-        order.pickup_boy_id,
-        order.workshop_id,
-        order.created_by_user_id,
-      );
-
+      order.order_status_details = getOrderStatusDetails(order);
       order.pickup_boy = order.pickup_boy_id
         ? {
             id: order.pickup_boy_id,
@@ -530,13 +523,7 @@ export class OrderService {
       throw new NotFoundException(`Order with id ${order_id} not found`);
     }
 
-    orders.order_status_name = getAdminOrderStatusLabel(
-      orders.order_status,
-      orders.branch_id,
-      orders.pickup_boy_id,
-      orders.workshop_id,
-      orders.created_by_user_id,
-    );
+    orders.order_status_details = getOrderStatusDetails(orders);
 
     orders.workshop_status_name = getWorkshopOrdersStatusLabel(
       orders.order_status,
@@ -690,40 +677,43 @@ export class OrderService {
     }
 
     switch (status) {
-      case OrderStatus.ITEMS_RECEIVED_BY_PICKUP_BOY:
-        if (order.order_status !== OrderStatus.PICKUP_PENDING) {
+      case OrderStatus.ASSIGNED_PICKUP_BOY:
+        if (
+          order.order_status !==
+          OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING
+        ) {
           throw new BadRequestException(
             'Cannot mark as Items Received by Pickup Boy. Previous status must be Pickup Pending.',
           );
         }
         break;
 
-      case OrderStatus.ITEMS_RECEIVED_AT_BRANCH:
-        if (order.order_status !== OrderStatus.ITEMS_RECEIVED_BY_PICKUP_BOY) {
+      case OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY:
+        if (order.order_status !== OrderStatus.ASSIGNED_PICKUP_BOY) {
           throw new BadRequestException(
             'Cannot mark as Items Received at Branch. Previous status must be Items Received by Pickup Boy.',
           );
         }
         break;
 
-      case OrderStatus.WORKSHOP_RECEIVED_ITEMS:
-        if (order.order_status !== OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
+      case OrderStatus.ITEMS_RECEIVED_AT_BRANCH:
+        if (order.order_status !== OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY) {
           throw new BadRequestException(
             'Cannot mark as Workshop Received Items. Previous status must be Items Received at Branch.',
           );
         }
         break;
 
-      case OrderStatus.WORKSHOP_MOVED_TO_IN_PROCESS:
-        if (order.order_status !== OrderStatus.WORKSHOP_RECEIVED_ITEMS) {
+      case OrderStatus.WORKSHOP_ASSIGNED:
+        if (order.order_status !== OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
           throw new BadRequestException(
             'Cannot mark as Workshop In Process. Previous status must be Workshop Received Items.',
           );
         }
         break;
 
-      case OrderStatus.WORKSHOP_MARKS_AS_COMPLETED:
-        if (order.order_status !== OrderStatus.WORKSHOP_MOVED_TO_IN_PROCESS) {
+      case OrderStatus.WORKSHOP_RECEIVED_ITEMS:
+        if (order.order_status !== OrderStatus.WORKSHOP_ASSIGNED) {
           throw new BadRequestException(
             'Cannot mark as Workshop Completed. Previous status must be Workshop In Process.',
           );
@@ -732,7 +722,8 @@ export class OrderService {
 
       case OrderStatus.DELIVERED:
         if (
-          order.order_status !== OrderStatus.DELIVERY_BOY_MARKS_AS_COMPLETED
+          order.order_status !==
+          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
         ) {
           throw new BadRequestException(
             'Cannot mark as Delivered. Previous status must be Delivery Boy Marks As Completed.',
@@ -755,14 +746,11 @@ export class OrderService {
     order.order_status = status;
     await this.orderRepository.save(order);
 
-    const adminStatus = getAdminOrderStatusLabel(status);
-
     return {
       statusCode: 200,
       message: 'Order status updated successfully',
       orderId: order_id,
       orderStatus: status,
-      adminStatus: adminStatus,
     };
   }
 
@@ -811,7 +799,8 @@ export class OrderService {
     }
 
     order.delivery_boy_id = deliveryBoy.user_id;
-    order.order_status = OrderStatus.DELIVERY_BOY_MARKS_AS_COMPLETED;
+    order.order_status =
+      OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY;
 
     await this.orderRepository.save(order);
 
@@ -943,12 +932,12 @@ export class OrderService {
       .where('order.user_id=:userId', { userId: user_id })
       .andWhere('order.order_status IN(:statuses)', {
         statuses: [
+          OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
           OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
+          OrderStatus.WORKSHOP_ASSIGNED,
           OrderStatus.WORKSHOP_RECEIVED_ITEMS,
-          OrderStatus.WORKSHOP_MOVED_TO_IN_PROCESS,
-          OrderStatus.WORKSHOP_MARKS_AS_COMPLETED,
-          OrderStatus.BRANCH_RECEIVED_ITEMS,
-          OrderStatus.BRANCH_ASSIGN_DELIVERY_BOY,
+          OrderStatus.WORKSHOP_WORK_IN_PROGRESS,
+          OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
         ],
       })
       .andWhere('order.deleted_at IS NULL');
@@ -1065,7 +1054,7 @@ export class OrderService {
     }
 
     order.workshop_id = workshop_id;
-    order.order_status = OrderStatus.WORKSHOP_RECEIVED_ITEMS;
+    order.order_status = OrderStatus.WORKSHOP_ASSIGNED;
 
     await this.orderRepository.save(order);
 
@@ -1101,13 +1090,13 @@ export class OrderService {
 
     order.pickup_boy_id = pickupBoy.user_id;
     order.pickup_comment = comment;
-    order.order_status = OrderStatus.ITEMS_RECEIVED_BY_PICKUP_BOY;
+    order.order_status = OrderStatus.ASSIGNED_PICKUP_BOY;
 
     await this.orderRepository.save(order);
 
     return {
       statusCode: 200,
-      message: 'Order picked up successfully',
+      message: 'pickupBoy assigned successfully',
     };
   }
 
@@ -1200,8 +1189,8 @@ export class OrderService {
       queryBuilder.andWhere(
         'order.order_status BETWEEN :minStatus AND :maxStatus',
         {
-          minStatus: OrderStatus.PICKUP_PENDING,
-          maxStatus: OrderStatus.WORKSHOP_MARKS_AS_COMPLETED,
+          minStatus: OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+          maxStatus: OrderStatus.WORKSHOP_RECEIVED_ITEMS,
         },
       );
     }

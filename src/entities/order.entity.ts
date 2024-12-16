@@ -86,7 +86,10 @@ export class OrderDetail extends BaseEntity {
   @Column({ type: 'int', default: PaymentType.ONLINE_PAYMENT })
   payment_type: PaymentType;
 
-  @Column({ type: 'int', default: OrderStatus.PICKUP_PENDING })
+  @Column({
+    type: 'int',
+    default: OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+  })
   order_status: OrderStatus;
 
   @Column({

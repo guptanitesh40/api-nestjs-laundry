@@ -140,7 +140,7 @@ export class OrderController {
     return this.orderService.updatePaymentStatus(order_id, status);
   }
 
-  @Patch('admin/orders/pickup')
+  @Patch('admin/orders/assign-pickup')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async assignPickupBoy(
     @Body('order_id', ParseIntPipe) order_id: number,
