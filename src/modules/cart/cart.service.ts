@@ -23,7 +23,7 @@ export class CartService {
     const result = await this.cartRepository.save(cart);
 
     return {
-      statusCode: 201,
+      statusCode: 200,
       message: 'Cart added successfully',
       data: result,
     };

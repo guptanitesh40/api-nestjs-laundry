@@ -260,7 +260,7 @@ export class OrderService {
       };
       await this.notificationService.sendOrderNotification(orderDetail);
       return {
-        statusCode: 201,
+        statusCode: 200,
         message: 'Order details added successfully',
         data: orderDetail,
       };
@@ -429,6 +429,9 @@ export class OrderService {
     const [orders, total]: any = await queryBuilder.getManyAndCount();
 
     orders.map((order) => {
+      if (order.total > order.paid_amount) {
+        order.pending_due_amount = order.total - order.paid_amount;
+      }
       order.order_status_details = getOrderStatusDetails(order);
       order.pickup_boy = order.pickup_boy_id
         ? {
@@ -525,6 +528,9 @@ export class OrderService {
 
     orders.order_status_details = getOrderStatusDetails(orders);
 
+    if (orders.toal > orders.paid_amount) {
+      orders.pending_due_amount = orders.total - orders.paid_amount;
+    }
     orders.workshop_status_name = getWorkshopOrdersStatusLabel(
       orders.order_status,
     );
