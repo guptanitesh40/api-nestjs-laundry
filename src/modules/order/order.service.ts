@@ -36,12 +36,15 @@ import { CartService } from '../cart/cart.service';
 import { CouponService } from '../coupon/coupon.service';
 import { OrderFilterDto } from '../dto/orders-filter.dto';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { CreateNoteDto } from '../notes/dto/create-note.dto';
+import { NotesService } from '../notes/note.service';
 import { NotificationService } from '../notification/notification.service';
 import { PriceService } from '../price/price.service';
 import { SettingService } from '../settings/setting.service';
 import { UserService } from '../user/user.service';
 import { WorkshopService } from '../workshop/workshop.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { DeliveryOrderDto } from './dto/delivery-order.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 
@@ -67,6 +70,7 @@ export class OrderService {
     private readonly priceService: PriceService,
     private readonly workshopService: WorkshopService,
     private readonly cartService: CartService,
+    private readonly notesService: NotesService,
     private dataSource: DataSource,
   ) {}
 
@@ -973,7 +977,7 @@ export class OrderService {
     };
   }
 
-  async getAssignedOrders(
+  async getDeliveryBoyAssignedOrders(
     delivery_boy_id: number,
     search?: string,
   ): Promise<Response> {
@@ -982,6 +986,9 @@ export class OrderService {
       .leftJoinAndSelect('order.items', 'items')
       .leftJoinAndSelect('order.user', 'user')
       .where('order.delivery_boy_id = :delivery_boy_id', { delivery_boy_id })
+      .andWhere('order.order_status != :deliveredStatus', {
+        deliveredStatus: OrderStatus.DELIVERED,
+      })
       .select([
         'order.order_id As order_id',
         'order.delivery_boy_id As delivery_boy_id',
@@ -990,11 +997,10 @@ export class OrderService {
         'user.last_name As last_name',
         'user.mobile_number As mobile_number',
         'order.address_details As address',
-        'items.item_id As item_id',
         'COUNT(items.item_id) As total_item',
         'order.estimated_pickup_time As estimated_pickup_time_hour',
       ])
-      .groupBy('order.order_id,user.user_id,items.item_id');
+      .groupBy('order.order_id,user.user_id');
 
     if (search) {
       queryBuilder.andWhere(
@@ -1011,6 +1017,49 @@ export class OrderService {
       statusCode: 200,
       message: 'Orders with assigned delivery boys retrieved successfully',
       data: ordersWithAssignedDeliveryBoys,
+    };
+  }
+
+  async getPickupBoyAssignedOrders(
+    pickup_boy_id: number,
+    search?: string,
+  ): Promise<Response> {
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('order.user', 'user')
+      .where('order.pickup_boy_id = :pickup_boy_id', { pickup_boy_id })
+      .andWhere('order.order_status != :deliveredStatus', {
+        deliveredStatus: OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+      })
+      .select([
+        'order.order_id As order_id',
+        'order.pickup_boy_id As pickup_boy_id',
+        'user.user_id As user_id',
+        'user.first_name As first_name',
+        'user.last_name As last_name',
+        'user.mobile_number As mobile_number',
+        'order.address_details As address',
+        'COUNT(items.item_id) As total_item',
+        'order.estimated_pickup_time As estimated_pickup_time_hour',
+      ])
+      .groupBy('order.order_id,user.user_id');
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(user.first_name LIKE :search OR user.last_name LIKE :search OR user.mobile_number LIKE :search OR order.address_details LIKE :search OR user.email LIKE :search)',
+        {
+          search: `%${search}%`,
+        },
+      );
+    }
+
+    const ordersWithAssignedPickupBoys = await queryBuilder.getRawMany();
+
+    return {
+      statusCode: 200,
+      message: 'Orders with assigned pickup boys retrieved successfully',
+      data: ordersWithAssignedPickupBoys,
     };
   }
 
@@ -1103,6 +1152,73 @@ export class OrderService {
     return {
       statusCode: 200,
       message: 'pickupBoy assigned successfully',
+    };
+  }
+
+  async DeliveryComplete(
+    order_id: number,
+    deliveryOrderDto: DeliveryOrderDto,
+    imagePaths: string[],
+  ): Promise<Response> {
+    const order: any = await this.orderRepository.findOne({
+      where: { order_id },
+    });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    order.order_status = OrderStatus.DELIVERED;
+
+    order.order_status_details = getOrderStatusDetails(order);
+    await this.orderRepository.save(order);
+
+    const noteDto: CreateNoteDto = {
+      order_id,
+      text_note: deliveryOrderDto.deliveryNote,
+      images: deliveryOrderDto.images,
+      user_id: deliveryOrderDto.user_id,
+    };
+
+    const deliveryNote = await this.notesService.create(noteDto, imagePaths);
+
+    return {
+      statusCode: 200,
+      message: 'Order delivery confirmed successfully',
+      data: { order, deliveryNote },
+    };
+  }
+
+  async pickupComplete(
+    order_id: number,
+    deliveryOrderDto: DeliveryOrderDto,
+    imagePaths: string[],
+  ): Promise<Response> {
+    const order: any = await this.orderRepository.findOne({
+      where: { order_id },
+    });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    order.order_status = OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY;
+
+    order.order_status_details = getOrderStatusDetails(order);
+
+    await this.orderRepository.save(order);
+
+    const noteDto: CreateNoteDto = {
+      order_id,
+      text_note: deliveryOrderDto.deliveryNote,
+      images: deliveryOrderDto.images,
+      user_id: deliveryOrderDto.user_id,
+    };
+
+    const pickupNote = await this.notesService.create(noteDto, imagePaths);
+
+    return {
+      statusCode: 200,
+      message: 'Order Pickup Confirmed successfully',
+      data: { order, pickupNote },
     };
   }
 
