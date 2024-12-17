@@ -196,7 +196,7 @@ export class OrderController {
     const imagePaths = files.map(
       (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
     );
-    return this.orderService.DeliveryComplete(
+    return this.orderService.deliveryComplete(
       order_id,
       deliveryOrderDto,
       imagePaths,

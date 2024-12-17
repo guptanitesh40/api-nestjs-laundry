@@ -992,6 +992,7 @@ export class OrderService {
       .andWhere('order.order_status IN(:deliveredStatus)', {
         deliveredStatus: [
           OrderStatus.ASSIGNED_PICKUP_BOY,
+          OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
           OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
         ],
       })
@@ -1121,7 +1122,7 @@ export class OrderService {
     };
   }
 
-  async completeOrder(
+  async updateOrderPickupAndDeliveryStatus(
     order_id: number,
     deliveryOrderDto: DeliveryOrderDto,
     imagePaths: string[],
@@ -1155,12 +1156,12 @@ export class OrderService {
     };
   }
 
-  async DeliveryComplete(
+  async deliveryComplete(
     order_id: number,
     deliveryOrderDto: DeliveryOrderDto,
     imagePaths: string[],
   ): Promise<Response> {
-    return this.completeOrder(
+    return this.updateOrderPickupAndDeliveryStatus(
       order_id,
       deliveryOrderDto,
       imagePaths,
@@ -1174,7 +1175,7 @@ export class OrderService {
     deliveryOrderDto: DeliveryOrderDto,
     imagePaths: string[],
   ): Promise<Response> {
-    return this.completeOrder(
+    return this.updateOrderPickupAndDeliveryStatus(
       order_id,
       deliveryOrderDto,
       imagePaths,
