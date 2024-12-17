@@ -12,19 +12,25 @@ import {
   Query,
   Request,
   StreamableFile,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { createReadStream, writeFileSync } from 'fs';
 import { join } from 'path';
+import { FilePath } from 'src/constants/FilePath';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { OrderDetail } from 'src/entities/order.entity';
 import { Role } from 'src/enum/role.enum';
+import { fileUpload } from 'src/multer/image-upload';
 import { RolesGuard } from '../auth/guard/role.guard';
 import { OrderFilterDto } from '../dto/orders-filter.dto';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { DeliveryOrderDto } from './dto/delivery-order.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderService } from './order.service';
@@ -175,6 +181,47 @@ export class OrderController {
     @Body('branch_id', ParseIntPipe) branch_id: number,
   ): Promise<Response> {
     return this.orderService.assignBranch(order_id, branch_id);
+  }
+
+  @Patch('order/:order_id/complete-delivery')
+  @Roles(Role.DELIVERY_BOY)
+  @UseInterceptors(
+    FilesInterceptor('images', 5, fileUpload(FilePath.NOTE_IMAGES)),
+  )
+  async deliveryComplete(
+    @Param('order_id') order_id: number,
+    @Body() deliveryOrderDto: DeliveryOrderDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ): Promise<Response> {
+    const imagePaths = files.map(
+      (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
+    );
+    return this.orderService.deliveryComplete(
+      order_id,
+      deliveryOrderDto,
+      imagePaths,
+    );
+  }
+
+  @Patch('order/:order_id/complete-pickup')
+  @Roles(Role.DELIVERY_BOY)
+  @UseInterceptors(
+    FilesInterceptor('images', 5, fileUpload(FilePath.NOTE_IMAGES)),
+  )
+  async pickupComplete(
+    @Param('order_id') order_id: number,
+    @Body() deliveryOrderDto: DeliveryOrderDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ): Promise<Response> {
+    const imagePaths = files.map(
+      (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
+    );
+
+    return this.orderService.pickupComplete(
+      order_id,
+      deliveryOrderDto,
+      imagePaths,
+    );
   }
 
   @Delete('admin/order/:order_id')
