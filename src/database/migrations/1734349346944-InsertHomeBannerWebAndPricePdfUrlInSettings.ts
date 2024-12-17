@@ -6,7 +6,7 @@ export class InsertHomeBannerWebAndPricePdfUrlInSettings1734349346944
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
       `INSERT INTO settings (setting_key, setting_value) 
-             VALUES ('home_banner_web', 
+             VALUES ('home_promotion_banner_website', 
              '{"title": "5 Saree Roll Press",
               "price": "200",
                "offer_validity": "20 Mar 2024",
@@ -21,7 +21,7 @@ export class InsertHomeBannerWebAndPricePdfUrlInSettings1734349346944
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `DELETE FROM settings WHERE setting_key IN ('home_banner_web', 'price_pdf_url')`,
+      `DELETE FROM settings WHERE setting_key IN ('home_promotion_banner_website', 'price_pdf_url')`,
     );
   }
 }
