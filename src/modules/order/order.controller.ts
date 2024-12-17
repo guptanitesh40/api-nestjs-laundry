@@ -41,29 +41,15 @@ import { OrderService } from './order.service';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @Get('orders/assigned-pickupboy')
+  @Get('orders/assigned')
   @Roles(Role.DELIVERY_BOY)
-  async getPickupBoyAssignedOrders(
+  async getAssignedOrders(
     @Request() req,
     @Query() paginationQuery: PaginationQueryDto,
   ): Promise<Response> {
     const user = req.user;
 
-    return await this.orderService.getPickupBoyAssignedOrders(
-      user.user_id,
-      paginationQuery.search,
-    );
-  }
-
-  @Get('orders/assigned-deliveryboy')
-  @Roles(Role.DELIVERY_BOY)
-  async getDeliveryBoyAssignedOrders(
-    @Request() req,
-    @Query() paginationQuery: PaginationQueryDto,
-  ): Promise<Response> {
-    const user = req.user;
-
-    return await this.orderService.getDeliveryBoyAssignedOrders(
+    return await this.orderService.getAssignedOrders(
       user.user_id,
       paginationQuery.search,
     );
@@ -202,7 +188,7 @@ export class OrderController {
   @UseInterceptors(
     FilesInterceptor('images', 5, fileUpload(FilePath.NOTE_IMAGES)),
   )
-  async DeliveryComplete(
+  async deliveryComplete(
     @Param('order_id') order_id: number,
     @Body() deliveryOrderDto: DeliveryOrderDto,
     @UploadedFiles() files: Express.Multer.File[],

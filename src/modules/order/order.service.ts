@@ -977,7 +977,7 @@ export class OrderService {
     };
   }
 
-  async getDeliveryBoyAssignedOrders(
+  async getAssignedOrders(
     delivery_boy_id: number,
     search?: string,
   ): Promise<Response> {
@@ -985,13 +985,21 @@ export class OrderService {
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'items')
       .leftJoinAndSelect('order.user', 'user')
-      .where('order.delivery_boy_id = :delivery_boy_id', { delivery_boy_id })
-      .andWhere('order.order_status != :deliveredStatus', {
-        deliveredStatus: OrderStatus.DELIVERED,
+      .where(
+        'order.pickup_boy_id = :delivery_boy_id OR order.delivery_boy_id = :delivery_boy_id',
+        { delivery_boy_id },
+      )
+      .andWhere('order.order_status IN(:deliveredStatus)', {
+        deliveredStatus: [
+          OrderStatus.ASSIGNED_PICKUP_BOY,
+          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+        ],
       })
       .select([
         'order.order_id As order_id',
         'order.delivery_boy_id As delivery_boy_id',
+        'order.pickup_boy_id As pickup_boy_id',
+        'order.order_status As order_status',
         'user.user_id As user_id',
         'user.first_name As first_name',
         'user.last_name As last_name',
@@ -1015,51 +1023,9 @@ export class OrderService {
 
     return {
       statusCode: 200,
-      message: 'Orders with assigned delivery boys retrieved successfully',
+      message:
+        'Orders with assigned delivery boys or pickup boys retrieved successfully',
       data: ordersWithAssignedDeliveryBoys,
-    };
-  }
-
-  async getPickupBoyAssignedOrders(
-    pickup_boy_id: number,
-    search?: string,
-  ): Promise<Response> {
-    const queryBuilder = this.orderRepository
-      .createQueryBuilder('order')
-      .leftJoinAndSelect('order.items', 'items')
-      .leftJoinAndSelect('order.user', 'user')
-      .where('order.pickup_boy_id = :pickup_boy_id', { pickup_boy_id })
-      .andWhere('order.order_status != :deliveredStatus', {
-        deliveredStatus: OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
-      })
-      .select([
-        'order.order_id As order_id',
-        'order.pickup_boy_id As pickup_boy_id',
-        'user.user_id As user_id',
-        'user.first_name As first_name',
-        'user.last_name As last_name',
-        'user.mobile_number As mobile_number',
-        'order.address_details As address',
-        'COUNT(items.item_id) As total_item',
-        'order.estimated_pickup_time As estimated_pickup_time_hour',
-      ])
-      .groupBy('order.order_id,user.user_id');
-
-    if (search) {
-      queryBuilder.andWhere(
-        '(user.first_name LIKE :search OR user.last_name LIKE :search OR user.mobile_number LIKE :search OR order.address_details LIKE :search OR user.email LIKE :search)',
-        {
-          search: `%${search}%`,
-        },
-      );
-    }
-
-    const ordersWithAssignedPickupBoys = await queryBuilder.getRawMany();
-
-    return {
-      statusCode: 200,
-      message: 'Orders with assigned pickup boys retrieved successfully',
-      data: ordersWithAssignedPickupBoys,
     };
   }
 
@@ -1155,10 +1121,12 @@ export class OrderService {
     };
   }
 
-  async DeliveryComplete(
+  async completeOrder(
     order_id: number,
     deliveryOrderDto: DeliveryOrderDto,
     imagePaths: string[],
+    status: OrderStatus,
+    statusMessage: string,
   ): Promise<Response> {
     const order: any = await this.orderRepository.findOne({
       where: { order_id },
@@ -1167,8 +1135,7 @@ export class OrderService {
       throw new NotFoundException('Order not found');
     }
 
-    order.order_status = OrderStatus.DELIVERED;
-
+    order.order_status = status;
     order.order_status_details = getOrderStatusDetails(order);
     await this.orderRepository.save(order);
 
@@ -1179,13 +1146,27 @@ export class OrderService {
       user_id: deliveryOrderDto.user_id,
     };
 
-    const deliveryNote = await this.notesService.create(noteDto, imagePaths);
+    const note = await this.notesService.create(noteDto, imagePaths);
 
     return {
       statusCode: 200,
-      message: 'Order delivery confirmed successfully',
-      data: { order, deliveryNote },
+      message: statusMessage,
+      data: { order, note },
     };
+  }
+
+  async DeliveryComplete(
+    order_id: number,
+    deliveryOrderDto: DeliveryOrderDto,
+    imagePaths: string[],
+  ): Promise<Response> {
+    return this.completeOrder(
+      order_id,
+      deliveryOrderDto,
+      imagePaths,
+      OrderStatus.DELIVERED,
+      'Order delivery confirmed successfully',
+    );
   }
 
   async pickupComplete(
@@ -1193,33 +1174,13 @@ export class OrderService {
     deliveryOrderDto: DeliveryOrderDto,
     imagePaths: string[],
   ): Promise<Response> {
-    const order: any = await this.orderRepository.findOne({
-      where: { order_id },
-    });
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
-
-    order.order_status = OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY;
-
-    order.order_status_details = getOrderStatusDetails(order);
-
-    await this.orderRepository.save(order);
-
-    const noteDto: CreateNoteDto = {
+    return this.completeOrder(
       order_id,
-      text_note: deliveryOrderDto.deliveryNote,
-      images: deliveryOrderDto.images,
-      user_id: deliveryOrderDto.user_id,
-    };
-
-    const pickupNote = await this.notesService.create(noteDto, imagePaths);
-
-    return {
-      statusCode: 200,
-      message: 'Order Pickup Confirmed successfully',
-      data: { order, pickupNote },
-    };
+      deliveryOrderDto,
+      imagePaths,
+      OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+      'Order Pickup Confirmed successfully',
+    );
   }
 
   async delete(order_id: number): Promise<Response> {
