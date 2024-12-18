@@ -986,10 +986,17 @@ export class OrderService {
       .leftJoinAndSelect('order.items', 'items')
       .leftJoinAndSelect('order.user', 'user')
       .where(
-        'order.pickup_boy_id = :delivery_boy_id OR order.delivery_boy_id = :delivery_boy_id',
+        '(order.pickup_boy_id = :delivery_boy_id OR order.delivery_boy_id = :delivery_boy_id)',
         { delivery_boy_id },
       )
-      .andWhere('order.order_status IN(:deliveredStatus)', {
+      .andWhere(
+        '(order.order_status != :excludedPickupStatus AND order.order_status != :excludedDeliveryStatus)',
+        {
+          excludedPickupStatus: OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
+          excludedDeliveryStatus: OrderStatus.DELIVERED,
+        },
+      )
+      .andWhere('order.order_status IN(:...deliveredStatus)', {
         deliveredStatus: [
           OrderStatus.ASSIGNED_PICKUP_BOY,
           OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
@@ -1179,7 +1186,7 @@ export class OrderService {
       order_id,
       deliveryOrderDto,
       imagePaths,
-      OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+      OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
       'Order Pickup Confirmed successfully',
     );
   }

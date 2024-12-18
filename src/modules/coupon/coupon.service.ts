@@ -116,6 +116,24 @@ export class CouponService {
     };
   }
 
+  async getAll(): Promise<Response> {
+    const queryBuilder = this.couponRepository
+      .createQueryBuilder('coupon')
+      .where('coupon.deleted_at IS NULL')
+      .andWhere(
+        'coupon.start_time <= :currentDate AND coupon.end_time >= :currentDate',
+        { currentDate: new Date() },
+      );
+    const result = await queryBuilder.getOne();
+    console.log('result', result);
+
+    return {
+      statusCode: 200,
+      message: 'Discount coupons retrieved successfully',
+      data: { result },
+    };
+  }
+
   async findOne(coupon_id: number): Promise<Response> {
     const coupon = await this.couponRepository.findOne({
       where: { coupon_id: coupon_id, deleted_at: null },

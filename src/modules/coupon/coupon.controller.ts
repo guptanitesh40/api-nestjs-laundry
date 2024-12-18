@@ -41,8 +41,8 @@ export class CouponController {
 
   @Get('customer/coupon')
   @Roles(Role.CUSTOMER)
-  async getAll(@Query() couponFiltrerDto: CouponFiltrerDto): Promise<Response> {
-    return this.couponService.findAll(couponFiltrerDto);
+  async getAll(): Promise<Response> {
+    return this.couponService.getAll();
   }
 
   @Post('coupon/apply')
