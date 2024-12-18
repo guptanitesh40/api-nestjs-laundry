@@ -125,7 +125,6 @@ export class CouponService {
         { currentDate: new Date() },
       );
     const result = await queryBuilder.getOne();
-    console.log('result', result);
 
     return {
       statusCode: 200,
