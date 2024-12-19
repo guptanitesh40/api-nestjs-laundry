@@ -191,7 +191,7 @@ export class OrderService {
 
       if (coupon_code) {
         const couponValidation = await this.couponService.applyCoupon(
-          { coupon_Code: coupon_code, order_Total: calculatedSubTotal },
+          { coupon_code: coupon_code, order_Total: calculatedSubTotal },
           createOrderDto.user_id,
         );
         coupon_discount = couponValidation.data.discountAmount;
@@ -1585,16 +1585,7 @@ export class OrderService {
     }
   }
 
-  async countOrdersByCondition(couponCode: string): Promise<number> {
-    return this.orderRepository.count({ where: { coupon_code: couponCode } });
-  }
-
-  async countOrdersByUserAndCoupon(
-    userId: number,
-    couponCode: string,
-  ): Promise<number> {
-    return this.orderRepository.count({
-      where: { coupon_code: couponCode, user_id: userId },
-    });
+  async countOrdersByCondition(condition: object): Promise<number> {
+    return this.orderRepository.count({ where: condition });
   }
 }

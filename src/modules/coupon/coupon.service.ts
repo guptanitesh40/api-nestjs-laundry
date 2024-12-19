@@ -73,11 +73,25 @@ export class CouponService {
         'usageCounts',
         'usageCounts.order_coupon_code = coupon.code',
       )
+      .leftJoinAndSelect(
+        (subQuery) =>
+          subQuery
+            .select('order.coupon_code', 'orders_coupon_code')
+            .addSelect('order.user_id', 'user_id')
+            .addSelect('COUNT(order.order_id)', 'user_usage_count')
+            .from(OrderDetail, 'order')
+            .groupBy('order.coupon_code, order.user_id'),
+        'userUsageCounts',
+        'userUsageCounts.orders_coupon_code = coupon.code',
+      )
       .where('coupon.deleted_at IS NULL')
       .andWhere('coupon.start_time <= :currentDate', { currentDate })
       .andWhere('coupon.end_time >= :currentDate', { currentDate })
       .andWhere(
-        `(usageCounts.usage_count < coupon.total_usage_count OR coupon.total_usage_count IS NULL)`,
+        `(usageCounts.usage_count IS NOT NULL AND usageCounts.usage_count < coupon.total_usage_count) OR usageCounts.usage_count IS NULL`,
+      )
+      .andWhere(
+        `(userUsageCounts.user_usage_count IS NOT NULL AND userUsageCounts.user_usage_count < coupon.maximum_usage_count_per_user) OR userUsageCounts.user_usage_count IS NULL`,
       )
       .take(perPage)
       .skip(skip);
@@ -138,18 +152,32 @@ export class CouponService {
       .leftJoinAndSelect(
         (subQuery) =>
           subQuery
-            .select('order.coupon_code', 'coupon_code')
+            .select('order.coupon_code', 'orders_coupon_code')
             .addSelect('COUNT(order.order_id)', 'usage_count')
             .from(OrderDetail, 'order')
             .groupBy('order.coupon_code'),
         'usageCounts',
-        'usageCounts.coupon_code = coupon.code',
+        'usageCounts.orders_coupon_code = coupon.code',
+      )
+      .leftJoinAndSelect(
+        (subQuery) =>
+          subQuery
+            .select('order.coupon_code', 'order_coupon_code')
+            .addSelect('order.user_id', 'user_id')
+            .addSelect('COUNT(order.order_id)', 'user_usage_count')
+            .from(OrderDetail, 'order')
+            .groupBy('order.coupon_code, order.user_id'),
+        'userUsageCounts',
+        'userUsageCounts.order_coupon_code = coupon.code',
       )
       .where('coupon.deleted_at IS NULL')
       .andWhere('coupon.start_time <= :currentDate', { currentDate })
       .andWhere('coupon.end_time >= :currentDate', { currentDate })
       .andWhere(
-        `(usageCounts.usage_count < coupon.total_usage_count OR coupon.total_usage_count IS NULL)`,
+        `(usageCounts.usage_count IS NULL OR usageCounts.usage_count < coupon.total_usage_count)`,
+      )
+      .andWhere(
+        `(userUsageCounts.user_usage_count IS NULL OR userUsageCounts.user_usage_count < coupon.maximum_usage_count_per_user)`,
       );
 
     const result = await queryBuilder.getMany();
@@ -157,7 +185,7 @@ export class CouponService {
     return {
       statusCode: 200,
       message: 'Discount coupons retrieved successfully',
-      data: { result },
+      data: result,
     };
   }
 
@@ -226,25 +254,28 @@ export class CouponService {
     applyCouponDto: ApplyCouponDto,
     user_id: number,
   ): Promise<Response> {
-    const { coupon_Code, order_Total } = applyCouponDto;
+    const { coupon_code, order_Total } = applyCouponDto;
 
     const coupon = await this.couponRepository.findOne({
-      where: { code: coupon_Code, deleted_at: null },
+      where: { code: coupon_code, deleted_at: null },
     });
 
     if (!coupon) {
       throw new BadRequestException('Invalid coupon code');
     }
 
-    const totalCouponUsedCount =
-      await this.orderService.countOrdersByCondition(coupon_Code);
+    const totalCouponUsedCount = await this.orderService.countOrdersByCondition(
+      { coupon_code },
+    );
 
     if (totalCouponUsedCount >= coupon.total_usage_count) {
       throw new BadRequestException('Coupon usage limit reached');
     }
 
-    const userCouponUsedCount =
-      await this.orderService.countOrdersByUserAndCoupon(user_id, coupon_Code);
+    const userCouponUsedCount = await this.orderService.countOrdersByCondition({
+      user_id,
+      coupon_code,
+    });
 
     if (userCouponUsedCount >= coupon.maximum_usage_count_per_user) {
       throw new BadRequestException(

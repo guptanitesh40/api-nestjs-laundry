@@ -3,7 +3,7 @@ import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 export class ApplyCouponDto {
   @IsNotEmpty()
   @IsString()
-  coupon_Code: string;
+  coupon_code: string;
 
   @IsNotEmpty()
   @IsNumber()
