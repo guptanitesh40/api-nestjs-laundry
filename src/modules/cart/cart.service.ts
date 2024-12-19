@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Cart } from 'src/entities/cart.entity';
 import { Price } from 'src/entities/price.entity';
-import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
+import {
+  appendBaseUrlToImages,
+  appendBaseUrlToImagesCartItems,
+} from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
 import { AddCartDto } from './dto/cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
@@ -16,7 +19,6 @@ export class CartService {
   ) {}
 
   async addToCart(addCartDto: AddCartDto, user_id: number): Promise<Response> {
-    const BASE_URL = process.env.BASE_URL;
     const cart = this.cartRepository.create({
       ...addCartDto,
       user_id,
@@ -35,18 +37,32 @@ export class CartService {
         'category.name as category_name',
         'service.service_id as service_id',
         'service.name as service_name',
-        `CONCAT('${BASE_URL}/', service.image) as service_image`,
+        'service.image as service_image',
         'product.product_id as product_id',
         'product.name as product_name',
-        `CONCAT('${BASE_URL}/', product.image) as product_image`,
+        'product.image as product_image',
       ])
       .where('cart.cart_id = :cart_id', { cart_id: result.cart_id });
+
     const cartitems = await cartWithDetails.getRawOne();
+
+    const updatedCartItems = appendBaseUrlToImagesCartItems(
+      [
+        {
+          ...cartitems,
+          service_image: cartitems.service_image,
+          product_image: cartitems.product_image,
+        },
+      ],
+      ['service_image', 'product_image'],
+    );
+
+    const updatedCart = updatedCartItems[0];
 
     return {
       statusCode: 200,
       message: 'Cart added successfully',
-      data: cartitems,
+      data: updatedCart,
     };
   }
 

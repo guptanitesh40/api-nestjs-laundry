@@ -10,6 +10,21 @@ export function appendBaseUrlToImages<T extends { image?: string }>(
   });
 }
 
+export function appendBaseUrlToImagesCartItems<T>(
+  items: T[],
+  imageFields: (keyof T)[],
+): T[] {
+  const baseUrl = process.env.BASE_URL || '';
+  return items.map((item) => {
+    imageFields.forEach((field) => {
+      if (item[field]) {
+        item[field] = `${baseUrl}/${item[field]}` as unknown as T[keyof T];
+      }
+    });
+    return item;
+  });
+}
+
 export function appendBaseUrlToArrayImages<T extends { images?: string[] }>(
   items: T[],
 ): T[] {
