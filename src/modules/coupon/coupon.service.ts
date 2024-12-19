@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ConflictException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,6 +13,7 @@ import { OrderDetail } from 'src/entities/order.entity';
 import { DiscountType } from 'src/enum/coupon_type.enum';
 import { Repository } from 'typeorm';
 import { CouponFiltrerDto } from '../dto/coupon-filter.dto';
+import { OrderService } from '../order/order.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { ApplyCouponDto } from './dto/create.verify-coupon.dto';
 import { UpdateCouponDto } from './dto/update-coupon.dto';
@@ -20,9 +23,8 @@ export class CouponService {
   constructor(
     @InjectRepository(Coupon)
     private readonly couponRepository: Repository<Coupon>,
-
-    @InjectRepository(OrderDetail)
-    private readonly orderRepository: Repository<OrderDetail>,
+    @Inject(forwardRef(() => OrderService))
+    private readonly orderService: OrderService,
   ) {}
 
   async create(createCouponDto: CreateCouponDto): Promise<Response> {
@@ -57,13 +59,25 @@ export class CouponService {
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
     const skip = (pageNumber - 1) * perPage;
+    const currentDate = new Date();
 
     const queryBuilder = this.couponRepository
       .createQueryBuilder('coupon')
+      .leftJoinAndSelect(
+        (subQuery) =>
+          subQuery
+            .select('order.coupon_code', 'order_coupon_code')
+            .addSelect('COUNT(order.order_id)', 'usage_count')
+            .from(OrderDetail, 'order')
+            .groupBy('order.coupon_code'),
+        'usageCounts',
+        'usageCounts.order_coupon_code = coupon.code',
+      )
       .where('coupon.deleted_at IS NULL')
+      .andWhere('coupon.start_time <= :currentDate', { currentDate })
+      .andWhere('coupon.end_time >= :currentDate', { currentDate })
       .andWhere(
-        'coupon.start_time <= :currentDate AND coupon.end_time >= :currentDate',
-        { currentDate: new Date() },
+        `(usageCounts.usage_count < coupon.total_usage_count OR coupon.total_usage_count IS NULL)`,
       )
       .take(perPage)
       .skip(skip);
@@ -83,13 +97,13 @@ export class CouponService {
     }
 
     if (coupon_type) {
-      queryBuilder.andWhere('coupon.coupon_type In (:...couponType)', {
+      queryBuilder.andWhere('coupon.coupon_type IN (:...couponType)', {
         couponType: coupon_type,
       });
     }
 
     if (discount_type) {
-      queryBuilder.andWhere('coupon.discount_type In (:...discountType)', {
+      queryBuilder.andWhere('coupon.discount_type IN (:...discountType)', {
         discountType: discount_type,
       });
     }
@@ -117,14 +131,28 @@ export class CouponService {
   }
 
   async getAll(): Promise<Response> {
+    const currentDate = new Date();
+
     const queryBuilder = this.couponRepository
       .createQueryBuilder('coupon')
+      .leftJoinAndSelect(
+        (subQuery) =>
+          subQuery
+            .select('order.coupon_code', 'coupon_code')
+            .addSelect('COUNT(order.order_id)', 'usage_count')
+            .from(OrderDetail, 'order')
+            .groupBy('order.coupon_code'),
+        'usageCounts',
+        'usageCounts.coupon_code = coupon.code',
+      )
       .where('coupon.deleted_at IS NULL')
+      .andWhere('coupon.start_time <= :currentDate', { currentDate })
+      .andWhere('coupon.end_time >= :currentDate', { currentDate })
       .andWhere(
-        'coupon.start_time <= :currentDate AND coupon.end_time >= :currentDate',
-        { currentDate: new Date() },
+        `(usageCounts.usage_count < coupon.total_usage_count OR coupon.total_usage_count IS NULL)`,
       );
-    const result = await queryBuilder.getOne();
+
+    const result = await queryBuilder.getMany();
 
     return {
       statusCode: 200,
@@ -208,29 +236,15 @@ export class CouponService {
       throw new BadRequestException('Invalid coupon code');
     }
 
-    const currentDate = new Date();
-
-    if (currentDate < coupon.start_time || currentDate > coupon.end_time) {
-      await this.couponRepository.update(coupon.coupon_id, {
-        deleted_at: new Date(),
-      });
-      throw new BadRequestException('Coupon is not valid at this time');
-    }
-
-    const totalCouponUsedCount = await this.orderRepository.count({
-      where: { coupon_code: coupon_Code },
-    });
+    const totalCouponUsedCount =
+      await this.orderService.countOrdersByCondition(coupon_Code);
 
     if (totalCouponUsedCount >= coupon.total_usage_count) {
-      await this.couponRepository.update(coupon.coupon_id, {
-        deleted_at: new Date(),
-      });
       throw new BadRequestException('Coupon usage limit reached');
     }
 
-    const userCouponUsedCount = await this.orderRepository.count({
-      where: { coupon_code: coupon_Code, user_id: user_id },
-    });
+    const userCouponUsedCount =
+      await this.orderService.countOrdersByUserAndCoupon(user_id, coupon_Code);
 
     if (userCouponUsedCount >= coupon.maximum_usage_count_per_user) {
       throw new BadRequestException(

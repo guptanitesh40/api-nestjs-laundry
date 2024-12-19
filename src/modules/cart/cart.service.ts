@@ -15,6 +15,7 @@ export class CartService {
   ) {}
 
   async addToCart(addCartDto: AddCartDto, user_id: number): Promise<Response> {
+    const BASE_URL = process.env.BASE_URL;
     const cart = this.cartRepository.create({
       ...addCartDto,
       user_id,
@@ -22,10 +23,29 @@ export class CartService {
 
     const result = await this.cartRepository.save(cart);
 
+    const cartWithDetails = this.cartRepository
+      .createQueryBuilder('cart')
+      .leftJoinAndSelect('cart.category', 'category')
+      .leftJoinAndSelect('cart.service', 'service')
+      .leftJoinAndSelect('cart.product', 'product')
+      .select([
+        'cart',
+        'category.category_id as category_id',
+        'category.name as category_name',
+        'service.service_id as service_id',
+        'service.name as service_name',
+        `CONCAT('${BASE_URL}/', service.image) as service_image`,
+        'product.product_id as product_id',
+        'product.name as product_name',
+        `CONCAT('${BASE_URL}/', product.image) as product_image`,
+      ])
+      .where('cart.cart_id = :cart_id', { cart_id: result.cart_id });
+    const cartitems = await cartWithDetails.getRawOne();
+
     return {
       statusCode: 200,
       message: 'Cart added successfully',
-      data: result,
+      data: cartitems,
     };
   }
 

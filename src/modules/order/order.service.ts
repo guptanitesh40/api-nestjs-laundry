@@ -1584,4 +1584,17 @@ export class OrderService {
       );
     }
   }
+
+  async countOrdersByCondition(couponCode: string): Promise<number> {
+    return this.orderRepository.count({ where: { coupon_code: couponCode } });
+  }
+
+  async countOrdersByUserAndCoupon(
+    userId: number,
+    couponCode: string,
+  ): Promise<number> {
+    return this.orderRepository.count({
+      where: { coupon_code: couponCode, user_id: userId },
+    });
+  }
 }
