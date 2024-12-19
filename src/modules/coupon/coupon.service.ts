@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ConflictException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,6 +13,7 @@ import { OrderDetail } from 'src/entities/order.entity';
 import { DiscountType } from 'src/enum/coupon_type.enum';
 import { Repository } from 'typeorm';
 import { CouponFiltrerDto } from '../dto/coupon-filter.dto';
+import { OrderService } from '../order/order.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { ApplyCouponDto } from './dto/create.verify-coupon.dto';
 import { UpdateCouponDto } from './dto/update-coupon.dto';
@@ -20,9 +23,8 @@ export class CouponService {
   constructor(
     @InjectRepository(Coupon)
     private readonly couponRepository: Repository<Coupon>,
-
-    @InjectRepository(OrderDetail)
-    private readonly orderRepository: Repository<OrderDetail>,
+    @Inject(forwardRef(() => OrderService))
+    private readonly orderService: OrderService,
   ) {}
 
   async create(createCouponDto: CreateCouponDto): Promise<Response> {
@@ -57,13 +59,41 @@ export class CouponService {
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
     const skip = (pageNumber - 1) * perPage;
+    const currentDate = new Date();
 
     const queryBuilder = this.couponRepository
       .createQueryBuilder('coupon')
+      .leftJoinAndSelect(
+        (subQuery) =>
+          subQuery
+            .select('order.coupon_code', 'order_coupon_code')
+            .addSelect('COUNT(order.order_id)', 'usage_count')
+            .from(OrderDetail, 'order')
+            .groupBy('order.coupon_code'),
+        'usageCounts',
+        'usageCounts.order_coupon_code = coupon.code',
+      )
+      .leftJoinAndSelect(
+        (subQuery) =>
+          subQuery
+            .select('order.coupon_code', 'orders_coupon_code')
+            .addSelect('order.user_id', 'user_id')
+            .addSelect('COUNT(order.order_id)', 'user_usage_count')
+            .from(OrderDetail, 'order')
+            .groupBy('order.coupon_code, order.user_id'),
+        'userUsageCounts',
+        'userUsageCounts.orders_coupon_code = coupon.code',
+      )
       .where('coupon.deleted_at IS NULL')
+      .andWhere('userUsageCounts.orders_coupon_code = coupon.code')
+      .andWhere('usageCounts.order_coupon_code = coupon.code')
+      .andWhere('coupon.start_time <= :currentDate', { currentDate })
+      .andWhere('coupon.end_time >= :currentDate', { currentDate })
       .andWhere(
-        'coupon.start_time <= :currentDate AND coupon.end_time >= :currentDate',
-        { currentDate: new Date() },
+        `(usageCounts.usage_count IS NOT NULL AND usageCounts.usage_count < coupon.total_usage_count) OR usageCounts.usage_count IS NULL`,
+      )
+      .andWhere(
+        `(userUsageCounts.user_usage_count IS NOT NULL AND userUsageCounts.user_usage_count < coupon.maximum_usage_count_per_user) OR userUsageCounts.user_usage_count IS NULL`,
       )
       .take(perPage)
       .skip(skip);
@@ -83,13 +113,13 @@ export class CouponService {
     }
 
     if (coupon_type) {
-      queryBuilder.andWhere('coupon.coupon_type In (:...couponType)', {
+      queryBuilder.andWhere('coupon.coupon_type IN (:...couponType)', {
         couponType: coupon_type,
       });
     }
 
     if (discount_type) {
-      queryBuilder.andWhere('coupon.discount_type In (:...discountType)', {
+      queryBuilder.andWhere('coupon.discount_type IN (:...discountType)', {
         discountType: discount_type,
       });
     }
@@ -113,6 +143,52 @@ export class CouponService {
       statusCode: 200,
       message: 'Discount coupons retrieved successfully',
       data: { result, limit: perPage, page_number: pageNumber, count: total },
+    };
+  }
+
+  async getAll(): Promise<Response> {
+    const currentDate = new Date();
+
+    const queryBuilder = this.couponRepository
+      .createQueryBuilder('coupon')
+      .leftJoinAndSelect(
+        (subQuery) =>
+          subQuery
+            .select('order.coupon_code', 'order_coupon_code')
+            .addSelect('COUNT(order.order_id)', 'usage_count')
+            .from(OrderDetail, 'order')
+            .groupBy('order.coupon_code'),
+        'usageCounts',
+        'usageCounts.order_coupon_code = coupon.code',
+      )
+      .leftJoinAndSelect(
+        (subQuery) =>
+          subQuery
+            .select('order.coupon_code', 'orders_coupon_code')
+            .addSelect('order.user_id', 'user_id')
+            .addSelect('COUNT(order.order_id)', 'user_usage_count')
+            .from(OrderDetail, 'order')
+            .groupBy('order.coupon_code, order.user_id'),
+        'userUsageCounts',
+        'userUsageCounts.orders_coupon_code = coupon.code',
+      )
+      .where('coupon.deleted_at IS NULL')
+      .andWhere('userUsageCounts.orders_coupon_code = coupon.code')
+      .andWhere('usageCounts.order_coupon_code = coupon.code')
+      .andWhere('coupon.start_time <= :currentDate', { currentDate })
+      .andWhere('coupon.end_time >= :currentDate', { currentDate })
+      .andWhere(
+        `(usageCounts.usage_count IS NOT NULL AND usageCounts.usage_count < coupon.total_usage_count) OR usageCounts.usage_count IS NULL`,
+      )
+      .andWhere(
+        `(userUsageCounts.user_usage_count IS NOT NULL AND userUsageCounts.user_usage_count < coupon.maximum_usage_count_per_user) OR userUsageCounts.user_usage_count IS NULL`,
+      );
+    const result = await queryBuilder.getMany();
+
+    return {
+      statusCode: 200,
+      message: 'Discount coupons retrieved successfully',
+      data: result,
     };
   }
 
@@ -181,38 +257,27 @@ export class CouponService {
     applyCouponDto: ApplyCouponDto,
     user_id: number,
   ): Promise<Response> {
-    const { coupon_Code, order_Total } = applyCouponDto;
+    const { coupon_code, order_Total } = applyCouponDto;
 
     const coupon = await this.couponRepository.findOne({
-      where: { code: coupon_Code, deleted_at: null },
+      where: { code: coupon_code, deleted_at: null },
     });
 
     if (!coupon) {
       throw new BadRequestException('Invalid coupon code');
     }
 
-    const currentDate = new Date();
-
-    if (currentDate < coupon.start_time || currentDate > coupon.end_time) {
-      await this.couponRepository.update(coupon.coupon_id, {
-        deleted_at: new Date(),
-      });
-      throw new BadRequestException('Coupon is not valid at this time');
-    }
-
-    const totalCouponUsedCount = await this.orderRepository.count({
-      where: { coupon_code: coupon_Code },
-    });
+    const totalCouponUsedCount = await this.orderService.countOrdersByCondition(
+      { coupon_code },
+    );
 
     if (totalCouponUsedCount >= coupon.total_usage_count) {
-      await this.couponRepository.update(coupon.coupon_id, {
-        deleted_at: new Date(),
-      });
       throw new BadRequestException('Coupon usage limit reached');
     }
 
-    const userCouponUsedCount = await this.orderRepository.count({
-      where: { coupon_code: coupon_Code, user_id: user_id },
+    const userCouponUsedCount = await this.orderService.countOrdersByCondition({
+      user_id,
+      coupon_code,
     });
 
     if (userCouponUsedCount >= coupon.maximum_usage_count_per_user) {

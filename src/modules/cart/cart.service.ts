@@ -3,6 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Cart } from 'src/entities/cart.entity';
 import { Price } from 'src/entities/price.entity';
+import {
+  appendBaseUrlToImages,
+  appendBaseUrlToImagesCartItems,
+} from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
 import { AddCartDto } from './dto/cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
@@ -22,15 +26,47 @@ export class CartService {
 
     const result = await this.cartRepository.save(cart);
 
+    const cartWithDetails = this.cartRepository
+      .createQueryBuilder('cart')
+      .leftJoinAndSelect('cart.category', 'category')
+      .leftJoinAndSelect('cart.service', 'service')
+      .leftJoinAndSelect('cart.product', 'product')
+      .select([
+        'cart',
+        'category.category_id as category_id',
+        'category.name as category_name',
+        'service.service_id as service_id',
+        'service.name as service_name',
+        'service.image as service_image',
+        'product.product_id as product_id',
+        'product.name as product_name',
+        'product.image as product_image',
+      ])
+      .where('cart.cart_id = :cart_id', { cart_id: result.cart_id });
+
+    const cartitems = await cartWithDetails.getRawOne();
+
+    const updatedCartItems = appendBaseUrlToImagesCartItems(
+      [
+        {
+          ...cartitems,
+          service_image: cartitems.service_image,
+          product_image: cartitems.product_image,
+        },
+      ],
+      ['service_image', 'product_image'],
+    );
+
+    const updatedCart = updatedCartItems[0];
+
     return {
       statusCode: 200,
       message: 'Cart added successfully',
-      data: result,
+      data: updatedCart,
     };
   }
 
   async getAllCarts(user_id: number): Promise<Response> {
-    const BASE_URL = process.env.BASE_URL;
     const carts = await this.cartRepository
       .createQueryBuilder('cart')
       .innerJoin('cart.category', 'category')
@@ -39,31 +75,40 @@ export class CartService {
       .innerJoinAndSelect(
         Price,
         'price',
-        'cart.category_id = price.category_id AND cart.product_id = price.product_id AND cart.service_id = price.service_id and price.deleted_at is NULL',
+        'cart.category_id = price.category_id AND cart.product_id = price.product_id AND cart.service_id = price.service_id AND price.deleted_at IS NULL',
       )
-      .where('user_id = :user_id', {
-        user_id,
-      })
+      .where('user_id = :user_id', { user_id })
       .select([
         'cart.cart_id as cart_id',
         'cart.quantity as quantity',
         'cart.description as description',
         'cart.product_id as product_id',
         'product.name as product_name',
-        `CONCAT('${BASE_URL}/', product.image) as product_image`,
+        'product.image as product_image',
         'cart.category_id as category_id',
         'category.name as category_name',
         'cart.service_id as service_id',
         'service.name as service_name',
+        'service.image as service_image',
         'price.price_id as price_id',
         'price.price as price',
       ])
       .getRawMany();
 
+    const cartsWithImages = carts.map((cart) => {
+      cart.product_image = appendBaseUrlToImages([
+        { image: cart.product_image },
+      ])[0].image;
+      cart.service_image = appendBaseUrlToImages([
+        { image: cart.service_image },
+      ])[0].image;
+      return cart;
+    });
+
     return {
       statusCode: 200,
       message: 'Cart retrieved successfully',
-      data: carts,
+      data: cartsWithImages,
     };
   }
 

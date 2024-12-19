@@ -31,7 +31,7 @@ import { OrderService } from './order.service';
       Coupon,
       User,
     ]),
-    CouponModule,
+    forwardRef(() => CouponModule),
     UsersModule,
     SettingModule,
     PriceModule,
