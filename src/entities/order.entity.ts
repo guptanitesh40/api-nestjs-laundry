@@ -21,7 +21,7 @@ import { User } from './user.entity';
 import { Workshop } from './workshop.entity';
 
 @Entity({ name: 'orders' })
-export class OrderDetail extends BaseEntity {
+export class Order extends BaseEntity {
   @PrimaryGeneratedColumn()
   order_id: number;
 

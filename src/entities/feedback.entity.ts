@@ -9,7 +9,7 @@ import {
   Unique,
 } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { OrderDetail } from './order.entity';
+import { Order } from './order.entity';
 
 @Entity({ name: 'feedback' })
 @Unique(['order_id'])
@@ -29,9 +29,9 @@ export class Feedback extends BaseEntity {
   @IsOptional()
   is_publish?: IsPublish;
 
-  @OneToOne(() => OrderDetail)
+  @OneToOne(() => Order)
   @JoinColumn({ name: 'order_id' })
-  order: OrderDetail;
+  order: Order;
 
   @Column()
   order_id: number;

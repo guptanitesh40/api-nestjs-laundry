@@ -1,14 +1,14 @@
 import { HttpModule } from '@nestjs/axios';
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { OrderDetail } from 'src/entities/order.entity';
+import { Order } from 'src/entities/order.entity';
 import { OrderModule } from '../order/order.module';
 import { NotificationService } from './notification.service';
 
 @Module({
   imports: [
     HttpModule,
-    TypeOrmModule.forFeature([OrderDetail]),
+    TypeOrmModule.forFeature([Order]),
     forwardRef(() => OrderModule),
   ],
   providers: [NotificationService],

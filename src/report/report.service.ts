@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Feedback } from 'src/entities/feedback.entity';
-import { OrderDetail } from 'src/entities/order.entity';
+import { Order } from 'src/entities/order.entity';
 import { User } from 'src/entities/user.entity';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
@@ -13,8 +13,8 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class ReportService {
   constructor(
-    @InjectRepository(OrderDetail)
-    private readonly orderRepository: Repository<OrderDetail>,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
     @InjectRepository(User)
     private readonly userRespository: Repository<User>,
     @InjectRepository(Feedback)

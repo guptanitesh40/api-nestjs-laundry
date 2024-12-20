@@ -1,6 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { OrderDetail } from './order.entity';
+import { Order } from './order.entity';
 import { WorkshopManagerMapping } from './workshop-manager-mapping.entity';
 
 @Entity({ name: 'workshop' })
@@ -26,6 +26,6 @@ export class Workshop extends BaseEntity {
   )
   workshopManagerMappings: WorkshopManagerMapping[];
 
-  @OneToMany(() => OrderDetail, (orderdetail) => orderdetail.workshop)
-  orders: OrderDetail[];
+  @OneToMany(() => Order, (orderdetail) => orderdetail.workshop)
+  orders: Order[];
 }

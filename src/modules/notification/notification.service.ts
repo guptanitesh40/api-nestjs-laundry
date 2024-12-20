@@ -1,7 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
-import { OrderDetail } from 'src/entities/order.entity';
+import { Order } from 'src/entities/order.entity';
 
 @Injectable()
 export class NotificationService {
@@ -26,7 +26,7 @@ export class NotificationService {
     }
   }
 
-  private prepareMessage(order: OrderDetail): string {
+  private prepareMessage(order: Order): string {
     return `Dear ${order.user.first_name} ${order.user.last_name}, Your booking has been confirmed with Booking No: SCONLINE/${order.order_id}, on Dated ${order.created_at.toISOString()}, Total No of clothes ${order.items}, Total Amount: ${order.total}. Please, check your bill on this link: www.sikkacleaners.in/sikka-billing/customer-login.`;
   }
 }

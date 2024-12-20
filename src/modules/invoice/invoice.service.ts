@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import puppeteer, { Browser } from 'puppeteer';
 import { FilePath } from 'src/constants/FilePath';
-import { OrderDetail } from 'src/entities/order.entity';
+import { Order } from 'src/entities/order.entity';
 import numberToWords from 'src/utils/numberToWords';
 import { OrderService } from '../order/order.service';
 
@@ -76,10 +76,7 @@ export class InvoiceService {
     return filePath;
   }
 
-  private async populateTemplate(
-    html: any,
-    orderData: OrderDetail,
-  ): Promise<any> {
+  private async populateTemplate(html: any, orderData: Order): Promise<any> {
     const items =
       orderData.items?.map((item) => {
         const quantity = item.quantity || 1;

@@ -15,7 +15,7 @@ import { Cart } from './cart.entity';
 import { DeviceUser } from './device-user.entity';
 import { LoginHistory } from './login-history.entity';
 import { Note } from './note.entity';
-import { OrderDetail } from './order.entity';
+import { Order } from './order.entity';
 import { Role } from './role.entity';
 import { UserBranchMapping } from './user-branch-mapping.entity';
 import { UserCompanyMapping } from './user-company-mapping.entity';
@@ -104,17 +104,17 @@ export class User extends BaseEntity {
   @OneToMany(() => LoginHistory, (loginHistory) => loginHistory.user)
   loginHistories: LoginHistory[];
 
-  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.user)
-  orders: OrderDetail[];
+  @OneToMany(() => Order, (orderDetail) => orderDetail.user)
+  orders: Order[];
 
   @OneToMany(() => Note, (note) => note.user)
   notes: Note[];
 
-  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.delivery_boy)
-  ordersAsDeliveryBoy: OrderDetail[];
+  @OneToMany(() => Order, (orderDetail) => orderDetail.delivery_boy)
+  ordersAsDeliveryBoy: Order[];
 
-  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.pickup_boy)
-  ordersAsPickupBoy: OrderDetail[];
+  @OneToMany(() => Order, (orderDetail) => orderDetail.pickup_boy)
+  ordersAsPickupBoy: Order[];
 
   @OneToMany(() => Branch, (branch) => branch.branchManager)
   branches: Branch[];
