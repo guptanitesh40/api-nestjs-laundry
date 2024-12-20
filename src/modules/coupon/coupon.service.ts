@@ -138,7 +138,6 @@ export class CouponService {
     queryBuilder.orderBy(sortColumn, sortOrder);
 
     const [result, total] = await queryBuilder.getManyAndCount();
-    console.log(result);
 
     return {
       statusCode: 200,
@@ -191,8 +190,6 @@ export class CouponService {
         `(userUsageCounts.user_usage_count IS NOT NULL AND userUsageCounts.user_usage_count < coupon.maximum_usage_count_per_user) OR userUsageCounts.user_usage_count IS NULL`,
       );
 
-    console.log('Generated SQL Query:', queryBuilder.getSql());
-    console.log('Current Date:', currentDate);
     const result = await queryBuilder.getMany();
 
     return {
