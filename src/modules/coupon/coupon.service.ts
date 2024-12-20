@@ -9,7 +9,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Coupon } from 'src/entities/coupon.entity';
-import { OrderDetail } from 'src/entities/order.entity';
+import { Order } from 'src/entities/order.entity';
 import { DiscountType } from 'src/enum/coupon_type.enum';
 import { Repository } from 'typeorm';
 import { CouponFiltrerDto } from '../dto/coupon-filter.dto';
@@ -68,7 +68,7 @@ export class CouponService {
           subQuery
             .select('order.coupon_code', 'order_coupon_code')
             .addSelect('COUNT(order.order_id)', 'usage_count')
-            .from(OrderDetail, 'order')
+            .from(Order, 'order')
             .groupBy('order.coupon_code'),
         'usageCounts',
         'usageCounts.order_coupon_code = coupon.code',
@@ -79,7 +79,7 @@ export class CouponService {
             .select('order.coupon_code', 'orders_coupon_code')
             .addSelect('order.user_id', 'user_id')
             .addSelect('COUNT(order.order_id)', 'user_usage_count')
-            .from(OrderDetail, 'order')
+            .from(Order, 'order')
             .groupBy('order.coupon_code, order.user_id'),
         'userUsageCounts',
         'userUsageCounts.orders_coupon_code = coupon.code',
@@ -128,7 +128,7 @@ export class CouponService {
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 
     if (sort_by) {
-      sortColumn = sort_by;
+      sortColumn = `coupon.${sort_by}`;
     }
 
     if (order) {
@@ -156,7 +156,8 @@ export class CouponService {
           subQuery
             .select('order.coupon_code', 'order_coupon_code')
             .addSelect('COUNT(order.order_id)', 'usage_count')
-            .from(OrderDetail, 'order')
+            .from(Order, 'order')
+            .where('order.deleted_at IS NULL')
             .groupBy('order.coupon_code'),
         'usageCounts',
         'usageCounts.order_coupon_code = coupon.code',
@@ -167,22 +168,28 @@ export class CouponService {
             .select('order.coupon_code', 'orders_coupon_code')
             .addSelect('order.user_id', 'user_id')
             .addSelect('COUNT(order.order_id)', 'user_usage_count')
-            .from(OrderDetail, 'order')
+            .from(Order, 'order')
+            .where('order.deleted_at IS NULL')
             .groupBy('order.coupon_code, order.user_id'),
         'userUsageCounts',
         'userUsageCounts.orders_coupon_code = coupon.code',
       )
       .where('coupon.deleted_at IS NULL')
+      .andWhere('coupon.start_time <= :currentDate', {
+        currentDate,
+      })
+      .andWhere('coupon.end_time >= :currentDate', {
+        currentDate,
+      })
       .andWhere('userUsageCounts.orders_coupon_code = coupon.code')
       .andWhere('usageCounts.order_coupon_code = coupon.code')
-      .andWhere('coupon.start_time <= :currentDate', { currentDate })
-      .andWhere('coupon.end_time >= :currentDate', { currentDate })
       .andWhere(
         `(usageCounts.usage_count IS NOT NULL AND usageCounts.usage_count < coupon.total_usage_count) OR usageCounts.usage_count IS NULL`,
       )
       .andWhere(
         `(userUsageCounts.user_usage_count IS NOT NULL AND userUsageCounts.user_usage_count < coupon.maximum_usage_count_per_user) OR userUsageCounts.user_usage_count IS NULL`,
       );
+
     const result = await queryBuilder.getMany();
 
     return {

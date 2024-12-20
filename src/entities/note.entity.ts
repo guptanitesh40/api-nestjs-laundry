@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { OrderDetail } from './order.entity';
+import { Order } from './order.entity';
 import { User } from './user.entity';
 
 @Entity({ name: 'notes' })
@@ -15,9 +15,9 @@ export class Note extends BaseEntity {
   @PrimaryGeneratedColumn()
   note_id: number;
 
-  @ManyToOne(() => OrderDetail, (orderDetail) => orderDetail.notes)
+  @ManyToOne(() => Order, (orderDetail) => orderDetail.notes)
   @JoinColumn({ name: 'order_id' })
-  order: OrderDetail;
+  order: Order;
 
   @Column()
   order_id: number;

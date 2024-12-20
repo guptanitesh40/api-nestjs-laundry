@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Company } from './company.entity';
-import { OrderDetail } from './order.entity';
+import { Order } from './order.entity';
 import { UserBranchMapping } from './user-branch-mapping.entity';
 import { User } from './user.entity';
 
@@ -52,6 +52,6 @@ export class Branch extends BaseEntity {
   )
   userBranchMappings: UserBranchMapping[];
 
-  @OneToMany(() => OrderDetail, (order) => order.branch)
-  orders: OrderDetail[];
+  @OneToMany(() => Order, (order) => order.branch)
+  orders: Order[];
 }

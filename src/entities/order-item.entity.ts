@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Category } from './category.entity';
-import { OrderDetail } from './order.entity';
+import { Order } from './order.entity';
 import { Product } from './product.entity';
 import { Service } from './service.entity';
 
@@ -33,9 +33,9 @@ export class OrderItem extends BaseEntity {
   @IsOptional()
   description?: string;
 
-  @ManyToOne(() => OrderDetail, (orderDetail) => orderDetail.items)
+  @ManyToOne(() => Order, (orderDetail) => orderDetail.items)
   @JoinColumn({ name: 'order_id' })
-  order: OrderDetail;
+  order: Order;
 
   @ManyToOne(() => Category, { nullable: true })
   @JoinColumn({ name: 'category_id' })

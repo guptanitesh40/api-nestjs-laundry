@@ -2,7 +2,7 @@ import {
   CustomerOrderStatus,
   WorkshopOrderStatus,
 } from 'src/enum/order-status.eum';
-import { OrderDetail } from '../entities/order.entity';
+import { Order } from '../entities/order.entity';
 
 const orderStatusFlow = {
   2: {
@@ -61,7 +61,7 @@ const orderStatusFlow = {
   },
 };
 
-export const getOrderStatusDetails = (order: OrderDetail) => {
+export const getOrderStatusDetails = (order: Order) => {
   if (order.order_status === 1) {
     if (order.created_by_user_id) {
       if (!order.branch_id) {

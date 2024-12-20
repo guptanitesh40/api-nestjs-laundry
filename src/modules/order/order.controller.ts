@@ -23,7 +23,7 @@ import { join } from 'path';
 import { FilePath } from 'src/constants/FilePath';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
-import { OrderDetail } from 'src/entities/order.entity';
+import { Order } from 'src/entities/order.entity';
 import { Role } from 'src/enum/role.enum';
 import { fileUpload } from 'src/multer/image-upload';
 import { RolesGuard } from '../auth/guard/role.guard';
@@ -237,8 +237,7 @@ export class OrderController {
     @Body() refundOrderDto: RefundOrderDto,
   ): Promise<StreamableFile> {
     try {
-      const order: OrderDetail =
-        await this.orderService.createRefund(refundOrderDto);
+      const order: Order = await this.orderService.createRefund(refundOrderDto);
       const pdfBuffer = await this.orderService.generateRefundReceipt(
         order.order_id,
       );
