@@ -73,10 +73,10 @@ export const getOrderStatusDetails = (order: Order) => {
         };
       } else {
         return {
-          admin_label: 'Assign Pickup Boy',
+          admin_label: 'Branch Assigned',
           description:
             'Admin has created the order, and now a Pickup Boy needs to be assigned.',
-          next_step: 'Pickup Boy Assigned',
+          next_step: 'Assign Pickup Boy',
         };
       }
     } else {
@@ -111,7 +111,7 @@ export const getOrderStatusDetails = (order: Order) => {
         admin_label: 'Items Received at Branch',
         description:
           'The branch has received the clothes from the pickup boy. Assign a workshop for processing.',
-        next_step: 'Assign workshop',
+        next_step: 'Assign Workshop',
       };
     }
   }

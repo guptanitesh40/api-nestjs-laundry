@@ -463,6 +463,7 @@ export class UserService {
         'orders.payment_status',
         'orders.total',
         'orders.paid_amount',
+        'orders.kasar_amount',
       ])
       .addSelect("CONCAT(user.first_name, ' ', user.last_name)", 'full_name')
       .take(perPage)
@@ -501,6 +502,9 @@ export class UserService {
 
     userQuery.andWhere('user.role = :roleId', { roleId: 5 });
     userQuery.andWhere('orders.payment_status = :status', {
+      status: PaymentStatus.PAYMENT_PENDING,
+    });
+    userQuery.orWhere('orders.payment_status = :status', {
       status: PaymentStatus.PAYMENT_PENDING,
     });
     userQuery.orWhere('orders.total > orders.paid_amount');
@@ -551,11 +555,18 @@ export class UserService {
 
     const usersWithMappings = users.map((user) => {
       const pendingOrders = user.orders.filter(
-        (order) => order.payment_status === PaymentStatus.PAYMENT_PENDING,
+        (order) =>
+          order.payment_status === PaymentStatus.PAYMENT_PENDING ||
+          order.payment_status === PaymentStatus.PARTIAL_PAYMENT_RECEIVED,
       );
 
-      const totalDueAmount = pendingOrders.reduce(
-        (sum, order) => sum + (order.total - order.paid_amount),
+      const pendingOrdersWithDueAmount = pendingOrders.map((order) => ({
+        ...order,
+        due_amount: order.total - order.paid_amount - (order.kasar_amount || 0),
+      }));
+
+      const totalDueAmount = pendingOrdersWithDueAmount.reduce(
+        (sum, order) => sum + (order.due_amount || 0),
         0,
       );
 
@@ -563,9 +574,7 @@ export class UserService {
         ...user,
         company_ids: userCompanyMap.get(user.user_id) || [],
         branch_ids: userBranchMap.get(user.user_id) || [],
-        pending_orders: pendingOrders.map((order) => ({
-          due_amount: order.total - order.paid_amount,
-        })),
+        pending_orders: pendingOrdersWithDueAmount,
         total_due_amount: totalDueAmount,
       };
     });
