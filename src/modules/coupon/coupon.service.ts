@@ -264,6 +264,7 @@ export class CouponService {
     applyCouponDto: ApplyCouponDto,
     user_id: number,
   ): Promise<Response> {
+    const currentDate = new Date();
     const { coupon_code, order_Total } = applyCouponDto;
 
     const coupon = await this.couponRepository.findOne({
@@ -272,6 +273,10 @@ export class CouponService {
 
     if (!coupon) {
       throw new BadRequestException('Invalid coupon code');
+    }
+
+    if (coupon.start_time <= currentDate && coupon.end_time >= currentDate) {
+      throw new BadRequestException('Coupon time is a reached');
     }
 
     const totalCouponUsedCount = await this.orderService.countOrdersByCondition(

@@ -14,6 +14,7 @@ import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
 import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
 import { OtpType } from 'src/enum/otp.enum';
+import { PaymentStatus } from 'src/enum/payment.enum';
 import { Role } from 'src/enum/role.enum';
 import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
@@ -452,8 +453,17 @@ export class UserService {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
       .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
+      .leftJoinAndSelect('user.orders', 'orders')
       .where('user.deleted_at IS NULL')
-      .select(['user', 'companyMapping.company_id', 'branchMapping.branch_id'])
+      .select([
+        'user',
+        'companyMapping.company_id',
+        'branchMapping.branch_id',
+        'orders.order_id',
+        'orders.payment_status',
+        'orders.total',
+        'orders.paid_amount',
+      ])
       .addSelect("CONCAT(user.first_name, ' ', user.last_name)", 'full_name')
       .take(perPage)
       .skip(skip);
@@ -488,6 +498,12 @@ export class UserService {
         companyIds: company_id,
       });
     }
+
+    userQuery.andWhere('user.role = :roleId', { roleId: 5 });
+    userQuery.andWhere('orders.payment_status = :status', {
+      status: PaymentStatus.PAYMENT_PENDING,
+    });
+    userQuery.orWhere('orders.total > orders.paid_amount');
 
     let sortColumn = 'user.created_at';
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
@@ -533,11 +549,26 @@ export class UserService {
       userBranchMap.get(mapping.user_id)?.push(mapping.branch_id);
     });
 
-    const usersWithMappings = users.map((user) => ({
-      ...user,
-      company_ids: userCompanyMap.get(user.user_id) || [],
-      branch_ids: userBranchMap.get(user.user_id) || [],
-    }));
+    const usersWithMappings = users.map((user) => {
+      const pendingOrders = user.orders.filter(
+        (order) => order.payment_status === PaymentStatus.PAYMENT_PENDING,
+      );
+
+      const totalDueAmount = pendingOrders.reduce(
+        (sum, order) => sum + (order.total - order.paid_amount),
+        0,
+      );
+
+      return {
+        ...user,
+        company_ids: userCompanyMap.get(user.user_id) || [],
+        branch_ids: userBranchMap.get(user.user_id) || [],
+        pending_orders: pendingOrders.map((order) => ({
+          due_amount: order.total - order.paid_amount,
+        })),
+        total_due_amount: totalDueAmount,
+      };
+    });
 
     return {
       statusCode: 200,
