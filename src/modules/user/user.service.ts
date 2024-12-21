@@ -14,6 +14,7 @@ import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
 import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
 import { OtpType } from 'src/enum/otp.enum';
+import { PaymentStatus } from 'src/enum/payment.enum';
 import { Role } from 'src/enum/role.enum';
 import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
@@ -452,8 +453,18 @@ export class UserService {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
       .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
+      .leftJoinAndSelect('user.orders', 'orders')
       .where('user.deleted_at IS NULL')
-      .select(['user', 'companyMapping.company_id', 'branchMapping.branch_id'])
+      .select([
+        'user',
+        'companyMapping.company_id',
+        'branchMapping.branch_id',
+        'orders.order_id',
+        'orders.payment_status',
+        'orders.total',
+        'orders.paid_amount',
+        'orders.kasar_amount',
+      ])
       .addSelect("CONCAT(user.first_name, ' ', user.last_name)", 'full_name')
       .take(perPage)
       .skip(skip);
@@ -488,6 +499,16 @@ export class UserService {
         companyIds: company_id,
       });
     }
+
+    userQuery.andWhere('user.role = :roleId', { roleId: 5 });
+    userQuery.andWhere('orders.payment_status IN (:...status)', {
+      status: [
+        PaymentStatus.PAYMENT_PENDING,
+        PaymentStatus.PARTIAL_PAYMENT_RECEIVED,
+      ],
+    });
+
+    userQuery.andWhere('orders.total > orders.paid_amount');
 
     let sortColumn = 'user.created_at';
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
@@ -533,11 +554,27 @@ export class UserService {
       userBranchMap.get(mapping.user_id)?.push(mapping.branch_id);
     });
 
-    const usersWithMappings = users.map((user) => ({
-      ...user,
-      company_ids: userCompanyMap.get(user.user_id) || [],
-      branch_ids: userBranchMap.get(user.user_id) || [],
-    }));
+    let pending_due_amount = 0;
+
+    const usersWithMappings = users.map((user) => {
+      const pendingOrdersWithDueAmount = user.orders.map((order) => {
+        const pendingAmount =
+          order.total - order.paid_amount - (order.kasar_amount || 0);
+        pending_due_amount += pendingAmount;
+        return {
+          ...order,
+          pending_due_amount: pendingAmount,
+        };
+      });
+
+      return {
+        ...user,
+        company_ids: userCompanyMap.get(user.user_id) || [],
+        branch_ids: userBranchMap.get(user.user_id) || [],
+        pending_orders: pendingOrdersWithDueAmount,
+        total_due_amount: pending_due_amount,
+      };
+    });
 
     return {
       statusCode: 200,

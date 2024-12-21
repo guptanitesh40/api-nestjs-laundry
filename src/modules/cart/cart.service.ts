@@ -32,7 +32,16 @@ export class CartService {
       .leftJoinAndSelect('cart.service', 'service')
       .leftJoinAndSelect('cart.product', 'product')
       .select([
-        'cart',
+        'cart.cart_id as cart_id',
+        'cart.created_at as created_at',
+        'cart.updated_at as updated_at',
+        'cart.deleted_at as deleted_at',
+        'cart.user_id as user_id',
+        'cart.category_id as category_id',
+        'cart.product_id as product_id',
+        'cart.service_id as service_id',
+        'cart.quantity as quantity',
+        'cart.description as description',
         'category.category_id as category_id',
         'category.name as category_name',
         'service.service_id as service_id',
