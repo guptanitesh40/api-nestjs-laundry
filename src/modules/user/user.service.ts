@@ -554,12 +554,6 @@ export class UserService {
       userBranchMap.get(mapping.user_id)?.push(mapping.branch_id);
     });
 
-    const usersWithMapping = users.map((user) => ({
-      ...user,
-      company_ids: userCompanyMap.get(user.user_id) || [],
-      branch_ids: userBranchMap.get(user.user_id) || [],
-    }));
-
     let pending_due_amount = 0;
 
     const usersWithMappings = users.map((user) => {
