@@ -501,13 +501,14 @@ export class UserService {
     }
 
     userQuery.andWhere('user.role = :roleId', { roleId: 5 });
-    userQuery.andWhere('orders.payment_status = :status', {
-      status: PaymentStatus.PAYMENT_PENDING,
+    userQuery.andWhere('orders.payment_status IN (:...status)', {
+      status: [
+        PaymentStatus.PAYMENT_PENDING,
+        PaymentStatus.PARTIAL_PAYMENT_RECEIVED,
+      ],
     });
-    userQuery.orWhere('orders.payment_status = :status', {
-      status: PaymentStatus.PAYMENT_PENDING,
-    });
-    userQuery.orWhere('orders.total > orders.paid_amount');
+
+    userQuery.andWhere('orders.total > orders.paid_amount');
 
     let sortColumn = 'user.created_at';
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
@@ -554,13 +555,7 @@ export class UserService {
     });
 
     const usersWithMappings = users.map((user) => {
-      const pendingOrders = user.orders.filter(
-        (order) =>
-          order.payment_status === PaymentStatus.PAYMENT_PENDING ||
-          order.payment_status === PaymentStatus.PARTIAL_PAYMENT_RECEIVED,
-      );
-
-      const pendingOrdersWithDueAmount = pendingOrders.map((order) => ({
+      const pendingOrdersWithDueAmount = user.orders.map((order) => ({
         ...order,
         due_amount: order.total - order.paid_amount - (order.kasar_amount || 0),
       }));
