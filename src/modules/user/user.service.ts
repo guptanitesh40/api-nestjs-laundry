@@ -571,8 +571,7 @@ export class UserService {
 
       const pendingOrdersWithDueAmount = user.orders.map((order) => {
         if (
-          (user.role_id === Role.CUSTOMER &&
-            order.total > order.paid_amount &&
+          (order.total > order.paid_amount &&
             order.payment_status == PaymentStatus.PARTIAL_PAYMENT_RECEIVED) ||
           order.payment_status == PaymentStatus.PAYMENT_PENDING
         ) {
