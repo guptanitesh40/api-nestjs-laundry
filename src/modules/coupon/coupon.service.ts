@@ -139,10 +139,20 @@ export class CouponService {
 
     const [result, total] = await queryBuilder.getManyAndCount();
 
+    const couponValidData = result.filter(
+      (coupon) =>
+        coupon.start_time <= currentDate && coupon.end_time >= currentDate,
+    );
+
     return {
       statusCode: 200,
       message: 'Discount coupons retrieved successfully',
-      data: { result, limit: perPage, page_number: pageNumber, count: total },
+      data: {
+        couponValidData,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+      },
     };
   }
 
@@ -192,10 +202,15 @@ export class CouponService {
 
     const result = await queryBuilder.getMany();
 
+    const couponValidData = result.filter(
+      (coupon) =>
+        coupon.start_time <= currentDate && coupon.end_time >= currentDate,
+    );
+
     return {
       statusCode: 200,
       message: 'Discount coupons retrieved successfully',
-      data: result,
+      data: couponValidData,
     };
   }
 
@@ -264,6 +279,7 @@ export class CouponService {
     applyCouponDto: ApplyCouponDto,
     user_id: number,
   ): Promise<Response> {
+    const currentDate = new Date();
     const { coupon_code, order_Total } = applyCouponDto;
 
     const coupon = await this.couponRepository.findOne({
@@ -272,6 +288,10 @@ export class CouponService {
 
     if (!coupon) {
       throw new BadRequestException('Invalid coupon code');
+    }
+
+    if (!(coupon.start_time <= currentDate && coupon.end_time >= currentDate)) {
+      throw new BadRequestException('Coupon time is a reached');
     }
 
     const totalCouponUsedCount = await this.orderService.countOrdersByCondition(

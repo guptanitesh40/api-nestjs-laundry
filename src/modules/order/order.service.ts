@@ -895,8 +895,6 @@ export class OrderService {
         'order.estimated_delivery_time',
         'order.created_at',
         'items',
-        '(order.total-COALESCE(order.paid_amount,0)-COALESCE(order.kasar_amount,0)) AS pending_amount',
-        'COUNT(items.item_id) AS total_items',
       ])
       .groupBy('order.order_id,items.item_id')
       .take(perPage)
@@ -927,7 +925,6 @@ export class OrderService {
     queryBuilder.orderBy(sortColumn, sortOrder);
 
     const [result, total]: any = await queryBuilder.getManyAndCount();
-
     result.map((order) => {
       order.order_status_name = getCustomerOrderStatusLabel(
         order.order_status,
@@ -958,9 +955,12 @@ export class OrderService {
       .where('order.user_id=:userId', { userId: user_id })
       .andWhere('order.deleted_at IS NULL')
       .select(
-        'SUM(order.total-COALESCE(order.paid_amount,0)-COALESCE(order.kasar_amount,0))',
+        'SUM(order.total-order.paid_amount-order.kasar_amount)',
         'total_pending_due_amount',
       )
+      .addSelect('SUM(order.total) as total')
+      .addSelect('SUM(order.paid_amount) as paid_amount')
+      .addSelect('SUM(order.kasar_amount) as kasar_amount')
       .getRawOne();
 
     return {

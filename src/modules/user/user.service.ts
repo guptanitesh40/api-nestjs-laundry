@@ -398,22 +398,25 @@ export class UserService {
   }
 
   async getUserById(user_id: number): Promise<Response> {
-    const user = await this.userRepository
+    const userQuery = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
+      .leftJoinAndSelect('user.orders', 'orders')
       .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
       .where('user.user_id = :user_id', { user_id })
       .andWhere('user.deleted_at IS NULL')
-      .select(['user', 'companyMapping.company_id', 'branchMapping.branch_id'])
-      .getOne();
+      .select([
+        'user',
+        'orders.order_id',
+        'orders.payment_status',
+        'orders.total',
+        'orders.paid_amount',
+        'orders.kasar_amount',
+        'companyMapping.company_id',
+        'branchMapping.branch_id',
+      ]);
 
-    if (!user) {
-      return {
-        statusCode: 404,
-        message: 'User not found',
-        data: null,
-      };
-    }
+    const user = await userQuery.getOne();
 
     const mappedUser = {
       ...user,
@@ -422,12 +425,30 @@ export class UserService {
         (company) => company.company_id,
       ),
     };
+    let pending_due_amount = 0;
+    user.orders.map((order) => {
+      if (
+        (order.total > order.paid_amount &&
+          order.payment_status == PaymentStatus.PAYMENT_PENDING) ||
+        order.payment_status == PaymentStatus.PARTIAL_PAYMENT_RECEIVED
+      ) {
+        const pending_amount =
+          order.total - order.paid_amount - (order.kasar_amount || 0);
+        pending_due_amount += pending_amount;
+
+        return {
+          ...order,
+          pending_due_amount: pending_amount,
+        };
+      }
+    });
 
     return {
       statusCode: 200,
       message: 'User found',
       data: {
         user: mappedUser,
+        total_pending_amount: pending_due_amount,
       },
     };
   }
@@ -455,6 +476,7 @@ export class UserService {
       .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
       .leftJoinAndSelect('user.orders', 'orders')
       .where('user.deleted_at IS NULL')
+      .andWhere('orders.deleted_at IS NULL')
       .select([
         'user',
         'companyMapping.company_id',
@@ -500,14 +522,13 @@ export class UserService {
       });
     }
 
-    userQuery.andWhere('user.role = :roleId', { roleId: 5 });
+    userQuery.orWhere('user.role = :roleId', { roleId: 5 });
     userQuery.andWhere('orders.payment_status IN (:...status)', {
       status: [
         PaymentStatus.PAYMENT_PENDING,
         PaymentStatus.PARTIAL_PAYMENT_RECEIVED,
       ],
     });
-
     userQuery.andWhere('orders.total > orders.paid_amount');
 
     let sortColumn = 'user.created_at';
@@ -554,17 +575,23 @@ export class UserService {
       userBranchMap.get(mapping.user_id)?.push(mapping.branch_id);
     });
 
-    let pending_due_amount = 0;
-
     const usersWithMappings = users.map((user) => {
+      let pending_due_amount = 0;
+
       const pendingOrdersWithDueAmount = user.orders.map((order) => {
-        const pendingAmount =
-          order.total - order.paid_amount - (order.kasar_amount || 0);
-        pending_due_amount += pendingAmount;
-        return {
-          ...order,
-          pending_due_amount: pendingAmount,
-        };
+        if (
+          (user.role_id === Role.CUSTOMER &&
+            order.total > order.paid_amount &&
+            order.payment_status == PaymentStatus.PARTIAL_PAYMENT_RECEIVED) ||
+          order.payment_status == PaymentStatus.PAYMENT_PENDING
+        ) {
+          const pendingAmount =
+            order.total - order.paid_amount - (order.kasar_amount || 0);
+          pending_due_amount += pendingAmount;
+          return {
+            pending_due_amount: pendingAmount,
+          };
+        }
       });
 
       return {
