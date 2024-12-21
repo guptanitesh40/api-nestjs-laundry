@@ -581,8 +581,6 @@ export class UserService {
       message: 'Users retrieved successfully',
       data: {
         users: usersWithMappings,
-
-        usersWithMapping,
         limit: perPage,
         page_number: pageNumber,
         count: total,
