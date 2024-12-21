@@ -554,23 +554,31 @@ export class UserService {
       userBranchMap.get(mapping.user_id)?.push(mapping.branch_id);
     });
 
-    const usersWithMappings = users.map((user) => {
-      const pendingOrdersWithDueAmount = user.orders.map((order) => ({
-        ...order,
-        due_amount: order.total - order.paid_amount - (order.kasar_amount || 0),
-      }));
+    const usersWithMapping = users.map((user) => ({
+      ...user,
+      company_ids: userCompanyMap.get(user.user_id) || [],
+      branch_ids: userBranchMap.get(user.user_id) || [],
+    }));
 
-      const totalDueAmount = pendingOrdersWithDueAmount.reduce(
-        (sum, order) => sum + (order.due_amount || 0),
-        0,
-      );
+    let pending_due_amount = 0;
+
+    const usersWithMappings = users.map((user) => {
+      const pendingOrdersWithDueAmount = user.orders.map((order) => {
+        const pendingAmount =
+          order.total - order.paid_amount - (order.kasar_amount || 0);
+        pending_due_amount += pendingAmount;
+        return {
+          ...order,
+          pending_due_amount: pendingAmount,
+        };
+      });
 
       return {
         ...user,
         company_ids: userCompanyMap.get(user.user_id) || [],
         branch_ids: userBranchMap.get(user.user_id) || [],
         pending_orders: pendingOrdersWithDueAmount,
-        total_due_amount: totalDueAmount,
+        total_due_amount: pending_due_amount,
       };
     });
 
@@ -579,6 +587,8 @@ export class UserService {
       message: 'Users retrieved successfully',
       data: {
         users: usersWithMappings,
+
+        usersWithMapping,
         limit: perPage,
         page_number: pageNumber,
         count: total,
