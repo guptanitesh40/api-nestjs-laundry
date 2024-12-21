@@ -522,15 +522,6 @@ export class UserService {
       });
     }
 
-    userQuery.orWhere('user.role = :roleId', { roleId: 5 });
-    userQuery.andWhere('orders.payment_status IN (:...status)', {
-      status: [
-        PaymentStatus.PAYMENT_PENDING,
-        PaymentStatus.PARTIAL_PAYMENT_RECEIVED,
-      ],
-    });
-    userQuery.andWhere('orders.total > orders.paid_amount');
-
     let sortColumn = 'user.created_at';
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 
