@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -39,28 +40,35 @@ export class CouponController {
     return this.couponService.findAll(couponFiltrerDto);
   }
 
+  @Get('admin/valid-coupons')
+  async findValidCoupons(@Query('user_id') user_id: number): Promise<Response> {
+    return this.couponService.getAll(user_id);
+  }
+
   @Get('customer/coupon')
   @Roles(Role.CUSTOMER)
-  async getAll(): Promise<Response> {
-    return this.couponService.getAll();
+  async getAll(@Request() req): Promise<Response> {
+    const user = req.user;
+    return this.couponService.getAll(user.user_id);
   }
 
   @Post('coupon/apply')
   @Roles(Role.CUSTOMER)
   async applyCoupon(
     @Body() applyCouponDto: ApplyCouponDto,
-    @Param('userId') userId: number,
+    @Request() req,
   ): Promise<Response> {
-    return this.couponService.applyCoupon(applyCouponDto, userId);
+    const user = req.user;
+    return this.couponService.applyCoupon(applyCouponDto, user.user_id);
   }
 
   @Post('admin/coupon/apply')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async applyCouponForAdmin(
     @Body() applyCouponDto: ApplyCouponDto,
-    @Param('userId') userId: number,
+    @Query('user_id') user_id: number,
   ): Promise<Response> {
-    return this.couponService.applyCoupon(applyCouponDto, userId);
+    return this.couponService.applyCoupon(applyCouponDto, user_id);
   }
 
   @Get('admin/coupon/:coupon_id')
@@ -68,16 +76,16 @@ export class CouponController {
     return this.couponService.findOne(coupon_id);
   }
 
-  @Put('admin/coupon/:id')
+  @Put('admin/coupon/:coupon_id')
   update(
-    @Param('id') id: number,
+    @Param('coupon_id') coupon_id: number,
     @Body() updateCouponDto: UpdateCouponDto,
   ): Promise<Response> {
-    return this.couponService.update(id, updateCouponDto);
+    return this.couponService.update(coupon_id, updateCouponDto);
   }
 
-  @Delete('admin/coupon/:id')
-  async remove(@Param('id') id: number): Promise<Response> {
-    return await this.couponService.remove(id);
+  @Delete('admin/coupon/:coupon_id')
+  async remove(@Param('coupon_id') coupon_id: number): Promise<Response> {
+    return await this.couponService.remove(coupon_id);
   }
 }

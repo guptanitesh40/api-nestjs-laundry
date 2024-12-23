@@ -532,7 +532,7 @@ export class OrderService {
 
     orders.order_status_details = getOrderStatusDetails(orders);
 
-    if (orders.toal > orders.paid_amount) {
+    if (orders.total > orders.paid_amount) {
       orders.pending_due_amount = orders.total - orders.paid_amount;
     }
     orders.workshop_status_name = getWorkshopOrdersStatusLabel(
@@ -882,7 +882,7 @@ export class OrderService {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .innerJoinAndSelect('order.items', 'items')
-      .where('order.user_id = :userId', { userId: user_id })
+      .where('order.user_id = :user_id', { user_id: user_id })
       .andWhere('order.deleted_at IS NULL')
       .select([
         'order.order_id',
@@ -895,8 +895,6 @@ export class OrderService {
         'order.estimated_delivery_time',
         'order.created_at',
         'items',
-        '(order.total-COALESCE(order.paid_amount,0)-COALESCE(order.kasar_amount,0)) AS pending_amount',
-        'COUNT(items.item_id) AS total_items',
       ])
       .groupBy('order.order_id,items.item_id')
       .take(perPage)
@@ -927,7 +925,6 @@ export class OrderService {
     queryBuilder.orderBy(sortColumn, sortOrder);
 
     const [result, total]: any = await queryBuilder.getManyAndCount();
-
     result.map((order) => {
       order.order_status_name = getCustomerOrderStatusLabel(
         order.order_status,
@@ -939,28 +936,29 @@ export class OrderService {
 
     const inProgressCountOrder = this.orderRepository
       .createQueryBuilder('order')
-      .where('order.user_id=:userId', { userId: user_id })
-      .andWhere('order.order_status IN(:statuses)', {
-        statuses: [
-          OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
-          OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
-          OrderStatus.WORKSHOP_ASSIGNED,
-          OrderStatus.WORKSHOP_RECEIVED_ITEMS,
-          OrderStatus.WORKSHOP_WORK_IN_PROGRESS,
-          OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
-        ],
-      })
+      .where('order.user_id=:user_id', { user_id: user_id })
+      .andWhere(
+        'order.order_status != :excludedDelivered AND order.order_status != :excludedCancelled',
+        {
+          excludedDelivered: OrderStatus.DELIVERED,
+          excludedCancelled: OrderStatus.CANCELLED,
+        },
+      )
+
       .andWhere('order.deleted_at IS NULL');
     const inProgressCount = await inProgressCountOrder.getCount();
 
     const totalPendingAmount = await this.orderRepository
       .createQueryBuilder('order')
-      .where('order.user_id=:userId', { userId: user_id })
+      .where('order.user_id=:user_id', { user_id: user_id })
       .andWhere('order.deleted_at IS NULL')
       .select(
-        'SUM(order.total-COALESCE(order.paid_amount,0)-COALESCE(order.kasar_amount,0))',
+        'SUM(order.total - order.paid_amount - order.kasar_amount)',
         'total_pending_due_amount',
       )
+      .addSelect('SUM(order.total) as total')
+      .addSelect('SUM(order.paid_amount) as paid_amount')
+      .addSelect('SUM(order.kasar_amount) as kasar_amount')
       .getRawOne();
 
     return {

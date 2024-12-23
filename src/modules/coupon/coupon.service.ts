@@ -59,42 +59,10 @@ export class CouponService {
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
     const skip = (pageNumber - 1) * perPage;
-    const currentDate = new Date();
 
     const queryBuilder = this.couponRepository
       .createQueryBuilder('coupon')
-      .leftJoinAndSelect(
-        (subQuery) =>
-          subQuery
-            .select('order.coupon_code', 'order_coupon_code')
-            .addSelect('COUNT(order.order_id)', 'usage_count')
-            .from(Order, 'order')
-            .groupBy('order.coupon_code'),
-        'usageCounts',
-        'usageCounts.order_coupon_code = coupon.code',
-      )
-      .leftJoinAndSelect(
-        (subQuery) =>
-          subQuery
-            .select('order.coupon_code', 'orders_coupon_code')
-            .addSelect('order.user_id', 'user_id')
-            .addSelect('COUNT(order.order_id)', 'user_usage_count')
-            .from(Order, 'order')
-            .groupBy('order.coupon_code, order.user_id'),
-        'userUsageCounts',
-        'userUsageCounts.orders_coupon_code = coupon.code',
-      )
       .where('coupon.deleted_at IS NULL')
-      .andWhere('userUsageCounts.orders_coupon_code = coupon.code')
-      .andWhere('usageCounts.order_coupon_code = coupon.code')
-      .andWhere('coupon.start_time <= :currentDate', { currentDate })
-      .andWhere('coupon.end_time >= :currentDate', { currentDate })
-      .andWhere(
-        `(usageCounts.usage_count IS NOT NULL AND usageCounts.usage_count < coupon.total_usage_count) OR usageCounts.usage_count IS NULL`,
-      )
-      .andWhere(
-        `(userUsageCounts.user_usage_count IS NOT NULL AND userUsageCounts.user_usage_count < coupon.maximum_usage_count_per_user) OR userUsageCounts.user_usage_count IS NULL`,
-      )
       .take(perPage)
       .skip(skip);
 
@@ -142,52 +110,46 @@ export class CouponService {
     return {
       statusCode: 200,
       message: 'Discount coupons retrieved successfully',
-      data: { result, limit: perPage, page_number: pageNumber, count: total },
+      data: {
+        result,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+      },
     };
   }
 
-  async getAll(): Promise<Response> {
+  async getAll(user_id: number): Promise<Response> {
     const currentDate = new Date();
 
     const queryBuilder = this.couponRepository
       .createQueryBuilder('coupon')
-      .leftJoinAndSelect(
+      .addSelect(
         (subQuery) =>
           subQuery
-            .select('order.coupon_code', 'order_coupon_code')
-            .addSelect('COUNT(order.order_id)', 'usage_count')
-            .from(Order, 'order')
-            .where('order.deleted_at IS NULL')
-            .groupBy('order.coupon_code'),
-        'usageCounts',
-        'usageCounts.order_coupon_code = coupon.code',
+            .select('COUNT(DISTINCT orders.order_id)', 'usage_count')
+            .from(Order, 'orders')
+            .where(
+              'orders.deleted_at IS NULL AND orders.coupon_code = coupon.code',
+            ),
+        'usage_count',
       )
-      .leftJoinAndSelect(
+      .addSelect(
         (subQuery) =>
           subQuery
-            .select('order.coupon_code', 'orders_coupon_code')
-            .addSelect('order.user_id', 'user_id')
-            .addSelect('COUNT(order.order_id)', 'user_usage_count')
-            .from(Order, 'order')
-            .where('order.deleted_at IS NULL')
-            .groupBy('order.coupon_code, order.user_id'),
-        'userUsageCounts',
-        'userUsageCounts.orders_coupon_code = coupon.code',
+            .select('COUNT(DISTINCT orders.order_id)', 'user_usage_count')
+            .from(Order, 'orders')
+            .where(
+              'orders.deleted_at IS NULL AND orders.coupon_code = coupon.code AND orders.user_id = :user_id',
+              { user_id },
+            ),
+        'user_usage_count',
       )
       .where('coupon.deleted_at IS NULL')
-      .andWhere('coupon.start_time <= :currentDate', {
-        currentDate,
-      })
-      .andWhere('coupon.end_time >= :currentDate', {
-        currentDate,
-      })
-      .andWhere('userUsageCounts.orders_coupon_code = coupon.code')
-      .andWhere('usageCounts.order_coupon_code = coupon.code')
-      .andWhere(
-        `(usageCounts.usage_count IS NOT NULL AND usageCounts.usage_count < coupon.total_usage_count) OR usageCounts.usage_count IS NULL`,
-      )
-      .andWhere(
-        `(userUsageCounts.user_usage_count IS NOT NULL AND userUsageCounts.user_usage_count < coupon.maximum_usage_count_per_user) OR userUsageCounts.user_usage_count IS NULL`,
+      .andWhere('coupon.start_time <= :currentDate', { currentDate })
+      .andWhere('coupon.end_time >= :currentDate', { currentDate })
+      .having(
+        'usage_count < coupon.total_usage_count AND user_usage_count < coupon.maximum_usage_count_per_user',
       );
 
     const result = await queryBuilder.getMany();
@@ -215,11 +177,11 @@ export class CouponService {
   }
 
   async update(
-    id: number,
+    coupon_id: number,
     updateCouponDto: UpdateCouponDto,
   ): Promise<Response> {
     const coupon = await this.couponRepository.findOne({
-      where: { coupon_id: id },
+      where: { coupon_id },
     });
 
     if (!coupon) {
@@ -230,7 +192,7 @@ export class CouponService {
       };
     }
 
-    await this.couponRepository.update(id, updateCouponDto);
+    await this.couponRepository.update(coupon_id, updateCouponDto);
 
     return {
       statusCode: 200,
@@ -239,9 +201,9 @@ export class CouponService {
     };
   }
 
-  async remove(id: number): Promise<Response> {
+  async remove(coupon_id: number): Promise<Response> {
     const coupon = await this.couponRepository.findOne({
-      where: { coupon_id: id, deleted_at: null },
+      where: { coupon_id, deleted_at: null },
     });
     if (!coupon) {
       return {
@@ -264,6 +226,7 @@ export class CouponService {
     applyCouponDto: ApplyCouponDto,
     user_id: number,
   ): Promise<Response> {
+    const currentDate = new Date();
     const { coupon_code, order_Total } = applyCouponDto;
 
     const coupon = await this.couponRepository.findOne({
@@ -272,6 +235,10 @@ export class CouponService {
 
     if (!coupon) {
       throw new BadRequestException('Invalid coupon code');
+    }
+
+    if (!(coupon.start_time <= currentDate && coupon.end_time >= currentDate)) {
+      throw new BadRequestException('Coupon time is a reached');
     }
 
     const totalCouponUsedCount = await this.orderService.countOrdersByCondition(
