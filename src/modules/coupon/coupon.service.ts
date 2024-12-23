@@ -177,11 +177,11 @@ export class CouponService {
   }
 
   async update(
-    id: number,
+    coupon_id: number,
     updateCouponDto: UpdateCouponDto,
   ): Promise<Response> {
     const coupon = await this.couponRepository.findOne({
-      where: { coupon_id: id },
+      where: { coupon_id },
     });
 
     if (!coupon) {
@@ -192,7 +192,7 @@ export class CouponService {
       };
     }
 
-    await this.couponRepository.update(id, updateCouponDto);
+    await this.couponRepository.update(coupon_id, updateCouponDto);
 
     return {
       statusCode: 200,
@@ -201,9 +201,9 @@ export class CouponService {
     };
   }
 
-  async remove(id: number): Promise<Response> {
+  async remove(coupon_id: number): Promise<Response> {
     const coupon = await this.couponRepository.findOne({
-      where: { coupon_id: id, deleted_at: null },
+      where: { coupon_id, deleted_at: null },
     });
     if (!coupon) {
       return {
@@ -254,7 +254,7 @@ export class CouponService {
       coupon_code,
     });
 
-    if (userCouponUsedCount > coupon.maximum_usage_count_per_user) {
+    if (userCouponUsedCount >= coupon.maximum_usage_count_per_user) {
       throw new BadRequestException(
         'You have exceeded the usage limit for this coupon',
       );
