@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -41,8 +42,9 @@ export class CouponController {
 
   @Get('customer/coupon')
   @Roles(Role.CUSTOMER)
-  async getAll(): Promise<Response> {
-    return this.couponService.getAll();
+  async getAll(@Request() req): Promise<Response> {
+    const user = req.user;
+    return this.couponService.getAll(user.user_id);
   }
 
   @Post('coupon/apply')
