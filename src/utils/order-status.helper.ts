@@ -59,6 +59,12 @@ const orderStatusFlow = {
       'The delivery boy has completed the delivery and the order has been successfully delivered to the customer.',
     next_step: 'NULL',
   },
+  12: {
+    admin_label: 'Cancelled',
+    description:
+      'The order has been cancelled either by the customer or due to a system error. No further actions are required, and the order will not proceed to delivery.',
+    next_step: 'NULL',
+  },
 };
 
 export const getOrderStatusDetails = (order: Order) => {

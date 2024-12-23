@@ -9,6 +9,7 @@ import * as crypto from 'crypto';
 import { Response } from 'src/dto/response.dto';
 import { DeviceUser } from 'src/entities/device-user.entity';
 import { LoginHistory } from 'src/entities/login-history.entity';
+import { Order } from 'src/entities/order.entity';
 import { Otp } from 'src/entities/otp.entity';
 import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
 import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
@@ -425,23 +426,13 @@ export class UserService {
         (company) => company.company_id,
       ),
     };
-    let pending_due_amount = 0;
-    user.orders.map((order) => {
-      if (
-        (order.total > order.paid_amount &&
-          order.payment_status == PaymentStatus.PAYMENT_PENDING) ||
-        order.payment_status == PaymentStatus.PARTIAL_PAYMENT_RECEIVED
-      ) {
-        const pending_amount =
-          order.total - order.paid_amount - (order.kasar_amount || 0);
-        pending_due_amount += pending_amount;
 
-        return {
-          ...order,
-          pending_due_amount: pending_amount,
-        };
-      }
-    });
+    let pending_due_amount = 0;
+    for (const order of user.orders) {
+      const { pending_due_amount: orderDueAmount } =
+        await this.calculatePendingDueAmount(order);
+      pending_due_amount += orderDueAmount;
+    }
 
     return {
       statusCode: 200,
@@ -451,6 +442,24 @@ export class UserService {
         total_pending_amount: pending_due_amount,
       },
     };
+  }
+
+  async calculatePendingDueAmount(
+    order: Order,
+  ): Promise<{ pending_due_amount: number }> {
+    let pending_due_amount = 0;
+
+    if (
+      (order.total > order.paid_amount &&
+        order.payment_status == PaymentStatus.PAYMENT_PENDING) ||
+      order.payment_status == PaymentStatus.PARTIAL_PAYMENT_RECEIVED
+    ) {
+      const pending_amount =
+        order.total - order.paid_amount - (order.kasar_amount || 0);
+      pending_due_amount += pending_amount;
+    }
+
+    return { pending_due_amount };
   }
 
   async getAllUsers(userFilterDto: UserFilterDto): Promise<Response> {
@@ -566,32 +575,24 @@ export class UserService {
       userBranchMap.get(mapping.user_id)?.push(mapping.branch_id);
     });
 
-    const usersWithMappings = users.map((user) => {
-      let pending_due_amount = 0;
+    const usersWithMappings = await Promise.all(
+      users.map(async (user) => {
+        let pending_due_amount = 0;
 
-      const pendingOrdersWithDueAmount = user.orders.map((order) => {
-        if (
-          (order.total > order.paid_amount &&
-            order.payment_status == PaymentStatus.PARTIAL_PAYMENT_RECEIVED) ||
-          order.payment_status == PaymentStatus.PAYMENT_PENDING
-        ) {
-          const pendingAmount =
-            order.total - order.paid_amount - (order.kasar_amount || 0);
-          pending_due_amount += pendingAmount;
-          return {
-            pending_due_amount: pendingAmount,
-          };
+        for (const order of user.orders) {
+          const { pending_due_amount: orderDueAmount } =
+            await this.calculatePendingDueAmount(order);
+          pending_due_amount += orderDueAmount;
         }
-      });
 
-      return {
-        ...user,
-        company_ids: userCompanyMap.get(user.user_id) || [],
-        branch_ids: userBranchMap.get(user.user_id) || [],
-        pending_orders: pendingOrdersWithDueAmount,
-        total_due_amount: pending_due_amount,
-      };
-    });
+        return {
+          ...user,
+          company_ids: userCompanyMap.get(user.user_id) || [],
+          branch_ids: userBranchMap.get(user.user_id) || [],
+          total_due_amount: pending_due_amount,
+        };
+      }),
+    );
 
     return {
       statusCode: 200,
