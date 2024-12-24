@@ -15,7 +15,7 @@ const orderStatusFlow = {
     admin_label: 'Pickup Complete',
     description:
       'The pickup boy has collected the clothes. Now, confirm that the branch has received the order.',
-    next_step: 'Items Received at branch',
+    next_step: 'Items Received at Branch',
   },
   5: {
     admin_label: 'Workshop Assigned (On the Way)',
@@ -57,13 +57,13 @@ const orderStatusFlow = {
     admin_label: 'Delivered',
     description:
       'The delivery boy has completed the delivery and the order has been successfully delivered to the customer.',
-    next_step: 'NULL',
+    next_step: null,
   },
   12: {
     admin_label: 'Cancelled',
     description:
       'The order has been cancelled either by the customer or due to a system error. No further actions are required, and the order will not proceed to delivery.',
-    next_step: 'NULL',
+    next_step: null,
   },
 };
 

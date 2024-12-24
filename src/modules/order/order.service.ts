@@ -370,9 +370,50 @@ export class OrderService {
     }
 
     if (orderstatus) {
-      queryBuilder.andWhere('order.order_status IN (:...ordersstatus)', {
-        ordersstatus: orderstatus,
-      });
+      const orderstatuses: number[] = Array.isArray(orderstatus)
+        ? orderstatus.map(Number)
+        : [Number(orderstatus)];
+
+      const BRANCH_NOT_ASSIGN = 111;
+      const BRANCH_ASSIGN = 112;
+
+      const specialStatuses = [BRANCH_NOT_ASSIGN, BRANCH_ASSIGN];
+      const specialConditions: string[] = [];
+      const normalStatuses = orderstatuses.filter(
+        (status) => !specialStatuses.includes(status),
+      );
+
+      if (orderstatuses.includes(BRANCH_NOT_ASSIGN)) {
+        specialConditions.push(`
+          (order.order_status = :branchNotAssign 
+           AND order.pickup_boy_id IS NULL 
+           AND order.branch_id IS NULL)
+        `);
+        queryBuilder.setParameter(
+          'branchNotAssign',
+          OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+        );
+      }
+
+      if (orderstatuses.includes(BRANCH_ASSIGN)) {
+        specialConditions.push(`
+          (order.order_status = :branchAssign 
+           AND order.branch_id IS NOT NULL)
+        `);
+        queryBuilder.setParameter(
+          'branchAssign',
+          OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+        );
+      }
+
+      if (normalStatuses.length > 0) {
+        specialConditions.push('order.order_status IN (:...normalStatuses)');
+        queryBuilder.setParameter('normalStatuses', normalStatuses);
+      }
+
+      if (specialConditions.length > 0) {
+        queryBuilder.andWhere(specialConditions.join(' OR '));
+      }
     }
 
     if (customer_id) {
@@ -431,7 +472,6 @@ export class OrderService {
     queryBuilder.orderBy(sortColumn, sortOrder);
 
     const [orders, total]: any = await queryBuilder.getManyAndCount();
-
     orders.map((order) => {
       if (order.total > order.paid_amount) {
         order.pending_due_amount = order.total - order.paid_amount;
