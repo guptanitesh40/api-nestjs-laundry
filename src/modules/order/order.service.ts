@@ -385,23 +385,23 @@ export class OrderService {
 
       if (orderstatuses.includes(BRANCH_NOT_ASSIGN)) {
         specialConditions.push(`
-          (order.order_status = :branchAssign 
+          (order.order_status = :branchNotAssign 
            AND order.pickup_boy_id IS NULL 
            AND order.branch_id IS NULL)
         `);
         queryBuilder.setParameter(
-          'branchAssign',
+          'branchNotAssign',
           OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
         );
       }
 
       if (orderstatuses.includes(BRANCH_ASSIGN)) {
         specialConditions.push(`
-          (order.order_status = :branchNotAssign 
+          (order.order_status = :branchAssign 
            AND order.branch_id IS NOT NULL)
         `);
         queryBuilder.setParameter(
-          'branchNotAssign',
+          'branchAssign',
           OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
         );
       }
