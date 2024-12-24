@@ -369,7 +369,7 @@ export class OrderService {
       );
     }
 
-    const orderstatuses: number[] = [111, 112, 113];
+    const orderstatuses: number[] = [111, 112];
 
     if (orderstatuses.includes(Number(orderstatus))) {
       if (Number(orderstatus) === 111) {
@@ -452,15 +452,6 @@ export class OrderService {
     queryBuilder.orderBy(sortColumn, sortOrder);
 
     const [orders, total]: any = await queryBuilder.getManyAndCount();
-    // if (orderstatus) {
-    //   orders.map((order) => {
-    //     if (order.order_status && order.pickup_boy_id) {
-    //       queryBuilder.andWhere('order.order_status IN (:...ordersstatus)', {
-    //         ordersstatus: orderstatus,
-    //       });
-    //     }
-    //   });
-    // }
     orders.map((order) => {
       if (order.total > order.paid_amount) {
         order.pending_due_amount = order.total - order.paid_amount;
