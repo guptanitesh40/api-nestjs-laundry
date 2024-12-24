@@ -369,7 +369,28 @@ export class OrderService {
       );
     }
 
-    if (orderstatus) {
+    const orderstatuses: number[] = [111, 112, 113];
+
+    if (orderstatuses.includes(Number(orderstatus))) {
+      if (Number(orderstatus) === 111) {
+        queryBuilder
+          .andWhere('order.order_status IN (:...orderstatus)', {
+            orderstatus: [
+              OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+            ],
+          })
+          .andWhere('order.pickup_boy_id IS NULL')
+          .andWhere('order.branch_id IS NULL');
+      } else if (Number(orderstatus) === 112) {
+        queryBuilder
+          .andWhere('order.order_status IN (:...orderstatus)', {
+            orderstatus: [
+              OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+            ],
+          })
+          .andWhere('order.branch_id IS NOT NULL');
+      }
+    } else if (orderstatus) {
       queryBuilder.andWhere('order.order_status IN (:...ordersstatus)', {
         ordersstatus: orderstatus,
       });
@@ -431,7 +452,15 @@ export class OrderService {
     queryBuilder.orderBy(sortColumn, sortOrder);
 
     const [orders, total]: any = await queryBuilder.getManyAndCount();
-
+    // if (orderstatus) {
+    //   orders.map((order) => {
+    //     if (order.order_status && order.pickup_boy_id) {
+    //       queryBuilder.andWhere('order.order_status IN (:...ordersstatus)', {
+    //         ordersstatus: orderstatus,
+    //       });
+    //     }
+    //   });
+    // }
     orders.map((order) => {
       if (order.total > order.paid_amount) {
         order.pending_due_amount = order.total - order.paid_amount;
