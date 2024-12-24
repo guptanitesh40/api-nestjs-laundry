@@ -3,14 +3,14 @@ import { PaginationQueryDto } from './pagination-query.dto';
 
 export class UserFilterDto extends PaginationQueryDto {
   @applyNumberArrayValidation()
-  branch_id?: number[];
+  branches_ids?: number[];
 
   @applyNumberArrayValidation()
-  role?: number[];
+  roles?: number[];
 
   @applyNumberArrayValidation()
-  gender?: number[];
+  genders?: number[];
 
   @applyNumberArrayValidation()
-  company_id?: number[];
+  companies_ids?: number[];
 }

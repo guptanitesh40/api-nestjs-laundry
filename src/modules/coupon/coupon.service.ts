@@ -52,8 +52,8 @@ export class CouponService {
       search,
       sort_by,
       order,
-      coupon_type,
-      discount_type,
+      coupon_types,
+      discount_types,
     } = couponFiltrerDto;
 
     const pageNumber = page_number ?? 1;
@@ -80,15 +80,15 @@ export class CouponService {
       );
     }
 
-    if (coupon_type) {
-      queryBuilder.andWhere('coupon.coupon_type IN (:...couponType)', {
-        couponType: coupon_type,
+    if (coupon_types) {
+      queryBuilder.andWhere('coupon.coupon_type IN (:...couponTypes)', {
+        couponTypes: coupon_types,
       });
     }
 
-    if (discount_type) {
-      queryBuilder.andWhere('coupon.discount_type IN (:...discountType)', {
-        discountType: discount_type,
+    if (discount_types) {
+      queryBuilder.andWhere('coupon.discount_type IN (:...discountTypes)', {
+        discountTypes: discount_types,
       });
     }
 
@@ -150,7 +150,8 @@ export class CouponService {
       .andWhere('coupon.end_time >= :currentDate', { currentDate })
       .having(
         'usage_count < coupon.total_usage_count AND user_usage_count < coupon.maximum_usage_count_per_user',
-      );
+      )
+      .orderBy('coupon_id', 'DESC');
 
     const result = await queryBuilder.getMany();
 

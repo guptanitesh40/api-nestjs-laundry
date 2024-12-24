@@ -402,8 +402,11 @@ export class UserService {
     const userQuery = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
+      .leftJoinAndSelect('companyMapping.company', 'company')
       .leftJoinAndSelect('user.orders', 'orders')
+      .leftJoinAndSelect('orders.items', 'items')
       .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
+      .leftJoinAndSelect('branchMapping.branch', 'branch')
       .where('user.user_id = :user_id', { user_id })
       .andWhere('user.deleted_at IS NULL')
       .select([
@@ -411,10 +414,17 @@ export class UserService {
         'orders.order_id',
         'orders.payment_status',
         'orders.total',
+        'orders.order_status',
+        'orders.payment_type',
         'orders.paid_amount',
         'orders.kasar_amount',
+        'items.item_id',
         'companyMapping.company_id',
         'branchMapping.branch_id',
+        'company.company_id',
+        'company.company_name',
+        'branch.branch_id',
+        'branch.branch_name',
       ]);
 
     const user = await userQuery.getOne();
@@ -469,10 +479,10 @@ export class UserService {
       search,
       sort_by,
       order,
-      role,
-      gender,
-      branch_id,
-      company_id,
+      roles,
+      genders,
+      branches_ids,
+      companies_ids,
     } = userFilterDto;
 
     const pageNumber = page_number ?? 1;
@@ -482,19 +492,27 @@ export class UserService {
     const userQuery = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
+      .leftJoinAndSelect('companyMapping.company', 'company')
       .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
       .leftJoinAndSelect('user.orders', 'orders')
+      .leftJoinAndSelect('orders.items', 'items')
+      .leftJoinAndSelect('branchMapping.branch', 'branch')
       .where('user.deleted_at IS NULL')
       .andWhere('orders.deleted_at IS NULL')
       .select([
         'user',
         'companyMapping.company_id',
         'branchMapping.branch_id',
+        'branch.branch_id',
+        'branch.branch_name',
+        'company.company_id',
+        'company.company_name',
         'orders.order_id',
         'orders.payment_status',
         'orders.total',
         'orders.paid_amount',
         'orders.kasar_amount',
+        'items.item_id',
       ])
       .addSelect("CONCAT(user.first_name, ' ', user.last_name)", 'full_name')
       .take(perPage)
@@ -511,23 +529,23 @@ export class UserService {
       );
     }
 
-    if (role) {
-      userQuery.andWhere('user.role IN (:...roles)', { roles: role });
+    if (roles) {
+      userQuery.andWhere('user.role IN (:...roles)', { roles: roles });
     }
 
-    if (gender) {
-      userQuery.andWhere('user.gender IN (:...genders)', { genders: gender });
+    if (genders) {
+      userQuery.andWhere('user.gender IN (:...genders)', { genders: genders });
     }
 
-    if (branch_id) {
+    if (branches_ids) {
       userQuery.andWhere('branchMapping.branch_id IN (:...branchIds)', {
-        branchIds: branch_id,
+        branchIds: branches_ids,
       });
     }
 
-    if (company_id) {
+    if (companies_ids) {
       userQuery.andWhere('companyMapping.company_id IN (:...companyIds)', {
-        companyIds: company_id,
+        companyIds: companies_ids,
       });
     }
 
@@ -551,20 +569,23 @@ export class UserService {
     const companyMappings = await this.userCompanyMappingRepository.find({
       where: { user_id: In(userIds) },
       select: ['user_id', 'company_id'],
+      relations: ['company'],
     });
 
     const branchMappings = await this.userBranchMappingRepository.find({
       where: { user_id: In(userIds) },
-      select: ['user_id', 'branch_id'],
+      select: ['user_id', 'branch_id', 'branch'],
+      relations: ['branch'],
     });
 
-    const userCompanyMap = new Map<number, number[]>();
-    const userBranchMap = new Map<number, number[]>();
+    const userCompanyMap: any = new Map<number, number[]>();
+    const userBranchMap: any = new Map<number, number[]>();
 
     companyMappings.forEach((mapping) => {
       if (!userCompanyMap.has(mapping.user_id)) {
         userCompanyMap.set(mapping.user_id, []);
       }
+      userCompanyMap.get(mapping.user_id)?.push(mapping.company.company_name);
       userCompanyMap.get(mapping.user_id)?.push(mapping.company_id);
     });
 
@@ -572,6 +593,7 @@ export class UserService {
       if (!userBranchMap.has(mapping.user_id)) {
         userBranchMap.set(mapping.user_id, []);
       }
+      userBranchMap.get(mapping.user_id)?.push(mapping.branch.branch_name);
       userBranchMap.get(mapping.user_id)?.push(mapping.branch_id);
     });
 
@@ -587,8 +609,8 @@ export class UserService {
 
         return {
           ...user,
-          company_ids: userCompanyMap.get(user.user_id) || [],
-          branch_ids: userBranchMap.get(user.user_id) || [],
+          companies: userCompanyMap.get(user.user_id) || [],
+          branches: userBranchMap.get(user.user_id) || [],
           total_due_amount: pending_due_amount,
         };
       }),

@@ -5,7 +5,7 @@ import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.en
 import { Workshop } from 'src/entities/workshop.entity';
 import { Role } from 'src/enum/role.enum';
 import { DataSource, In, Repository } from 'typeorm';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { WorkshopFilterDto } from '../dto/workshop-filter.dto';
 import { UserService } from '../user/user.service';
 import { CreateWorkshopDto } from './dto/create-workshop.dto';
 import { UpdateWorkshopDto } from './dto/update-workshop.dto';
@@ -57,9 +57,15 @@ export class WorkshopService {
     };
   }
 
-  async findAll(paginationQueryDto: PaginationQueryDto): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order } =
-      paginationQueryDto;
+  async findAll(workshopFilterDto: WorkshopFilterDto): Promise<Response> {
+    const {
+      per_page,
+      page_number,
+      search,
+      sort_by,
+      order,
+      workshop_manager_ids,
+    } = workshopFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
@@ -74,7 +80,6 @@ export class WorkshopService {
       .leftJoinAndSelect('workshopManagerMapping.user', 'user')
       .where('workshop.deleted_at IS NULL')
       .select(['workshop', 'workshopManagerMapping.user_id'])
-      .addSelect("CONCAT(user.first_name, ' ', user.last_name)", 'full_name')
       .take(perPage)
       .skip(skip);
 
@@ -87,6 +92,12 @@ export class WorkshopService {
           `CONCAT(user.first_name, ' ' ,user.last_name) LIKE :search)`,
         { search: `%${search}%` },
       );
+    }
+
+    if (workshop_manager_ids) {
+      workshopQuery.andWhere('user.user_id In (:...userIds)', {
+        userIds: workshop_manager_ids,
+      });
     }
 
     let sortColumn = 'workshop.created_at';

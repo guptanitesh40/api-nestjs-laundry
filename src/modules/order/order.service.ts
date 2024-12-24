@@ -301,13 +301,13 @@ export class OrderService {
       search,
       sort_by,
       order,
-      orderstatus,
-      customer_id,
-      branch_id,
-      pickup_boy_id,
-      delivery_boy_id,
-      payment_type,
-      payment_status,
+      order_statuses,
+      customer_ids,
+      branches_ids,
+      pickup_boy_ids,
+      delivery_boy_ids,
+      payment_types,
+      payment_statuses,
     } = orderFilterDto;
 
     const pageNumber = page_number ?? 1;
@@ -369,10 +369,10 @@ export class OrderService {
       );
     }
 
-    if (orderstatus) {
-      const orderstatuses: number[] = Array.isArray(orderstatus)
-        ? orderstatus.map(Number)
-        : [Number(orderstatus)];
+    if (order_statuses) {
+      const orderstatuses: number[] = Array.isArray(order_statuses)
+        ? order_statuses.map(Number)
+        : [Number(order_statuses)];
 
       const BRANCH_NOT_ASSIGN = 111;
       const BRANCH_ASSIGN = 112;
@@ -416,39 +416,39 @@ export class OrderService {
       }
     }
 
-    if (customer_id) {
-      queryBuilder.andWhere('order.user_id IN (:...customerId)', {
-        customerId: customer_id,
+    if (customer_ids) {
+      queryBuilder.andWhere('order.user_id IN (:...customerIds)', {
+        customerIds: customer_ids,
       });
     }
 
-    if (branch_id) {
-      queryBuilder.andWhere('order.branch_id In (:...branchId)', {
-        branchId: branch_id,
+    if (branches_ids) {
+      queryBuilder.andWhere('order.branch_id In (:...branchIds)', {
+        branchIds: branches_ids,
       });
     }
 
-    if (pickup_boy_id) {
-      queryBuilder.andWhere('order.pickup_boy_id In (:...pickupBoyId)', {
-        pickupBoyId: pickup_boy_id,
+    if (pickup_boy_ids) {
+      queryBuilder.andWhere('order.pickup_boy_id In (:...pickupBoyIds)', {
+        pickupBoyIds: pickup_boy_ids,
       });
     }
 
-    if (delivery_boy_id) {
-      queryBuilder.andWhere('order.delivery_boy_id In(:...deliveryBoyId)', {
-        deliveryBoyId: delivery_boy_id,
+    if (delivery_boy_ids) {
+      queryBuilder.andWhere('order.delivery_boy_id In(:...deliveryBoyIds)', {
+        deliveryBoyIds: delivery_boy_ids,
       });
     }
 
-    if (payment_type) {
-      queryBuilder.andWhere('order.payment_type In(:...paymentType)', {
-        paymentType: payment_type,
+    if (payment_types) {
+      queryBuilder.andWhere('order.payment_type In(:...paymentTypes)', {
+        paymentTypes: payment_types,
       });
     }
 
-    if (payment_status) {
-      queryBuilder.andWhere('order.payment_status In(:...paymentStatus)', {
-        paymentStatus: payment_status,
+    if (payment_statuses) {
+      queryBuilder.andWhere('order.payment_status In(:...paymentStatuses)', {
+        paymentStatuses: payment_statuses,
       });
     }
 
@@ -1256,14 +1256,14 @@ export class OrderService {
       search,
       sort_by,
       order,
-      orderstatus,
-      customer_id,
-      branch_id,
-      pickup_boy_id,
-      payment_type,
-      payment_status,
-      workshop_id,
-      workshop_manager_id,
+      order_statuses,
+      customer_ids,
+      branches_ids,
+      pickup_boy_ids,
+      payment_types,
+      payment_statuses,
+      workshop_ids,
+      workshop_manager_ids,
     } = orderFilterDto;
 
     const pageNumber = page_number ?? 1;
@@ -1310,9 +1310,9 @@ export class OrderService {
       );
     }
 
-    if (orderstatus) {
+    if (order_statuses) {
       queryBuilder.andWhere('order.order_status IN (:...ordersStatuses)', {
-        ordersStatuses: orderstatus,
+        ordersStatuses: order_statuses,
       });
     } else {
       queryBuilder.andWhere(
@@ -1324,45 +1324,45 @@ export class OrderService {
       );
     }
 
-    if (customer_id) {
-      queryBuilder.andWhere('order.user_id IN (:...customerId)', {
-        customerId: customer_id,
+    if (customer_ids) {
+      queryBuilder.andWhere('order.user_id IN (:...customerIds)', {
+        customerIds: customer_ids,
       });
     }
 
-    if (branch_id) {
-      queryBuilder.andWhere('order.branch_id In (:...branchId)', {
-        branchId: branch_id,
+    if (branches_ids) {
+      queryBuilder.andWhere('order.branch_id In (:...branchIds)', {
+        branchIds: branches_ids,
       });
     }
 
-    if (pickup_boy_id) {
-      queryBuilder.andWhere('order.pickup_boy_id In (:...pickupBoyId)', {
-        pickupBoyId: pickup_boy_id,
+    if (pickup_boy_ids) {
+      queryBuilder.andWhere('order.pickup_boy_id In (:...pickupBoyIds)', {
+        pickupBoyIds: pickup_boy_ids,
       });
     }
 
-    if (payment_type) {
-      queryBuilder.andWhere('order.payment_type In (:...paymentType)', {
-        paymentType: payment_type,
+    if (payment_types) {
+      queryBuilder.andWhere('order.payment_type In (:...paymentTypes)', {
+        paymentTypes: payment_types,
       });
     }
 
-    if (payment_status) {
-      queryBuilder.andWhere('order.payment_status In (:...paymentStatus)', {
-        paymentStatus: payment_status,
+    if (payment_statuses) {
+      queryBuilder.andWhere('order.payment_status In (:...paymentStatuses)', {
+        paymentStatuses: payment_statuses,
       });
     }
 
-    if (workshop_id) {
-      queryBuilder.andWhere('workshop.workshop_id In(:...workshopId)', {
-        workshopId: workshop_id,
+    if (workshop_ids) {
+      queryBuilder.andWhere('workshop.workshop_id In(:...workshopIds)', {
+        workshopIds: workshop_ids,
       });
     }
 
-    if (workshop_manager_id) {
+    if (workshop_manager_ids) {
       queryBuilder.andWhere('manager_user.user_id In(:...workshopManagerId)', {
-        workshopManagerId: workshop_manager_id,
+        workshopManagerId: workshop_manager_ids,
       });
     }
 

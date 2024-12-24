@@ -38,7 +38,7 @@ export class CompanyService {
   }
 
   async findAll(companyFilterDto: CompanyFilterDto): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order, company_ownedby } =
+    const { per_page, page_number, search, sort_by, order, companies_ownedby } =
       companyFilterDto;
 
     const pageNumber = page_number ?? 1;
@@ -58,10 +58,13 @@ export class CompanyService {
       );
     }
 
-    if (company_ownedby) {
-      queryBuilder.andWhere('company.company_ownedby In (:...companyOwnedby)', {
-        companyOwnedby: company_ownedby,
-      });
+    if (companies_ownedby) {
+      queryBuilder.andWhere(
+        'company.company_ownedby In (:...companiesOwnedby)',
+        {
+          companiesOwnedby: companies_ownedby,
+        },
+      );
     }
 
     let sortColumn = 'company.created_at';

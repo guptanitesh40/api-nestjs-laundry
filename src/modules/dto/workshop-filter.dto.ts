@@ -1,10 +1,7 @@
 import { applyNumberArrayValidation } from 'src/utils/validation-helper';
 import { PaginationQueryDto } from './pagination-query.dto';
 
-export class BranchFilterDto extends PaginationQueryDto {
+export class WorkshopFilterDto extends PaginationQueryDto {
   @applyNumberArrayValidation()
-  company_id?: number[];
-
-  @applyNumberArrayValidation()
-  branch_manager_ids?: number[];
+  workshop_manager_ids?: number[];
 }

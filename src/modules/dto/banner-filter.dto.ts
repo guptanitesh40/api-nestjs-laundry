@@ -3,5 +3,5 @@ import { PaginationQueryDto } from './pagination-query.dto';
 
 export class BannerFilterDto extends PaginationQueryDto {
   @applyNumberArrayValidation()
-  banner_type?: number[];
+  banner_types?: number[];
 }

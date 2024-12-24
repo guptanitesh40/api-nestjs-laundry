@@ -3,5 +3,5 @@ import { PaginationQueryDto } from './pagination-query.dto';
 
 export class CompanyFilterDto extends PaginationQueryDto {
   @applyNumberArrayValidation()
-  company_ownedby?: number;
+  companies_ownedby?: number;
 }

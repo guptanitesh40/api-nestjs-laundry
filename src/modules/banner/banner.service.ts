@@ -48,7 +48,7 @@ export class BannerService {
   }
 
   async findAll(bannerFilterDto: BannerFilterDto): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order, banner_type } =
+    const { per_page, page_number, search, sort_by, order, banner_types } =
       bannerFilterDto;
 
     const pageNumber = page_number ?? 1;
@@ -67,9 +67,9 @@ export class BannerService {
       );
     }
 
-    if (banner_type) {
-      queryBuilder.andWhere('banner.banner_type In (:...bannerType)', {
-        bannerType: banner_type,
+    if (banner_types) {
+      queryBuilder.andWhere('banner.banner_type In (:...bannerTypes)', {
+        bannerTypes: banner_types,
       });
     }
 
