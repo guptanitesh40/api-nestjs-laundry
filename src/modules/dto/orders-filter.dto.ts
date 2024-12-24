@@ -3,29 +3,29 @@ import { PaginationQueryDto } from './pagination-query.dto';
 
 export class OrderFilterDto extends PaginationQueryDto {
   @applyNumberArrayValidation()
-  orderstatus?: number[];
+  order_statuses?: number[];
 
   @applyNumberArrayValidation()
-  customer_id?: number[];
+  customer_ids?: number[];
 
   @applyNumberArrayValidation()
-  branch_id?: number[];
+  branches_ids?: number[];
 
   @applyNumberArrayValidation()
-  pickup_boy_id?: number[];
+  pickup_boy_ids?: number[];
 
   @applyNumberArrayValidation()
-  delivery_boy_id?: number[];
+  delivery_boy_ids?: number[];
 
   @applyNumberArrayValidation()
-  payment_type?: number[];
+  payment_types?: number[];
 
   @applyNumberArrayValidation()
-  payment_status?: number[];
+  payment_statuses?: number[];
 
   @applyNumberArrayValidation()
-  workshop_id?: number[];
+  workshop_ids?: number[];
 
   @applyNumberArrayValidation()
-  workshop_manager_id?: number[];
+  workshop_manager_ids?: number[];
 }

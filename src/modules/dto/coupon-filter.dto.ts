@@ -3,8 +3,8 @@ import { PaginationQueryDto } from './pagination-query.dto';
 
 export class CouponFiltrerDto extends PaginationQueryDto {
   @applyNumberArrayValidation()
-  coupon_type?: number[];
+  coupon_types?: number[];
 
   @applyNumberArrayValidation()
-  discount_type?: number;
+  discount_types?: number;
 }

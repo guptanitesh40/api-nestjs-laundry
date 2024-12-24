@@ -33,7 +33,7 @@ export class BranchService {
       sort_by,
       order,
       company_id,
-      branch_manager_id,
+      branch_manager_ids,
     } = branchFilterDto;
 
     const pageNumber = page_number ?? 1;
@@ -75,9 +75,9 @@ export class BranchService {
       });
     }
 
-    if (branch_manager_id) {
+    if (branch_manager_ids) {
       queryBuilder.andWhere('user.user_id In (:...userIds)', {
-        userIds: branch_manager_id,
+        userIds: branch_manager_ids,
       });
     }
 

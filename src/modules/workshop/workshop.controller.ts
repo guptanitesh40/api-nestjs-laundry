@@ -14,7 +14,7 @@ import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from '../auth/guard/role.guard';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { WorkshopFilterDto } from '../dto/workshop-filter.dto';
 import { CreateWorkshopDto } from './dto/create-workshop.dto';
 import { UpdateWorkshopDto } from './dto/update-workshop.dto';
 import { WorkshopService } from './workshop.service';
@@ -35,9 +35,9 @@ export class WorkshopController {
 
   @Get()
   async findAll(
-    @Query() paginationQueryDto: PaginationQueryDto,
+    @Query() workshopFilterDto: WorkshopFilterDto,
   ): Promise<Response> {
-    return await this.workshopService.findAll(paginationQueryDto);
+    return await this.workshopService.findAll(workshopFilterDto);
   }
 
   @Get(':id')

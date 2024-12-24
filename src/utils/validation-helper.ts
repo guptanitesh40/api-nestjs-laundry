@@ -1,10 +1,10 @@
 import { Transform } from 'class-transformer';
 import {
-    ArrayMinSize,
-    IsArray,
-    IsNumber,
-    IsOptional,
-    IsString,
+  ArrayMinSize,
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
 } from 'class-validator';
 
 export function applyNumberArrayValidation(isStringArray: boolean = false) {
