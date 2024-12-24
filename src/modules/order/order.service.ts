@@ -374,31 +374,34 @@ export class OrderService {
         ? orderstatus.map(Number)
         : [Number(orderstatus)];
 
-      const specialStatuses = [111, 112];
+      const BRANCH_NOT_ASSIGN = 111;
+      const BRANCH_ASSIGN = 112;
+
+      const specialStatuses = [BRANCH_NOT_ASSIGN, BRANCH_ASSIGN];
       const specialConditions: string[] = [];
       const normalStatuses = orderstatuses.filter(
         (status) => !specialStatuses.includes(status),
       );
 
-      if (orderstatuses.includes(111)) {
+      if (orderstatuses.includes(BRANCH_NOT_ASSIGN)) {
         specialConditions.push(`
-          (order.order_status = :orderStatus111 
+          (order.order_status = :branchAssign 
            AND order.pickup_boy_id IS NULL 
            AND order.branch_id IS NULL)
         `);
         queryBuilder.setParameter(
-          'orderStatus111',
+          'branchAssign',
           OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
         );
       }
 
-      if (orderstatuses.includes(112)) {
+      if (orderstatuses.includes(BRANCH_ASSIGN)) {
         specialConditions.push(`
-          (order.order_status = :orderStatus112 
+          (order.order_status = :branchNotAssign 
            AND order.branch_id IS NOT NULL)
         `);
         queryBuilder.setParameter(
-          'orderStatus112',
+          'branchNotAssign',
           OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
         );
       }
