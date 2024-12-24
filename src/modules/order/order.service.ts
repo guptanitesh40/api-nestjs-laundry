@@ -369,31 +369,48 @@ export class OrderService {
       );
     }
 
-    const orderstatuses: number[] = [111, 112];
+    if (orderstatus) {
+      const orderstatuses: number[] = Array.isArray(orderstatus)
+        ? orderstatus.map(Number)
+        : [Number(orderstatus)];
 
-    if (orderstatuses.includes(Number(orderstatus))) {
-      if (Number(orderstatus) === 111) {
-        queryBuilder
-          .andWhere('order.order_status IN (:...orderstatus)', {
-            orderstatus: [
-              OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
-            ],
-          })
-          .andWhere('order.pickup_boy_id IS NULL')
-          .andWhere('order.branch_id IS NULL');
-      } else if (Number(orderstatus) === 112) {
-        queryBuilder
-          .andWhere('order.order_status IN (:...orderstatus)', {
-            orderstatus: [
-              OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
-            ],
-          })
-          .andWhere('order.branch_id IS NOT NULL');
+      const specialStatuses = [111, 112];
+      const specialConditions: string[] = [];
+      const normalStatuses = orderstatuses.filter(
+        (status) => !specialStatuses.includes(status),
+      );
+
+      if (orderstatuses.includes(111)) {
+        specialConditions.push(`
+          (order.order_status = :orderStatus111 
+           AND order.pickup_boy_id IS NULL 
+           AND order.branch_id IS NULL)
+        `);
+        queryBuilder.setParameter(
+          'orderStatus111',
+          OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+        );
       }
-    } else if (orderstatus) {
-      queryBuilder.andWhere('order.order_status IN (:...ordersstatus)', {
-        ordersstatus: orderstatus,
-      });
+
+      if (orderstatuses.includes(112)) {
+        specialConditions.push(`
+          (order.order_status = :orderStatus112 
+           AND order.branch_id IS NOT NULL)
+        `);
+        queryBuilder.setParameter(
+          'orderStatus112',
+          OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+        );
+      }
+
+      if (normalStatuses.length > 0) {
+        specialConditions.push('order.order_status IN (:...normalStatuses)');
+        queryBuilder.setParameter('normalStatuses', normalStatuses);
+      }
+
+      if (specialConditions.length > 0) {
+        queryBuilder.andWhere(specialConditions.join(' OR '));
+      }
     }
 
     if (customer_id) {
