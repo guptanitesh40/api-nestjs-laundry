@@ -31,6 +31,11 @@ export class CartService {
       .leftJoinAndSelect('cart.category', 'category')
       .leftJoinAndSelect('cart.service', 'service')
       .leftJoinAndSelect('cart.product', 'product')
+      .innerJoinAndSelect(
+        Price,
+        'price',
+        'cart.category_id = price.category_id AND cart.product_id = price.product_id AND cart.service_id = price.service_id AND price.deleted_at IS NULL',
+      )
       .select([
         'cart.cart_id as cart_id',
         'cart.created_at as created_at',
@@ -50,6 +55,8 @@ export class CartService {
         'product.product_id as product_id',
         'product.name as product_name',
         'product.image as product_image',
+        'price.price_id as price_id',
+        'price.price as price',
       ])
       .where('cart.cart_id = :cart_id', { cart_id: result.cart_id });
 
