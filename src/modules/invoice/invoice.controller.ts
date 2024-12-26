@@ -1,10 +1,10 @@
 import {
   Controller,
+  Get,
   HttpException,
   HttpStatus,
   NotFoundException,
   Param,
-  Post,
   Res,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -14,7 +14,7 @@ import { InvoiceService } from './invoice.service';
 export class InvoiceController {
   constructor(private readonly invoiceService: InvoiceService) {}
 
-  @Post('invoice/:order_id')
+  @Get('invoice/:order_id')
   async generateInvoice(
     @Param('order_id') order_id: number,
     @Res() res: Response,
