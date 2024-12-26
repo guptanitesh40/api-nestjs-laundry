@@ -6,8 +6,13 @@ import {
   NotFoundException,
   Param,
   Res,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
+import { Roles } from 'src/decorator/roles.decorator';
+import { Role } from 'src/enum/role.enum';
+import { RolesGuard } from '../auth/guard/role.guard';
 import { InvoiceService } from './invoice.service';
 
 @Controller('pdf')
@@ -15,6 +20,9 @@ export class InvoiceController {
   constructor(private readonly invoiceService: InvoiceService) {}
 
   @Get('invoice/:order_id')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.CUSTOMER)
   async generateInvoice(
     @Param('order_id') order_id: number,
     @Res() res: Response,

@@ -24,7 +24,7 @@
         }
         h1, h2, h3 {
             text-align: center;
-            color: #4A90E2;
+            color: #161F5F;
             margin: 5px 0;
         }
         h1 { font-size: 20px; }
@@ -32,8 +32,9 @@
         h3 { font-size: 16px; }
         table {
             width: 100%;
+            height: 30%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 5px;
         }
         table, th, td {
             border: 1px solid #ccc;
@@ -59,7 +60,7 @@
             font-size: 12px;
         }
         .logo {
-            width: 100px;
+            width: 75px;
             height: auto;
             display: block;
             margin: 0 auto 10px;
@@ -73,7 +74,7 @@
         .totals p {
             display: flex;
             justify-content: space-between;
-            padding: 5px;
+            padding: 2px;
             margin: 0; 
             font-size: 12px;
         }
@@ -127,13 +128,13 @@
                 <h2>Sikka Cleaners</h2>
                 <p>Address: XYZ, Near Subhash Chowk, Ahmedabad</p>
                 <p>GSTIN: 24ACPPV3865Q1Z</p>
-                <p>Delivery Dt & Time: <%= invoice.deliveryTime %></p>
+                <p>Delivery Date & Time: <%= invoice.deliveryTime %></p>
             </div>
             <div class="customer-details">
                 <h3>Booking No: <%= invoice.invoiceNumber %></h3>
                 <p>Customer Name: <%= invoice.customer.name %></p>
                 <p>Customer Contact: <%= invoice.customer.contact %></p>
-                <p>Collection Dt & Time: <%= invoice.collectionTime %></p>
+                <p>Collection Date & Time: <%= invoice.collectionTime %></p>
             </div>
         </div>
 
@@ -199,10 +200,20 @@
                         <span>Discount:</span>
                         <span><%= invoice.discount.toFixed(2) %></span>
                     </p>
-                   
+
+                    <p>
+                        <span style="color: green;">Paid Amount:</span>
+                        <span style="color: green;"><%= invoice.paidAmount.toFixed(2) %></span>
+                    </p>
+
+                    <p>
+                        <span style="color: red;">Pending Due Amount:</span>
+                        <span style="color: red;"><%= invoice.pendingDueAmount.toFixed(2) %></span>
+                    </p>
+
                     <p>
                         <span>Total Amount:</span>
-                        <span><%= invoice.finalTotal.toFixed(2) %></span>
+                        <span><%= invoice.totalAmount.toFixed(2) %></span>
                     </p>
                 </div>
             </div>

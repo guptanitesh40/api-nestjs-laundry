@@ -4,10 +4,12 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  Res,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { addDays, addHours } from 'date-fns';
 import ejs from 'ejs';
+import { Response as ExpResponse } from 'express';
 import * as fs from 'fs';
 import { writeFileSync } from 'fs';
 import path, { join } from 'path';
@@ -38,6 +40,7 @@ import { CartService } from '../cart/cart.service';
 import { CouponService } from '../coupon/coupon.service';
 import { OrderFilterDto } from '../dto/orders-filter.dto';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { InvoiceService } from '../invoice/invoice.service';
 import { CreateNoteDto } from '../notes/dto/create-note.dto';
 import { NotesService } from '../notes/note.service';
 import { NotificationService } from '../notification/notification.service';
@@ -74,6 +77,8 @@ export class OrderService {
     private readonly workshopService: WorkshopService,
     private readonly cartService: CartService,
     private readonly notesService: NotesService,
+    @Inject(forwardRef(() => InvoiceService))
+    private readonly invoiceService: InvoiceService,
     private dataSource: DataSource,
   ) {}
 
@@ -610,6 +615,7 @@ export class OrderService {
   async updateOrder(
     order_id: number,
     updateOrderDto: UpdateOrderDto,
+    @Res() res: ExpResponse,
   ): Promise<Response> {
     const queryRunner = this.dataSource.createQueryRunner();
     const order = await this.orderRepository.findOne({
@@ -622,8 +628,12 @@ export class OrderService {
 
     const { address_id, items, ...orderUpdates } = updateOrderDto;
 
-    if (PaymentType.CASH_ON_DELIVERY && PaymentStatus.FULL_PAYMENT_RECEIVED) {
-      orderUpdates.kasar_amount = order.total - updateOrderDto.paid_amount;
+    if (
+      orderUpdates.payment_type === PaymentType.CASH_ON_DELIVERY &&
+      orderUpdates.payment_status === PaymentStatus.FULL_PAYMENT_RECEIVED
+    ) {
+      orderUpdates.kasar_amount =
+        order.total > order.paid_amount ? order.total - order.paid_amount : 0;
     }
 
     if (address_id) {
@@ -706,6 +716,21 @@ export class OrderService {
         await this.dataSource.manager.insert(OrderItem, orderItem);
       }
     }
+
+    const pdfBuffer =
+      await this.invoiceService.generateAndSaveInvoicePdf(order_id);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="invoice_${order_id}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.send(pdfBuffer);
+    const filename = `invoice_${order_id}.pdf`;
+
+    const filePath = path.join(process.cwd(), 'pdf', filename);
+    fs.writeFileSync(filePath, pdfBuffer);
 
     return {
       statusCode: 200,
