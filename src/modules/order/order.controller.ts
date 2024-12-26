@@ -258,4 +258,15 @@ export class OrderController {
       );
     }
   }
+
+  @Post('orders/payments/clear-due')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.SUPER_ADMIN)
+  async payDueAmount(
+    @Body('user_id') user_id: number,
+    @Body() body: { orders: any[] },
+  ): Promise<Response> {
+    return await this.orderService.payDueAmount(user_id, body.orders);
+  }
 }

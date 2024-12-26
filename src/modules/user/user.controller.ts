@@ -164,18 +164,18 @@ export class UserController {
     return await this.userService.createUser(user.user_id, createUserDto);
   }
 
-  @Put(':id')
+  @Put(':user_id')
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN)
   @UseInterceptors(FileInterceptor('image', fileUpload(FilePath.USER_IMAGES)))
   async updateUser(
-    @Param('id') id: number,
+    @Param('user_id') user_id: number,
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<Response> {
     const imagepath = file ? FilePath.USER_IMAGES + '/' + file.filename : null;
-    return await this.userService.updateUser(id, updateUserDto, imagepath);
+    return await this.userService.updateUser(user_id, updateUserDto, imagepath);
   }
 
   @Get('delivery-boys')
@@ -186,12 +186,12 @@ export class UserController {
     return await this.userService.getAllDeliveryBoys();
   }
 
-  @Get(':id')
+  @Get(':user_id')
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN)
-  async getUserById(@Param('id') id: number): Promise<Response> {
-    return await this.userService.getUserById(id);
+  async getUserById(@Param('user_id') user_id: number): Promise<Response> {
+    return await this.userService.getUserById(user_id);
   }
 
   @Get()
@@ -202,12 +202,12 @@ export class UserController {
     return await this.userService.getAllUsers(userFilterDto);
   }
 
-  @Delete(':id')
+  @Delete(':user_id')
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN)
-  async deleteUser(@Param('id') id: number): Promise<Response> {
-    return await this.userService.deleteUser(id);
+  async deleteUser(@Param('user_id') user_id: number): Promise<Response> {
+    return await this.userService.deleteUser(user_id);
   }
 
   @Post('generate')
