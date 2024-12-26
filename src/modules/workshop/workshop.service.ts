@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
@@ -17,6 +22,7 @@ export class WorkshopService {
     private workshopRepository: Repository<Workshop>,
     @InjectRepository(WorkshopManagerMapping)
     private workshopManagerRepository: Repository<WorkshopManagerMapping>,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private dataSource: DataSource,
   ) {}

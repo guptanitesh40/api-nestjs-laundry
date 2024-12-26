@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -20,9 +22,11 @@ import { Role } from 'src/enum/role.enum';
 import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
 import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
+import { getOrderStatusDetails } from 'src/utils/order-status.helper';
 import twilio from 'twilio';
 import { In, MoreThan, Repository } from 'typeorm';
 import { UserFilterDto } from '../dto/users-filter.dto';
+import { OrderService } from '../order/order.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -46,6 +50,8 @@ export class UserService {
     private userCompanyMappingRepository: Repository<UserCompanyMapping>,
     @InjectRepository(UserBranchMapping)
     private userBranchMappingRepository: Repository<UserBranchMapping>,
+    @Inject(forwardRef(() => OrderService))
+    private readonly orderService: OrderService,
   ) {}
 
   async signup(signUpDto: SignupDto): Promise<User> {
@@ -409,6 +415,7 @@ export class UserService {
       .leftJoinAndSelect('branchMapping.branch', 'branch')
       .where('user.user_id = :user_id', { user_id })
       .andWhere('user.deleted_at IS NULL')
+      .andWhere('orders.deleted_at IS NULL')
       .select([
         'user',
         'orders.order_id',
@@ -427,8 +434,7 @@ export class UserService {
         'branch.branch_name',
       ]);
 
-    const user = await userQuery.getOne();
-
+    const user: any = await userQuery.getOne();
     const mappedUser = {
       ...user,
       branch_ids: user.userBranchMappings.map((branch) => branch.branch_id),
@@ -436,6 +442,15 @@ export class UserService {
         (company) => company.company_id,
       ),
     };
+
+    user.orders.map((order) => {
+      order.admin_order_status = getOrderStatusDetails(order);
+
+      return {
+        order_id: order.id,
+        admin_order_status: order.admin_order_status,
+      };
+    });
 
     let pending_due_amount = 0;
     for (const order of user.orders) {
@@ -568,7 +583,7 @@ export class UserService {
 
     const companyMappings = await this.userCompanyMappingRepository.find({
       where: { user_id: In(userIds) },
-      select: ['user_id', 'company_id'],
+      select: ['user_id', 'company_id', 'company'],
       relations: ['company'],
     });
 

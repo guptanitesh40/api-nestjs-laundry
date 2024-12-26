@@ -9,6 +9,8 @@ import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
 import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
 import { UserService } from 'src/modules/user/user.service';
+import { OrderModule } from '../order/order.module';
+import { UsersModule } from '../user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategy/jwt-strategy';
@@ -29,6 +31,8 @@ config();
       UserCompanyMapping,
       UserBranchMapping,
     ]),
+    UsersModule,
+    OrderModule,
   ],
   providers: [AuthService, UserService, JwtStrategy],
   controllers: [AuthController],
