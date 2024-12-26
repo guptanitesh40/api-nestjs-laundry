@@ -24,7 +24,7 @@ export class InvoiceService {
     const order = await this.orderService.getOrderDetail(order_id);
 
     if (!order) {
-      throw new NotFoundException('Order not found this');
+      throw new NotFoundException('Order not found');
     }
 
     const templatePath = path.join(
