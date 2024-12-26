@@ -513,6 +513,10 @@ export class UserService {
       .leftJoinAndSelect('orders.items', 'items')
       .leftJoinAndSelect('branchMapping.branch', 'branch')
       .where('user.deleted_at IS NULL')
+      .andWhere('companyMapping.deleted_at IS NULL')
+      .andWhere('company.deleted_at IS NULL')
+      .andWhere('branchMapping.deleted_at IS NULL')
+      .andWhere('branch.deleted_at IS NULL')
       .andWhere('orders.deleted_at IS NULL')
       .select([
         'user',
@@ -600,7 +604,7 @@ export class UserService {
       if (!userCompanyMap.has(mapping.user_id)) {
         userCompanyMap.set(mapping.user_id, []);
       }
-      userCompanyMap.get(mapping.user_id)?.push(mapping.company.company_name);
+      userCompanyMap.get(mapping.user_id)?.push(mapping.company?.company_name);
       userCompanyMap.get(mapping.user_id)?.push(mapping.company_id);
     });
 
@@ -608,7 +612,7 @@ export class UserService {
       if (!userBranchMap.has(mapping.user_id)) {
         userBranchMap.set(mapping.user_id, []);
       }
-      userBranchMap.get(mapping.user_id)?.push(mapping.branch.branch_name);
+      userBranchMap.get(mapping.user_id)?.push(mapping.branch?.branch_name);
       userBranchMap.get(mapping.user_id)?.push(mapping.branch_id);
     });
 
