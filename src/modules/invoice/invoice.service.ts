@@ -59,7 +59,7 @@ export class InvoiceService {
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'networkidle0' });
 
-      const pdfBufferUint8: Uint8Array = await page.pdf({ format: 'A4' });
+      const pdfBufferUint8: Uint8Array = await page.pdf({ format: 'A5' });
       const pdfBuffer: Buffer = Buffer.from(pdfBufferUint8);
 
       return pdfBuffer;
