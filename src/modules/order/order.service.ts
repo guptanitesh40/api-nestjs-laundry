@@ -4,12 +4,10 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  Res,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { addDays, addHours } from 'date-fns';
 import ejs from 'ejs';
-import { Response as ExpResponse } from 'express';
 import * as fs from 'fs';
 import { writeFileSync } from 'fs';
 import path, { join } from 'path';
@@ -615,7 +613,6 @@ export class OrderService {
   async updateOrder(
     order_id: number,
     updateOrderDto: UpdateOrderDto,
-    @Res() res: ExpResponse,
   ): Promise<Response> {
     const queryRunner = this.dataSource.createQueryRunner();
     const order = await this.orderRepository.findOne({
@@ -719,18 +716,11 @@ export class OrderService {
 
     const pdfBuffer =
       await this.invoiceService.generateAndSaveInvoicePdf(order_id);
-
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="invoice_${order_id}.pdf"`,
-      'Content-Length': pdfBuffer.length,
-    });
-
-    res.send(pdfBuffer);
-    const filename = `invoice_${order_id}.pdf`;
-
-    const filePath = path.join(process.cwd(), 'pdf', filename);
+    const baseUrl = process.env.BASE_URL;
+    const fileName = `invoice_${order_id}.pdf`;
+    const filePath = path.join(process.cwd(), 'pdf', fileName);
     fs.writeFileSync(filePath, pdfBuffer);
+    const fileurl = `${baseUrl}/pdf/${fileName}`;
 
     return {
       statusCode: 200,
@@ -741,6 +731,7 @@ export class OrderService {
         total: updatedOrder.total,
         address_details: updatedOrder.address_details,
         items: items ? items.length : 0,
+        url: fileurl,
       },
     };
   }

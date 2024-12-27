@@ -11,7 +11,6 @@ import {
   Put,
   Query,
   Request,
-  Res,
   StreamableFile,
   UploadedFiles,
   UseGuards,
@@ -19,7 +18,6 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { Response as ExpResponse } from 'express';
 import { createReadStream, writeFileSync } from 'fs';
 import { join } from 'path';
 import { FilePath } from 'src/constants/FilePath';
@@ -125,9 +123,8 @@ export class OrderController {
   async updateOrder(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateOrderDto: UpdateOrderDto,
-    @Res() res: ExpResponse,
   ): Promise<Response> {
-    return this.orderService.updateOrder(id, updateOrderDto, res);
+    return this.orderService.updateOrder(id, updateOrderDto);
   }
 
   @Patch('admin/orders/:order_id/update-status')
