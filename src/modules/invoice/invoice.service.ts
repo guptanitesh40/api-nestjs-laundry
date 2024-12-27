@@ -5,8 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import ejs from 'ejs';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs, writeFileSync } from 'fs';
+import path, { join } from 'path';
 import puppeteer, { Browser } from 'puppeteer';
 import { FilePath } from 'src/constants/FilePath';
 import { Order } from 'src/entities/order.entity';
@@ -20,7 +20,7 @@ export class InvoiceService {
     private readonly orderService: OrderService,
   ) {}
 
-  async generateAndSaveInvoicePdf(order_id: number): Promise<Buffer> {
+  async generateAndSaveInvoicePdf(order_id: number): Promise<any> {
     const order = await this.orderService.getOrderDetail(order_id);
 
     if (!order) {
@@ -41,7 +41,15 @@ export class InvoiceService {
     const pdfBuffer = await this.createPdfBuffer(populatedHtml);
     await this.savePdfToFile(order_id, pdfBuffer);
 
-    return pdfBuffer;
+    const baseUrl = process.env.BASE_URL;
+    const fileName = `invoice_${order_id}.pdf`;
+    const filePath = join(process.cwd(), 'pdf', fileName);
+
+    writeFileSync(filePath, pdfBuffer);
+
+    const fileUrl = `${baseUrl}/pdf/${fileName}`;
+
+    return { url: fileUrl };
   }
 
   private async createPdfBuffer(html: string): Promise<Buffer> {

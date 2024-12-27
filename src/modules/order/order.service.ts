@@ -714,13 +714,7 @@ export class OrderService {
       }
     }
 
-    const pdfBuffer =
-      await this.invoiceService.generateAndSaveInvoicePdf(order_id);
-    const baseUrl = process.env.BASE_URL;
-    const fileName = `invoice_${order_id}.pdf`;
-    const filePath = path.join(process.cwd(), 'pdf', fileName);
-    fs.writeFileSync(filePath, pdfBuffer);
-    const fileurl = `${baseUrl}/pdf/${fileName}`;
+    await this.invoiceService.generateAndSaveInvoicePdf(order_id);
 
     return {
       statusCode: 200,
@@ -731,7 +725,6 @@ export class OrderService {
         total: updatedOrder.total,
         address_details: updatedOrder.address_details,
         items: items ? items.length : 0,
-        url: fileurl,
       },
     };
   }

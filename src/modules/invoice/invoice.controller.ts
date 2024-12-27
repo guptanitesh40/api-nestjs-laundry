@@ -6,8 +6,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { writeFileSync } from 'fs';
-import { join } from 'path';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from '../auth/guard/role.guard';
@@ -29,13 +27,6 @@ export class InvoiceController {
         `Invoice could not be generated for order ID ${order_id}`,
       );
     }
-    const baseUrl = process.env.BASE_URL;
-    const fileName = `invoice_${order_id}.pdf`;
-    const filePath = join(process.cwd(), 'pdf', fileName);
-
-    writeFileSync(filePath, pdfBuffer);
-
-    const fileUrl = `${baseUrl}/pdf/${fileName}`;
-    return { url: fileUrl };
+    return pdfBuffer;
   }
 }
