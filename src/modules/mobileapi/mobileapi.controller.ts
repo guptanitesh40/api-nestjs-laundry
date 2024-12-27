@@ -28,7 +28,7 @@ export class MobileApiController {
     return await this.apiService.getProductsByCategoryAndService(
       category_id,
       service_id,
-      user.use_id,
+      user.user_id,
     );
   }
 

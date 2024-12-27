@@ -10,6 +10,7 @@ import { Service } from 'src/entities/service.entity';
 import { User } from 'src/entities/user.entity';
 import { CartModule } from '../cart/cart.module';
 import { CouponModule } from '../coupon/coupon.module';
+import { InvoiceModule } from '../invoice/invoice.module';
 import { NotesModule } from '../notes/note.module';
 import { NotificationModule } from '../notification/notification.module';
 import { PriceModule } from '../price/price.module';
@@ -33,6 +34,7 @@ import { OrderService } from './order.service';
     ]),
     forwardRef(() => UsersModule),
     forwardRef(() => CouponModule),
+    forwardRef(() => InvoiceModule),
     SettingModule,
     PriceModule,
     WorkshopModule,

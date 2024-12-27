@@ -38,6 +38,7 @@ import { CartService } from '../cart/cart.service';
 import { CouponService } from '../coupon/coupon.service';
 import { OrderFilterDto } from '../dto/orders-filter.dto';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { InvoiceService } from '../invoice/invoice.service';
 import { CreateNoteDto } from '../notes/dto/create-note.dto';
 import { NotesService } from '../notes/note.service';
 import { NotificationService } from '../notification/notification.service';
@@ -74,6 +75,8 @@ export class OrderService {
     private readonly workshopService: WorkshopService,
     private readonly cartService: CartService,
     private readonly notesService: NotesService,
+    @Inject(forwardRef(() => InvoiceService))
+    private readonly invoiceService: InvoiceService,
     private dataSource: DataSource,
   ) {}
 
@@ -622,8 +625,12 @@ export class OrderService {
 
     const { address_id, items, ...orderUpdates } = updateOrderDto;
 
-    if (PaymentType.CASH_ON_DELIVERY && PaymentStatus.FULL_PAYMENT_RECEIVED) {
-      orderUpdates.kasar_amount = order.total - updateOrderDto.paid_amount;
+    if (
+      orderUpdates.payment_type === PaymentType.CASH_ON_DELIVERY &&
+      orderUpdates.payment_status === PaymentStatus.FULL_PAYMENT_RECEIVED
+    ) {
+      orderUpdates.kasar_amount =
+        order.total > order.paid_amount ? order.total - order.paid_amount : 0;
     }
 
     if (address_id) {
@@ -706,6 +713,8 @@ export class OrderService {
         await this.dataSource.manager.insert(OrderItem, orderItem);
       }
     }
+
+    await this.invoiceService.generateAndSaveInvoicePdf(order_id);
 
     return {
       statusCode: 200,

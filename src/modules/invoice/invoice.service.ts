@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import ejs from 'ejs';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs, writeFileSync } from 'fs';
+import path, { join } from 'path';
 import puppeteer, { Browser } from 'puppeteer';
 import { FilePath } from 'src/constants/FilePath';
 import { Order } from 'src/entities/order.entity';
@@ -10,9 +15,12 @@ import { OrderService } from '../order/order.service';
 
 @Injectable()
 export class InvoiceService {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    @Inject(forwardRef(() => OrderService))
+    private readonly orderService: OrderService,
+  ) {}
 
-  async generateAndSaveInvoicePdf(order_id: number): Promise<Buffer> {
+  async generateAndSaveInvoicePdf(order_id: number): Promise<any> {
     const order = await this.orderService.getOrderDetail(order_id);
 
     if (!order) {
@@ -33,7 +41,15 @@ export class InvoiceService {
     const pdfBuffer = await this.createPdfBuffer(populatedHtml);
     await this.savePdfToFile(order_id, pdfBuffer);
 
-    return pdfBuffer;
+    const baseUrl = process.env.BASE_URL;
+    const fileName = `invoice_${order_id}.pdf`;
+    const filePath = join(process.cwd(), 'pdf', fileName);
+
+    writeFileSync(filePath, pdfBuffer);
+
+    const fileUrl = `${baseUrl}/pdf/${fileName}`;
+
+    return { url: fileUrl };
   }
 
   private async createPdfBuffer(html: string): Promise<Buffer> {
@@ -51,7 +67,7 @@ export class InvoiceService {
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'networkidle0' });
 
-      const pdfBufferUint8: Uint8Array = await page.pdf({ format: 'A4' });
+      const pdfBufferUint8: Uint8Array = await page.pdf({ format: 'A5' });
       const pdfBuffer: Buffer = Buffer.from(pdfBufferUint8);
 
       return pdfBuffer;
@@ -93,10 +109,14 @@ export class InvoiceService {
         };
       }) || [];
 
-    const totalAmount = items.reduce(
-      (sum, item) => sum + parseFloat(item.amount),
-      0,
-    );
+    const totalAmount = orderData.shipping_charges
+      ? parseFloat(orderData.total.toString())
+      : 0;
+
+    const subTotal = orderData.sub_total
+      ? parseFloat(orderData.sub_total.toString())
+      : 0;
+
     const shippingCharges = orderData.shipping_charges
       ? parseFloat(orderData.shipping_charges.toString())
       : 0;
@@ -110,15 +130,14 @@ export class InvoiceService {
       ? parseFloat(orderData.kasar_amount.toString())
       : 0;
 
-    const gst = orderData.gst ? parseFloat(orderData.gst.toString()) : 0;
+    const paidAmount = orderData.paid_amount
+      ? parseFloat(orderData.paid_amount.toString())
+      : 0;
 
-    const finalTotal =
-      totalAmount +
-      gst +
-      shippingCharges +
-      expressDeliveryCharges -
-      adjustmentCharges -
-      discount;
+    const pendingDueAmount =
+      orderData.total - orderData.paid_amount - (orderData.kasar_amount || 0);
+
+    const gst = orderData.gst ? parseFloat(orderData.gst.toString()) : 0;
 
     const invoiceData = {
       invoiceNumber: orderData.order_id?.toString() || 'N/A',
@@ -133,15 +152,16 @@ export class InvoiceService {
         ? new Date(orderData.estimated_delivery_time).toLocaleString()
         : 'N/A',
       items,
-      total: finalTotal,
-      subTotal: totalAmount,
+      subTotal: subTotal,
       Gst: gst,
       shippingCharges,
       expressDeliveryCharges,
       discount,
+      paidAmount,
+      pendingDueAmount,
       adjustmentCharges,
-      finalTotal,
-      totalInWords: numberToWords(finalTotal),
+      totalAmount,
+      totalInWords: numberToWords(totalAmount),
     };
 
     return ejs.render(html, { invoice: invoiceData });

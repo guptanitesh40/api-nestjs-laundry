@@ -110,7 +110,7 @@ export class PriceService {
     service_id: number,
     user_id?: number,
   ) {
-    const prices = await this.priceRepository
+    const prices = this.priceRepository
       .createQueryBuilder('price')
       .innerJoinAndSelect('price.category', 'category')
       .innerJoinAndSelect('price.service', 'service')
