@@ -20,13 +20,12 @@ export class InvoiceController {
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.CUSTOMER)
   async generateInvoice(@Param('order_id') order_id: number) {
-    const pdfBuffer =
-      await this.invoiceService.generateAndSaveInvoicePdf(order_id);
-    if (!pdfBuffer) {
+    const pdf = await this.invoiceService.generateAndSaveInvoicePdf(order_id);
+    if (!pdf) {
       throw new NotFoundException(
         `Invoice could not be generated for order ID ${order_id}`,
       );
     }
-    return pdfBuffer;
+    return pdf;
   }
 }
