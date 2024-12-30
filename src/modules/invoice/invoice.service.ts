@@ -170,14 +170,11 @@ export class InvoiceService {
     return ejs.render(html, { invoice: invoiceData });
   }
 
-  async generateRefundReceipt(order_id: number): Promise<any> {
+  async generateRefundReceipt(order: any): Promise<any> {
     const base_url = process.env.BASE_URL;
-    const getOrder = await this.orderService.getOrderDetail(order_id);
-
-    const order = getOrder.data;
 
     if (!order) {
-      throw new NotFoundException(`Order with id ${order_id} not found`);
+      throw new NotFoundException(`Order with id ${order.order_id} not found`);
     }
 
     const {
@@ -201,7 +198,7 @@ export class InvoiceService {
 
     const refundData = {
       logoUrl: `${base_url}/images/logo/logo2.png`,
-      order_id,
+      order_id: order.order_id,
       user: {
         name: `${user.first_name} ${user.last_name}`,
         mobile_number: user.mobile_number,
@@ -246,7 +243,7 @@ export class InvoiceService {
       const pdfBuffer: Buffer = Buffer.from(pdfBufferUint8);
       await browser.close();
       const baseUrl = process.env.BASE_URL;
-      const fileName = `refund_receipt_${order_id}.pdf`;
+      const fileName = `refund_receipt_${order.order_id}.pdf`;
       const filePath = join(process.cwd(), 'pdf', fileName);
 
       writeFileSync(filePath, pdfBuffer);

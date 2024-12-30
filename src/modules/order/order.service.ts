@@ -1445,9 +1445,8 @@ export class OrderService {
     order.refund_descriptions = refundOrderDto.refund_description;
     await this.orderRepository.save(order);
 
-    const refundReceipt = await this.invoiceService.generateRefundReceipt(
-      order.order_id,
-    );
+    const refundReceipt =
+      await this.invoiceService.generateRefundReceipt(order);
 
     return {
       statusCode: 200,
