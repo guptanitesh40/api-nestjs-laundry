@@ -5,7 +5,6 @@ import path, { join } from 'path';
 import puppeteer, { Browser } from 'puppeteer';
 import { FilePath } from 'src/constants/FilePath';
 import numberToWords from 'src/utils/numberToWords';
-import { DataSource } from 'typeorm';
 import { OrderService } from '../order/order.service';
 
 @Injectable()
@@ -13,7 +12,6 @@ export class InvoiceService {
   constructor(
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
-    private dataSource: DataSource,
   ) {}
 
   async generateAndSaveInvoicePdf(order_id: number): Promise<any> {
