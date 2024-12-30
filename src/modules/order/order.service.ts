@@ -9,8 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { addDays, addHours } from 'date-fns';
 import ejs from 'ejs';
 import * as fs from 'fs';
-import { writeFileSync } from 'fs';
-import path, { join } from 'path';
+import path from 'path';
 import puppeteer, { Browser } from 'puppeteer';
 import { Response } from 'src/dto/response.dto';
 import { UserAddress } from 'src/entities/address.entity';
@@ -218,6 +217,7 @@ export class OrderService {
         coupon_discount,
         address_details,
         kasar_amount,
+        paid_amount,
         estimated_pickup_time,
         estimated_delivery_time: estimated_delivery_date,
         branch_id: createOrderDto.branch_id,
@@ -1423,10 +1423,8 @@ export class OrderService {
     };
   }
 
-  async createRefund(refundOrderDto: RefundOrderDto): Promise<Order> {
-    const order = await this.orderRepository.findOne({
-      where: { order_id: refundOrderDto.order_id },
-    });
+  async createRefund(refundOrderDto: RefundOrderDto): Promise<Response> {
+    const order = (await this.getOrderDetail(refundOrderDto.order_id))?.data;
 
     if (order.refund_amount > 0) {
       throw new BadRequestException(
@@ -1442,128 +1440,19 @@ export class OrderService {
       newRefundAmount = refundOrderDto.refund_amount;
     }
 
-    order.refund_amount = parseFloat(newRefundAmount.toFixed(2));
+    order.refund_amount = newRefundAmount;
     order.refund_status = refundOrderDto.refund_status;
     order.refund_descriptions = refundOrderDto.refund_description;
-
     await this.orderRepository.save(order);
 
-    const pdfBuffer = await this.generateRefundReceipt(order.order_id);
+    const refundReceipt =
+      await this.invoiceService.generateRefundReceipt(order);
 
-    const filePath = join(
-      process.cwd(),
-      `pdf/refund-receipt-${order.order_id}.pdf`,
-    );
-    writeFileSync(filePath, pdfBuffer);
-
-    return order;
-  }
-
-  async generateRefundReceipt(order_id: number): Promise<Buffer> {
-    const base_url = process.env.BASE_URL;
-    const order = await this.orderRepository
-      .createQueryBuilder('order')
-      .leftJoinAndSelect('order.user', 'user')
-      .leftJoinAndSelect('order.items', 'item')
-      .leftJoinAndSelect('item.category', 'category')
-      .leftJoinAndSelect('item.product', 'product')
-      .leftJoinAndSelect('item.service', 'service')
-      .where('order.order_id = :order_id', { order_id })
-      .select([
-        'order.order_id',
-        'order.total',
-        'order.payment_type',
-        'order.coupon_code',
-        'order.address_details',
-        'order.refund_status',
-        'order.refund_amount',
-        'user.first_name',
-        'user.last_name',
-        'user.mobile_number',
-        'user.email',
-        'item.price',
-        'item.quantity',
-        'category.name',
-        'product.name',
-        'service.name',
-      ])
-      .getOne();
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${order_id} not found`);
-    }
-
-    const {
-      address_details,
-      total,
-      payment_type,
-      coupon_code,
-      refund_status,
-      refund_amount,
-    } = order;
-    const user = order.user;
-
-    const orderItems = order.items.map((item) => ({
-      category: item.category ? item.category.name : 'N/A',
-      product: item.product ? item.product.name : 'N/A',
-      service: item.service ? item.service.name : 'N/A',
-      price: item.price,
-      quantity: item.quantity,
-      total: item.price * item.quantity,
-    }));
-
-    const refundData = {
-      logoUrl: `${base_url}/images/logo/logo2.png`,
-      order_id,
-      user: {
-        name: `${user.first_name} ${user.last_name}`,
-        mobile_number: user.mobile_number,
-        email: user.email,
-      },
-      address_details,
-      payment_type,
-      coupon_code,
-      refund_status: RefundStatus[refund_status],
-      refund_amount,
-      items: orderItems,
-      total_amount: total,
+    return {
+      statusCode: 200,
+      message: 'Refund created successfully',
+      data: { order, refundReceipt },
     };
-
-    try {
-      const htmlTemplatePath = path.join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'src/templates/refund-receipt.ejs',
-      );
-      const templateContent = fs.readFileSync(htmlTemplatePath, 'utf-8');
-      const htmlContent = ejs.render(templateContent, refundData);
-
-      const browser: Browser = await puppeteer.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-        ],
-      });
-
-      const page = await browser.newPage();
-      await page.setContent(htmlContent);
-      const pdfBufferUint8: Uint8Array = await page.pdf({
-        format: 'A4',
-        landscape: false,
-      });
-
-      const pdfBuffer: Buffer = Buffer.from(pdfBufferUint8);
-      await browser.close();
-      return pdfBuffer;
-    } catch (error) {
-      throw new BadRequestException(
-        `Failed to generate refund receipt: ${error.message}`,
-      );
-    }
   }
 
   async generateOrderLabels(

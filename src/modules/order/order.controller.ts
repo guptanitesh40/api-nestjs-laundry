@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -11,19 +10,15 @@ import {
   Put,
   Query,
   Request,
-  StreamableFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { createReadStream, writeFileSync } from 'fs';
-import { join } from 'path';
 import { FilePath } from 'src/constants/FilePath';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
-import { Order } from 'src/entities/order.entity';
 import { Role } from 'src/enum/role.enum';
 import { fileUpload } from 'src/multer/image-upload';
 import { RolesGuard } from '../auth/guard/role.guard';
@@ -234,30 +229,8 @@ export class OrderController {
   }
 
   @Post('refund')
-  async refundOrder(
-    @Body() refundOrderDto: RefundOrderDto,
-  ): Promise<StreamableFile> {
-    try {
-      const order: Order = await this.orderService.createRefund(refundOrderDto);
-      const pdfBuffer = await this.orderService.generateRefundReceipt(
-        order.order_id,
-      );
-
-      const filePath = join(
-        process.cwd(),
-        `pdf/refund-receipt-${order.order_id}.pdf`,
-      );
-
-      writeFileSync(filePath, pdfBuffer);
-
-      const file = createReadStream(filePath);
-
-      return new StreamableFile(file, { type: 'application/pdf' });
-    } catch (error) {
-      throw new BadRequestException(
-        `Failed to process refund: ${error.message}`,
-      );
-    }
+  async refundOrder(@Body() refundOrderDto: RefundOrderDto): Promise<Response> {
+    return await this.orderService.createRefund(refundOrderDto);
   }
 
   @Post('orders/payments/clear-due')
