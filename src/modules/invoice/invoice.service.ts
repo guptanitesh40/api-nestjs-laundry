@@ -1,9 +1,16 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import ejs from 'ejs';
 import { promises as fs, writeFileSync } from 'fs';
 import path, { join } from 'path';
 import puppeteer, { Browser } from 'puppeteer';
 import { FilePath } from 'src/constants/FilePath';
+import { RefundStatus } from 'src/enum/refund_status.enum';
 import numberToWords from 'src/utils/numberToWords';
 import { OrderService } from '../order/order.service';
 
@@ -161,5 +168,97 @@ export class InvoiceService {
     };
 
     return ejs.render(html, { invoice: invoiceData });
+  }
+
+  async generateRefundReceipt(order_id: number): Promise<any> {
+    const base_url = process.env.BASE_URL;
+    const getOrder = await this.orderService.getOrderDetail(order_id);
+
+    const order = getOrder.data;
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${order_id} not found`);
+    }
+
+    const {
+      address_details,
+      total,
+      payment_type,
+      coupon_code,
+      refund_status,
+      refund_amount,
+    } = order;
+    const user = order.user;
+
+    const orderItems = order.items.map((item) => ({
+      category: item.category ? item.category.name : 'N/A',
+      product: item.product ? item.product.name : 'N/A',
+      service: item.service ? item.service.name : 'N/A',
+      price: item.price,
+      quantity: item.quantity,
+      total: item.price * item.quantity,
+    }));
+
+    const refundData = {
+      logoUrl: `${base_url}/images/logo/logo2.png`,
+      order_id,
+      user: {
+        name: `${user.first_name} ${user.last_name}`,
+        mobile_number: user.mobile_number,
+        email: user.email,
+      },
+      address_details,
+      payment_type,
+      coupon_code,
+      refund_status: RefundStatus[refund_status],
+      refund_amount,
+      items: orderItems,
+      total_amount: total,
+    };
+
+    try {
+      const htmlTemplatePath = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'src/templates/refund-receipt.ejs',
+      );
+
+      const htmlContent = await ejs.renderFile(htmlTemplatePath, refundData);
+
+      const browser: Browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+        ],
+      });
+
+      const page = await browser.newPage();
+      await page.setContent(htmlContent);
+      const pdfBufferUint8: Uint8Array = await page.pdf({
+        format: 'A4',
+        landscape: false,
+      });
+      console.log(pdfBufferUint8);
+
+      const pdfBuffer: Buffer = Buffer.from(pdfBufferUint8);
+      await browser.close();
+      const baseUrl = process.env.BASE_URL;
+      const fileName = `refund_receipt_${order_id}.pdf`;
+      const filePath = join(process.cwd(), 'pdf', fileName);
+
+      writeFileSync(filePath, pdfBuffer);
+
+      const fileUrl = `${baseUrl}/pdf/${fileName}`;
+
+      return { url: fileUrl };
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to generate refund receipt: ${error.message}`,
+      );
+    }
   }
 }
