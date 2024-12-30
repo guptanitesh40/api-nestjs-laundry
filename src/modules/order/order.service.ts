@@ -880,6 +880,7 @@ export class OrderService {
       .innerJoinAndSelect('items.category', 'category')
       .innerJoinAndSelect('items.product', 'product')
       .innerJoinAndSelect('items.service', 'service')
+      .leftJoinAndSelect('order.branch', 'branch')
       .where('order.order_id = :orderId', { orderId: order_id })
       .andWhere('order.deleted_at IS NULL')
       .select([
@@ -897,6 +898,8 @@ export class OrderService {
         'service.service_id',
         'service.name',
         'service.image',
+        'branch.branch_name',
+        'branch.branch_phone_number',
       ])
       .groupBy(
         'order.order_id, items.item_id, category.category_id, product.product_id, service.service_id',
@@ -1726,6 +1729,42 @@ export class OrderService {
       message: 'Payment applied successfully',
       data: {
         orders: updateOrders,
+      },
+    };
+  }
+
+  async cancelOrder(createNoteDto: CreateNoteDto): Promise<Response> {
+    const order = await this.orderRepository.findOne({
+      where: { order_id: createNoteDto.order_id },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order Not Found');
+    }
+
+    if (order.order_status === OrderStatus.DELIVERED) {
+      throw new NotFoundException(
+        'This order is not canceled; it has already been delivered.',
+      );
+    }
+
+    order.order_status = OrderStatus.CANCELLED;
+    await this.orderRepository.save(order);
+
+    const note: any = {
+      order_id: createNoteDto.order_id,
+      text_note: createNoteDto.text_note,
+      user_id: createNoteDto.user_id,
+    };
+
+    const notes = await this.notesService.create(note);
+
+    return {
+      statusCode: 200,
+      message: 'Order Cancelled Successfully',
+      data: {
+        order,
+        notes,
       },
     };
   }
