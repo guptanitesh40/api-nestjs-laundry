@@ -1424,16 +1424,13 @@ export class OrderService {
   }
 
   async createRefund(refundOrderDto: RefundOrderDto): Promise<Response> {
-    const order = await this.orderRepository.findOne({
-      where: { order_id: refundOrderDto.order_id },
-    });
+    const order = (await this.getOrderDetail(refundOrderDto.order_id))?.data;
 
     if (order.refund_amount > 0) {
       throw new BadRequestException(
         'Refund has already been processed for this order.',
       );
     }
-    console.log(order.refund_amount);
 
     let newRefundAmount = 0;
 
@@ -1443,18 +1440,19 @@ export class OrderService {
       newRefundAmount = refundOrderDto.refund_amount;
     }
 
-    order.refund_amount = parseFloat(newRefundAmount.toFixed(2));
+    order.refund_amount = newRefundAmount;
     order.refund_status = refundOrderDto.refund_status;
     order.refund_descriptions = refundOrderDto.refund_description;
-
     await this.orderRepository.save(order);
 
-    await this.invoiceService.generateRefundReceipt(order.order_id);
+    const refundReceipt = await this.invoiceService.generateRefundReceipt(
+      order.order_id,
+    );
 
     return {
       statusCode: 200,
       message: 'Refund created successfully',
-      data: order,
+      data: { order, refundReceipt },
     };
   }
 

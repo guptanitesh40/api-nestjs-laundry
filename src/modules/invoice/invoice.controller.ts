@@ -28,18 +28,4 @@ export class InvoiceController {
     }
     return pdf;
   }
-
-  @Get('refund/:order_id')
-  @UseGuards(RolesGuard)
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.CUSTOMER)
-  async generateRefundReceipt(@Param('order_id') order_id: number) {
-    const refund = await this.invoiceService.generateRefundReceipt(order_id);
-    if (!refund) {
-      throw new NotFoundException(
-        `Refund Receipt could not be generated for order ID ${order_id}`,
-      );
-    }
-    return refund;
-  }
 }

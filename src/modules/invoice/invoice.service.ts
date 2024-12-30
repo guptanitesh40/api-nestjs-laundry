@@ -242,7 +242,6 @@ export class InvoiceService {
         format: 'A4',
         landscape: false,
       });
-      console.log(pdfBufferUint8);
 
       const pdfBuffer: Buffer = Buffer.from(pdfBufferUint8);
       await browser.close();
