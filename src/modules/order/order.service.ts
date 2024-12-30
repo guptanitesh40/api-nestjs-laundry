@@ -1729,4 +1729,40 @@ export class OrderService {
       },
     };
   }
+
+  async cancelOrder(createNoteDto: CreateNoteDto): Promise<Response> {
+    const order = await this.orderRepository.findOne({
+      where: { order_id: createNoteDto.order_id },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order Not Found');
+    }
+
+    if (order.order_status === OrderStatus.DELIVERED) {
+      throw new NotFoundException(
+        'This order is not canceled; it has already been delivered.',
+      );
+    }
+
+    order.order_status = OrderStatus.CANCELLED;
+    await this.orderRepository.save(order);
+
+    const note: any = {
+      order_id: createNoteDto.order_id,
+      text_note: createNoteDto.text_note,
+      user_id: createNoteDto.user_id,
+    };
+
+    const notes = await this.notesService.create(note);
+
+    return {
+      statusCode: 200,
+      message: 'Order Cancelled Successfully',
+      data: {
+        order,
+        notes,
+      },
+    };
+  }
 }

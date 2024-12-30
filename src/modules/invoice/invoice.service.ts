@@ -11,6 +11,7 @@ import puppeteer, { Browser } from 'puppeteer';
 import { FilePath } from 'src/constants/FilePath';
 import { Order } from 'src/entities/order.entity';
 import numberToWords from 'src/utils/numberToWords';
+import { DataSource } from 'typeorm';
 import { OrderService } from '../order/order.service';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class InvoiceService {
   constructor(
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
+    private dataSource: DataSource,
   ) {}
 
   async generateAndSaveInvoicePdf(order_id: number): Promise<any> {
@@ -93,6 +95,20 @@ export class InvoiceService {
   }
 
   private async populateTemplate(html: any, orderData: Order): Promise<any> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    const orderId = orderData.order_id;
+    const order = queryRunner.manager
+      .createQueryBuilder(Order, 'order')
+      .leftJoinAndSelect('order.branch', 'branch')
+      .where('order.order_id = :orderId', {
+        orderId,
+      });
+
+    const result = await order.getOne();
+
+    const branchName = result.branch.branch_name;
+    const branchMobileNumber = result.branch.branch_phone_number;
+
     const items =
       orderData.items?.map((item) => {
         const quantity = item.quantity || 1;
@@ -152,6 +168,8 @@ export class InvoiceService {
         ? new Date(orderData.estimated_delivery_time).toLocaleString()
         : 'N/A',
       items,
+      branchName,
+      branchMobileNumber,
       subTotal: subTotal,
       Gst: gst,
       shippingCharges,
