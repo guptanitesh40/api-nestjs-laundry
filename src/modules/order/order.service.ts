@@ -880,6 +880,7 @@ export class OrderService {
       .innerJoinAndSelect('items.category', 'category')
       .innerJoinAndSelect('items.product', 'product')
       .innerJoinAndSelect('items.service', 'service')
+      .leftJoinAndSelect('order.branch', 'branch')
       .where('order.order_id = :orderId', { orderId: order_id })
       .andWhere('order.deleted_at IS NULL')
       .select([
@@ -897,6 +898,8 @@ export class OrderService {
         'service.service_id',
         'service.name',
         'service.image',
+        'branch.branch_name',
+        'branch.branch_phone_number',
       ])
       .groupBy(
         'order.order_id, items.item_id, category.category_id, product.product_id, service.service_id',

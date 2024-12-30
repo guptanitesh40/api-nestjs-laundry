@@ -1,15 +1,9 @@
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import ejs from 'ejs';
 import { promises as fs, writeFileSync } from 'fs';
 import path, { join } from 'path';
 import puppeteer, { Browser } from 'puppeteer';
 import { FilePath } from 'src/constants/FilePath';
-import { Order } from 'src/entities/order.entity';
 import numberToWords from 'src/utils/numberToWords';
 import { DataSource } from 'typeorm';
 import { OrderService } from '../order/order.service';
@@ -23,12 +17,6 @@ export class InvoiceService {
   ) {}
 
   async generateAndSaveInvoicePdf(order_id: number): Promise<any> {
-    const order = await this.orderService.getOrderDetail(order_id);
-
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
-
     const templatePath = path.join(
       __dirname,
       '..',
@@ -38,7 +26,7 @@ export class InvoiceService {
     );
     const html = await fs.readFile(templatePath, 'utf8');
 
-    const populatedHtml = await this.populateTemplate(html, order.data);
+    const populatedHtml = await this.populateTemplate(html, order_id);
 
     const pdfBuffer = await this.createPdfBuffer(populatedHtml);
     await this.savePdfToFile(order_id, pdfBuffer);
@@ -94,21 +82,13 @@ export class InvoiceService {
     return filePath;
   }
 
-  private async populateTemplate(html: any, orderData: Order): Promise<any> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    const orderId = orderData.order_id;
-    const order = queryRunner.manager
-      .createQueryBuilder(Order, 'order')
-      .leftJoinAndSelect('order.branch', 'branch')
-      .where('order.order_id = :orderId', {
-        orderId,
-      });
+  private async populateTemplate(html: any, order_id: number): Promise<any> {
+    const order = await this.orderService.getOrderDetail(order_id);
+    const orderData = order.data;
 
-    const result = await order.getOne();
+    const branchName = orderData.branch.branch_name;
 
-    const branchName = result.branch.branch_name;
-    const branchMobileNumber = result.branch.branch_phone_number;
-
+    const branchMobileNumber = orderData.branch.branch_phone_number;
     const items =
       orderData.items?.map((item) => {
         const quantity = item.quantity || 1;
@@ -168,8 +148,6 @@ export class InvoiceService {
         ? new Date(orderData.estimated_delivery_time).toLocaleString()
         : 'N/A',
       items,
-      branchName,
-      branchMobileNumber,
       subTotal: subTotal,
       Gst: gst,
       shippingCharges,
@@ -179,6 +157,8 @@ export class InvoiceService {
       pendingDueAmount,
       adjustmentCharges,
       totalAmount,
+      branchName,
+      branchMobileNumber,
       totalInWords: numberToWords(totalAmount),
     };
 
