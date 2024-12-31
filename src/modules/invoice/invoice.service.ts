@@ -91,9 +91,9 @@ export class InvoiceService {
     const order = await this.orderService.getOrderDetail(order_id);
     const orderData = order.data;
 
-    const branchName = orderData.branch.branch_name;
+    const branchName = orderData.branch?.branch_name;
 
-    const branchMobileNumber = orderData.branch.branch_phone_number;
+    const branchMobileNumber = orderData.branch?.branch_phone_number;
     const items =
       orderData.items?.map((item) => {
         const quantity = item.quantity || 1;
@@ -254,6 +254,69 @@ export class InvoiceService {
     } catch (error) {
       throw new BadRequestException(
         `Failed to generate refund receipt: ${error.message}`,
+      );
+    }
+  }
+
+  async generateOrderLabels(order: any): Promise<any> {
+    const baseUrl = process.env.BASE_URL;
+
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${order.order_id} not found`);
+    }
+
+    const logoUrl = `${baseUrl}/images/logo/logo2.png`;
+    const customerName = `${order.user.first_name} ${order.user.last_name}`;
+    const date = new Date(order.created_at).toLocaleDateString();
+    const items = order.items.map((item) => ({
+      serviceName: item.service?.name || 'Unknown Service',
+      remarks: item.description || 'No remarks provided',
+    }));
+
+    const data = {
+      logoUrl,
+      orderNumber: order.order_id,
+      date,
+      customerName,
+      items,
+    };
+
+    try {
+      const templatePath = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'src/templates/label-template.ejs',
+      );
+
+      const browser: Browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+        ],
+      });
+
+      const htmlContent = await ejs.renderFile(templatePath, data);
+
+      const page = await browser.newPage();
+      await page.setContent(htmlContent);
+
+      const pdfBuffer = await page.pdf({ format: 'Letter' });
+      await browser.close();
+
+      const fileName = `order_items_label_${order.order_id}.pdf`;
+      const outputPath = join(process.cwd(), 'pdf', fileName);
+      writeFileSync(outputPath, pdfBuffer);
+
+      const fileUrl = `${baseUrl}/pdf/${fileName}`;
+
+      return { url: fileUrl };
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to generate order labels: ${error.message}`,
       );
     }
   }
