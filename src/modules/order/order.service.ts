@@ -7,10 +7,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { addDays, addHours } from 'date-fns';
-import ejs from 'ejs';
-import * as fs from 'fs';
-import path from 'path';
-import puppeteer, { Browser } from 'puppeteer';
 import { Response } from 'src/dto/response.dto';
 import { UserAddress } from 'src/entities/address.entity';
 import { Branch } from 'src/entities/branch.entity';
@@ -19,6 +15,7 @@ import { OrderItem } from 'src/entities/order-item.entity';
 import { Order } from 'src/entities/order.entity';
 import { Product } from 'src/entities/product.entity';
 import { Service } from 'src/entities/service.entity';
+import { CustomerOrderStatuseLabel } from 'src/enum/customer_order_status_label.enum';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
@@ -32,7 +29,7 @@ import {
   getOrderStatusDetails,
   getWorkshopOrdersStatusLabel,
 } from 'src/utils/order-status.helper';
-import { DataSource, In, QueryRunner, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { CartService } from '../cart/cart.service';
 import { CouponService } from '../coupon/coupon.service';
 import { OrderFilterDto } from '../dto/orders-filter.dto';
@@ -251,8 +248,6 @@ export class OrderService {
       }
       await this.cartService.removeCartByUser(user.user_id);
 
-      await this.generateOrderLabels(queryRunner, savedOrder.order_id);
-
       await queryRunner.commitTransaction();
 
       const orderDetail = {
@@ -260,7 +255,8 @@ export class OrderService {
         total: savedOrder.total,
         created_at: savedOrder.created_at,
         address_details: savedOrder.address_details,
-        items: orderItems.length,
+        items: orderItems,
+        total_items: orderItems.length,
         branch_id: savedOrder.branch_id,
         user: {
           first_name: user.first_name,
@@ -268,11 +264,16 @@ export class OrderService {
           mobile_number: user.mobile_number,
         },
       };
+
+      const itemsLabel =
+        await this.invoiceService.generateOrderLabels(orderDetail);
+
       await this.notificationService.sendOrderNotification(orderDetail);
+
       return {
         statusCode: 200,
         message: 'Order details added successfully',
-        data: orderDetail,
+        data: { orderDetail, itemsLabel },
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -714,7 +715,11 @@ export class OrderService {
       }
     }
 
+    const data = (await this.getOrderDetail(order.order_id)).data;
+
     await this.invoiceService.generateAndSaveInvoicePdf(order_id);
+
+    const refundReceipt = await this.invoiceService.generateOrderLabels(data);
 
     return {
       statusCode: 200,
@@ -725,6 +730,7 @@ export class OrderService {
         total: updatedOrder.total,
         address_details: updatedOrder.address_details,
         items: items ? items.length : 0,
+        url: refundReceipt,
       },
     };
   }
@@ -926,6 +932,7 @@ export class OrderService {
   async getAll(
     user_id: number,
     paginationQueryDto: PaginationQueryDto,
+    orderStatus?: CustomerOrderStatuseLabel,
   ): Promise<Response> {
     const { per_page, page_number, search, sort_by, order } =
       paginationQueryDto;
@@ -966,6 +973,38 @@ export class OrderService {
           'order.payment_status LIKE :search)',
         { search: `%${search}%` },
       );
+    }
+
+    if (orderStatus === CustomerOrderStatuseLabel.NEW) {
+      queryBuilder.andWhere('order.order_status In (:...orderStatuses)', {
+        orderStatuses: [
+          OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+          OrderStatus.ASSIGNED_PICKUP_BOY,
+          OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+        ],
+      });
+    }
+
+    if (orderStatus === CustomerOrderStatuseLabel.PENDING) {
+      queryBuilder.andWhere('order.order_status In (:...orderStatuses)', {
+        orderStatuses: [
+          OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
+          OrderStatus.WORKSHOP_ASSIGNED,
+          OrderStatus.WORKSHOP_RECEIVED_ITEMS,
+          OrderStatus.WORKSHOP_WORK_IN_PROGRESS,
+          OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
+          OrderStatus.ORDER_COMPLETED_AND_RECEIVED_AT_BRANCH,
+        ],
+      });
+    }
+
+    if (orderStatus === CustomerOrderStatuseLabel.COMPLETED) {
+      queryBuilder.andWhere('order.order_status In (:...orderStatuses)', {
+        orderStatuses: [
+          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+          OrderStatus.DELIVERED,
+        ],
+      });
     }
 
     let sortColumn = 'order.created_at';
@@ -1453,78 +1492,6 @@ export class OrderService {
       message: 'Refund created successfully',
       data: { order, refundReceipt },
     };
-  }
-
-  async generateOrderLabels(
-    queryRunner: QueryRunner,
-    orderId: number,
-  ): Promise<string> {
-    const baseUrl = process.env.BASE_URL;
-
-    const order = await queryRunner.manager
-      .createQueryBuilder(Order, 'order')
-      .leftJoinAndSelect('order.user', 'user')
-      .leftJoinAndSelect('order.items', 'item')
-      .leftJoinAndSelect('item.service', 'service')
-      .where('order.order_id = :orderId', { orderId })
-      .getOne();
-
-    if (!order) {
-      throw new NotFoundException(`Order with ID ${orderId} not found`);
-    }
-
-    const logoUrl = `${baseUrl}/images/logo/logo2.png`;
-    const customerName = `${order.user.first_name} ${order.user.last_name}`;
-    const date = new Date(order.created_at).toLocaleDateString();
-    const items = order.items.map((item) => ({
-      serviceName: item.service?.name || 'Unknown Service',
-      remarks: item.description || 'No remarks provided',
-    }));
-
-    const data = {
-      logoUrl,
-      orderNumber: order.order_id,
-      date,
-      customerName,
-      items,
-    };
-
-    const templatePath = path.join(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      'src/templates/label-template.ejs',
-    );
-
-    const browser: Browser = await puppeteer.launch({
-      headless: true,
-    });
-
-    const page = await browser.newPage();
-
-    try {
-      const htmlContent = await ejs.renderFile(templatePath, data);
-      await page.setContent(htmlContent);
-      const pdfBuffer = await page.pdf({ format: 'Letter' });
-
-      const outputPath = path.join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'pdf/labels.pdf',
-      );
-      fs.writeFileSync(outputPath, pdfBuffer);
-
-      await browser.close();
-      return outputPath;
-    } catch (error) {
-      await browser.close();
-      throw new BadRequestException(
-        `Failed to generate order labels: ${error.message}`,
-      );
-    }
   }
 
   async countOrdersByCondition(condition: object): Promise<number> {

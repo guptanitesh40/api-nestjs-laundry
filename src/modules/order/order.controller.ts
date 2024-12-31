@@ -19,6 +19,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { FilePath } from 'src/constants/FilePath';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
+import { CustomerOrderStatuseLabel } from 'src/enum/customer_order_status_label.enum';
 import { Role } from 'src/enum/role.enum';
 import { fileUpload } from 'src/multer/image-upload';
 import { RolesGuard } from '../auth/guard/role.guard';
@@ -83,10 +84,11 @@ export class OrderController {
   @Roles(Role.CUSTOMER)
   async getCustomerOrders(
     @Request() req,
+    @Query('orderStatus') orderStatus: CustomerOrderStatuseLabel,
     @Query() paginationQuery: PaginationQueryDto,
   ): Promise<Response> {
     const user = req.user;
-    return this.orderService.getAll(user.user_id, paginationQuery);
+    return this.orderService.getAll(user.user_id, paginationQuery, orderStatus);
   }
 
   @Post('admin/orders')

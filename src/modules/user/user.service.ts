@@ -407,17 +407,23 @@ export class UserService {
   async getUserById(user_id: number): Promise<Response> {
     const userQuery = this.userRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
-      .leftJoinAndSelect('companyMapping.company', 'company')
       .leftJoinAndSelect('user.orders', 'orders')
       .leftJoinAndSelect('orders.items', 'items')
-      .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
-      .leftJoinAndSelect('branchMapping.branch', 'branch')
       .where('user.user_id = :user_id', { user_id })
       .andWhere('user.deleted_at IS NULL')
       .andWhere('orders.deleted_at IS NULL')
       .select([
-        'user',
+        'user.user_id',
+        'user.first_name',
+        'user.last_name',
+        'user.email',
+        'user.mobile_number',
+        'user.gender',
+        'user.image',
+        'user.id_proof',
+        'user.education_qualification',
+        'user.role_id',
+        'user.created_by_user_id',
         'orders.order_id',
         'orders.payment_status',
         'orders.total',
@@ -426,22 +432,9 @@ export class UserService {
         'orders.paid_amount',
         'orders.kasar_amount',
         'items.item_id',
-        'companyMapping.company_id',
-        'branchMapping.branch_id',
-        'company.company_id',
-        'company.company_name',
-        'branch.branch_id',
-        'branch.branch_name',
       ]);
 
     const user: any = await userQuery.getOne();
-    const mappedUser = {
-      ...user,
-      branch_ids: user.userBranchMappings.map((branch) => branch.branch_id),
-      company_ids: user.UserCompanyMappings.map(
-        (company) => company.company_id,
-      ),
-    };
 
     user.orders.map((order) => {
       order.admin_order_status = getOrderStatusDetails(order);
@@ -463,7 +456,7 @@ export class UserService {
       statusCode: 200,
       message: 'User found',
       data: {
-        user: mappedUser,
+        user,
         total_pending_amount: pending_due_amount,
       },
     };
