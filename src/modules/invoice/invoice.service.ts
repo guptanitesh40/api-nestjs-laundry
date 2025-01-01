@@ -251,7 +251,7 @@ export class InvoiceService {
 
       writeFileSync(filePath, pdfBuffer);
 
-      const fileUrl = refundReceipt;
+      const fileUrl = refundReceipt.fileUrl;
 
       return { url: fileUrl };
     } catch (error) {
