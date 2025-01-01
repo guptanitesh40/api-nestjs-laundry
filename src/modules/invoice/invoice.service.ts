@@ -12,13 +12,17 @@ import puppeteer, { Browser } from 'puppeteer';
 import { FilePath } from 'src/constants/FilePath';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import numberToWords from 'src/utils/numberToWords';
+import { getRefundReceiptUrl } from 'src/utils/refund-receipt-url.helper';
 import { OrderService } from '../order/order.service';
+import { PriceService } from '../price/price.service';
 
 @Injectable()
 export class InvoiceService {
   constructor(
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
+    @Inject(forwardRef(() => PriceService))
+    private readonly priceService: PriceService,
   ) {}
 
   async generateAndSaveInvoicePdf(order_id: number): Promise<any> {
@@ -242,13 +246,12 @@ export class InvoiceService {
 
       const pdfBuffer: Buffer = Buffer.from(pdfBufferUint8);
       await browser.close();
-      const baseUrl = process.env.BASE_URL;
-      const fileName = `refund_receipt_${order.order_id}.pdf`;
-      const filePath = join(process.cwd(), 'pdf', fileName);
+      const refundReceipt = getRefundReceiptUrl(order.order_id);
+      const filePath = join(process.cwd(), 'pdf', refundReceipt.fileName);
 
       writeFileSync(filePath, pdfBuffer);
 
-      const fileUrl = `${baseUrl}/pdf/${fileName}`;
+      const fileUrl = refundReceipt;
 
       return { url: fileUrl };
     } catch (error) {
@@ -319,5 +322,47 @@ export class InvoiceService {
         `Failed to generate order labels: ${error.message}`,
       );
     }
+  }
+
+  async generatePriceListPDF(): Promise<any> {
+    const base_url = process.env.BASE_URL;
+
+    const prices = await this.priceService.getAll();
+    const templatePath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/templates/price-list-template.ejs',
+    );
+
+    const data = {
+      logoUrl: `${base_url}/images/logo/logo.png`,
+      prices,
+    };
+
+    const browser: Browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+      ],
+    });
+
+    const htmlContent = await ejs.renderFile(templatePath, data);
+
+    const page = await browser.newPage();
+    await page.setContent(htmlContent);
+    const pdfBuffer = await page.pdf({ format: 'A4' });
+    await browser.close();
+
+    const fileName = 'priceList.pdf';
+    const filePath = join(process.cwd(), 'pdf', fileName);
+
+    writeFileSync(filePath, pdfBuffer);
+
+    const fileUrl = `${base_url}/pdf/${fileName}`;
+    return { url: fileUrl };
   }
 }

@@ -29,6 +29,7 @@ import {
   getOrderStatusDetails,
   getWorkshopOrdersStatusLabel,
 } from 'src/utils/order-status.helper';
+import { getRefundReceiptUrl } from 'src/utils/refund-receipt-url.helper';
 import { DataSource, In, Repository } from 'typeorm';
 import { CartService } from '../cart/cart.service';
 import { CouponService } from '../coupon/coupon.service';
@@ -42,6 +43,7 @@ import { PriceService } from '../price/price.service';
 import { SettingService } from '../settings/setting.service';
 import { UserService } from '../user/user.service';
 import { WorkshopService } from '../workshop/workshop.service';
+import { CancelOrderDto } from './dto/cancel-order.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { DeliveryOrderDto } from './dto/delivery-order.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
@@ -575,6 +577,10 @@ export class OrderService {
 
     if (!orders) {
       throw new NotFoundException(`Order with id ${order_id} not found`);
+    }
+
+    if (orders.refund_amount !== null) {
+      orders.refund_receipt_url = getRefundReceiptUrl(orders.order_id);
     }
 
     orders.order_status_details = getOrderStatusDetails(orders);
@@ -1589,9 +1595,9 @@ export class OrderService {
     };
   }
 
-  async cancelOrder(createNoteDto: CreateNoteDto): Promise<Response> {
+  async cancelOrder(cancelOrderDto: CancelOrderDto): Promise<Response> {
     const order = await this.orderRepository.findOne({
-      where: { order_id: createNoteDto.order_id },
+      where: { order_id: cancelOrderDto.order_id },
     });
 
     if (!order) {
@@ -1607,10 +1613,10 @@ export class OrderService {
     order.order_status = OrderStatus.CANCELLED;
     await this.orderRepository.save(order);
 
-    const note: any = {
-      order_id: createNoteDto.order_id,
-      text_note: createNoteDto.text_note,
-      user_id: createNoteDto.user_id,
+    const note: CreateNoteDto = {
+      order_id: cancelOrderDto.order_id,
+      user_id: cancelOrderDto.user_id,
+      text_note: cancelOrderDto.text_note,
     };
 
     const notes = await this.notesService.create(note);

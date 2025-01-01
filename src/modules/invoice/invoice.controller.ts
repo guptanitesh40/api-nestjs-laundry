@@ -28,4 +28,14 @@ export class InvoiceController {
     }
     return pdf;
   }
+
+  @Get('prices/download-pdf')
+  async downloadPDF() {
+    const pdf = await this.invoiceService.generatePriceListPDF();
+    if (!pdf) {
+      throw new NotFoundException('price list pdf could not be generates');
+    }
+
+    return pdf;
+  }
 }

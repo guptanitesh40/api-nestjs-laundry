@@ -135,7 +135,7 @@ export class WorkshopService {
     >();
 
     workshopManagerMappings.forEach((mapping) => {
-      const fullName = `${mapping.user.first_name} ${mapping.user.last_name}`;
+      const fullName = `${mapping.user?.first_name} ${mapping.user?.last_name}`;
       if (!workshopManagerMap.has(mapping.workshop_id)) {
         workshopManagerMap.set(mapping.workshop_id, []);
       }
