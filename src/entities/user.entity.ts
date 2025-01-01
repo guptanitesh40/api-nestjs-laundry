@@ -14,6 +14,7 @@ import { Branch } from './branch.entity';
 import { Cart } from './cart.entity';
 import { DeviceUser } from './device-user.entity';
 import { LoginHistory } from './login-history.entity';
+import { Note } from './note.entity';
 import { Order } from './order.entity';
 import { Role } from './role.entity';
 import { UserBranchMapping } from './user-branch-mapping.entity';
@@ -105,6 +106,9 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Order, (orderDetail) => orderDetail.user)
   orders: Order[];
+
+  @OneToMany(() => Note, (note) => note.user)
+  notes: Note[];
 
   @OneToMany(() => Order, (orderDetail) => orderDetail.delivery_boy)
   ordersAsDeliveryBoy: Order[];

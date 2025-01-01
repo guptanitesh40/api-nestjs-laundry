@@ -1,8 +1,11 @@
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateNoteDto {
   @IsNotEmpty()
   order_id: number;
+
+  @IsOptional()
+  user_id?: number;
 
   @IsString()
   @IsNotEmpty()
