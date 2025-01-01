@@ -8,7 +8,6 @@ import {
 } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Order } from './order.entity';
-import { User } from './user.entity';
 
 @Entity({ name: 'notes' })
 export class Note extends BaseEntity {
@@ -21,13 +20,6 @@ export class Note extends BaseEntity {
 
   @Column()
   order_id: number;
-
-  @ManyToOne(() => User, (user) => user.notes)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
-
-  @Column()
-  user_id: number;
 
   @Column({ type: 'text' })
   text_note: string;

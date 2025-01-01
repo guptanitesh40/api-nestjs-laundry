@@ -1249,7 +1249,6 @@ export class OrderService {
       order_id,
       text_note: deliveryOrderDto.deliveryNote,
       images: deliveryOrderDto.images,
-      user_id: deliveryOrderDto.user_id,
     };
 
     const note = await this.notesService.create(noteDto, imagePaths);
@@ -1615,7 +1614,6 @@ export class OrderService {
 
     const note: CreateNoteDto = {
       order_id: cancelOrderDto.order_id,
-      user_id: cancelOrderDto.user_id,
       text_note: cancelOrderDto.text_note,
     };
 
