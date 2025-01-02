@@ -1,9 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import ejs from 'ejs';
-import * as fs from 'fs';
-import path from 'path';
-import puppeteer from 'puppeteer';
 import { Response } from 'src/dto/response.dto';
 import { Category } from 'src/entities/category.entity';
 import { Price } from 'src/entities/price.entity';
@@ -11,6 +7,7 @@ import { Product } from 'src/entities/product.entity';
 import { Service } from 'src/entities/service.entity';
 import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
 import { DataSource, IsNull, Repository } from 'typeorm';
+import { InvoiceService } from '../invoice/invoice.service';
 import { CreatePriceDto } from './dto/create-price.dto';
 
 @Injectable()
@@ -24,7 +21,8 @@ export class PriceService {
     private productRepository: Repository<Product>,
     @InjectRepository(Service)
     private serviceRepository: Repository<Service>,
-
+    @Inject(forwardRef(() => InvoiceService))
+    private invoiceService: InvoiceService,
     private dataSource: DataSource,
   ) {}
 
@@ -52,10 +50,7 @@ export class PriceService {
       }
 
       await queryRunner.commitTransaction();
-      const pdfBuffer = await this.generatePriceListPDF();
-      const fileName = 'priceList.pdf';
-      const filePath = path.join(process.cwd(), 'pdf', fileName);
-      fs.writeFileSync(filePath, pdfBuffer);
+      await this.invoiceService.generatePriceListPDF();
 
       return {
         statusCode: 201,
@@ -213,35 +208,5 @@ export class PriceService {
       .getRawMany();
 
     return prices;
-  }
-
-  async generatePriceListPDF(): Promise<Buffer> {
-    const base_url = process.env.BASE_URL;
-
-    const prices = await this.getAll();
-    const templatePath = path.join(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      'src/templates/price-list-template.ejs',
-    );
-
-    const templateFile = fs.readFileSync(templatePath, 'utf8');
-
-    const data = {
-      logoUrl: `${base_url}/images/logo/logo.png`,
-      prices,
-    };
-
-    const htmlContent = ejs.render(templateFile, data);
-
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-    const pdfBuffer = await page.pdf({ format: 'A4' });
-    await browser.close();
-
-    return Buffer.from(pdfBuffer);
   }
 }

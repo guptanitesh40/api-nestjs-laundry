@@ -25,7 +25,6 @@ import { fileUpload } from 'src/multer/image-upload';
 import { RolesGuard } from '../auth/guard/role.guard';
 import { OrderFilterDto } from '../dto/orders-filter.dto';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
-import { CreateNoteDto } from '../notes/dto/create-note.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { DeliveryOrderDto } from './dto/delivery-order.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
@@ -50,6 +49,13 @@ export class OrderController {
       user.user_id,
       paginationQuery.search,
     );
+  }
+
+  @Post('orders/cancel')
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  async cancelOrder(@Body() cancelOrderDto, @Request() req): Promise<Response> {
+    const user = req.user;
+    return this.orderService.cancelOrder(cancelOrderDto, user.user_id);
   }
 
   @Get('admin/orders/workshop')
@@ -188,13 +194,16 @@ export class OrderController {
   )
   async deliveryComplete(
     @Param('order_id') order_id: number,
+    @Request() req,
     @Body() deliveryOrderDto: DeliveryOrderDto,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Response> {
+    const user = req.user;
     const imagePaths = files.map(
       (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
     );
     return this.orderService.deliveryComplete(
+      user.user_id,
       order_id,
       deliveryOrderDto,
       imagePaths,
@@ -208,14 +217,17 @@ export class OrderController {
   )
   async pickupComplete(
     @Param('order_id') order_id: number,
+    @Request() req,
     @Body() deliveryOrderDto: DeliveryOrderDto,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Response> {
+    const user = req.user;
     const imagePaths = files.map(
       (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
     );
 
     return this.orderService.pickupComplete(
+      user.user_id,
       order_id,
       deliveryOrderDto,
       imagePaths,
@@ -244,13 +256,5 @@ export class OrderController {
     @Body() body: { orders: any[] },
   ): Promise<Response> {
     return await this.orderService.payDueAmount(user_id, body.orders);
-  }
-
-  @Post('orders/cancel')
-  @UseGuards(RolesGuard)
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.SUPER_ADMIN)
-  async cancelOrder(@Body() createNoteDto: CreateNoteDto): Promise<Response> {
-    return await this.orderService.cancelOrder(createNoteDto);
   }
 }

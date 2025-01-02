@@ -13,5 +13,5 @@ export class CreateNoteDto {
 
   @IsArray()
   @IsString({ each: true })
-  images: string[] = [];
+  images?: string[] = [];
 }

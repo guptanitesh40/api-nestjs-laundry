@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Request,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -35,6 +36,7 @@ export class NotesController {
   )
   async create(
     @Body() createNoteDto: CreateNoteDto,
+    @Request() req,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Response> {
     const imagePaths = files.map(

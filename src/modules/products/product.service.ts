@@ -5,7 +5,6 @@ import { Product } from 'src/entities/product.entity';
 import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
-import { PriceService } from '../price/price.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
@@ -14,7 +13,6 @@ export class ProductService {
   constructor(
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
-    private readonly priceService: PriceService,
   ) {}
 
   async getAll(): Promise<Response> {

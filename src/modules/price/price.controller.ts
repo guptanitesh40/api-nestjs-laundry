@@ -1,7 +1,5 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { writeFileSync } from 'fs';
-import { join } from 'path';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
@@ -35,18 +33,5 @@ export class PriceController {
   @Roles(Role.CUSTOMER)
   async getAll(): Promise<any[]> {
     return await this.priceService.getAll();
-  }
-
-  @Get('download-pdf')
-  async downloadPDF(): Promise<{ url: string }> {
-    const pdfBuffer = await this.priceService.generatePriceListPDF();
-    const baseUrl = process.env.BASE_URL;
-    const fileName = 'priceList.pdf';
-    const filePath = join(process.cwd(), 'pdf', fileName);
-
-    writeFileSync(filePath, pdfBuffer);
-
-    const fileUrl = `${baseUrl}/pdf/${fileName}`;
-    return { url: fileUrl };
   }
 }
