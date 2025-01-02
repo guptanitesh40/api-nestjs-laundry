@@ -12,7 +12,11 @@ import puppeteer, { Browser } from 'puppeteer';
 import { FilePath } from 'src/constants/FilePath';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import numberToWords from 'src/utils/numberToWords';
-import { getPdfUrl } from 'src/utils/pdf-url.helper';
+import {
+  getOrderInvoiceFileFileName,
+  getPdfUrl,
+  getRefundFileFileName,
+} from 'src/utils/pdf-url.helper';
 import { OrderService } from '../order/order.service';
 import { PriceService } from '../price/price.service';
 
@@ -38,15 +42,7 @@ export class InvoiceService {
     const populatedHtml = await this.populateTemplate(html, order_id);
 
     const pdfBuffer = await this.createPdfBuffer(populatedHtml);
-    await this.savePdfToFile(order_id, pdfBuffer);
-
-    const baseUrl = process.env.BASE_URL;
-    const fileName = `invoice_${order_id}.pdf`;
-    const filePath = join(process.cwd(), 'pdf', fileName);
-
-    writeFileSync(filePath, pdfBuffer);
-
-    const fileUrl = `${baseUrl}/pdf/${fileName}`;
+    const fileUrl = await this.savePdfToFile(order_id, pdfBuffer);
 
     return { url: fileUrl };
   }
@@ -85,7 +81,7 @@ export class InvoiceService {
     pdfBuffer: Buffer,
   ): Promise<string> {
     const pdfDirectory = FilePath.PDF_DIRECTORY;
-    const file_name = 'invoice_';
+    const file_name = getOrderInvoiceFileFileName();
     const invoicePdf = getPdfUrl(order_id, file_name);
     const filePath = path.join(pdfDirectory, invoicePdf.fileName);
     await fs.writeFile(filePath, pdfBuffer);
@@ -247,7 +243,7 @@ export class InvoiceService {
 
       const pdfBuffer: Buffer = Buffer.from(pdfBufferUint8);
       await browser.close();
-      const file_name = 'refund_receipt_';
+      const file_name = getRefundFileFileName();
       const refundReceipt = getPdfUrl(order.order_id, file_name);
       const filePath = join(process.cwd(), 'pdf', refundReceipt.fileName);
 
@@ -312,7 +308,7 @@ export class InvoiceService {
       const pdfBuffer = await page.pdf({ format: 'Letter' });
       await browser.close();
 
-      const file_name = 'order_items_label_';
+      const file_name = getOrderInvoiceFileFileName();
 
       const orderLabel = getPdfUrl(order.order_id, file_name);
 

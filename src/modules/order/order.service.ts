@@ -29,7 +29,7 @@ import {
   getOrderStatusDetails,
   getWorkshopOrdersStatusLabel,
 } from 'src/utils/order-status.helper';
-import { getPdfUrl } from 'src/utils/pdf-url.helper';
+import { getPdfUrl, getRefundFileFileName } from 'src/utils/pdf-url.helper';
 import { DataSource, In, Repository } from 'typeorm';
 import { CartService } from '../cart/cart.service';
 import { CouponService } from '../coupon/coupon.service';
@@ -578,7 +578,7 @@ export class OrderService {
     if (!orders) {
       throw new NotFoundException(`Order with id ${order_id} not found`);
     }
-    const file_name = 'refund_receipt_';
+    const file_name = getRefundFileFileName();
     if (orders.refund_amount !== null) {
       orders.refund_receipt_url = getPdfUrl(orders.order_id, file_name);
     }
@@ -1229,13 +1229,14 @@ export class OrderService {
 
   async updateOrderPickupAndDeliveryStatus(
     order_id: number,
+    user_id: number,
     deliveryOrderDto: DeliveryOrderDto,
     imagePaths: string[],
     status: OrderStatus,
     statusMessage: string,
   ): Promise<Response> {
     const order: any = await this.orderRepository.findOne({
-      where: { order_id },
+      where: { order_id, user_id: user_id },
     });
     if (!order) {
       throw new NotFoundException('Order not found');
@@ -1246,6 +1247,7 @@ export class OrderService {
     await this.orderRepository.save(order);
 
     const noteDto: CreateNoteDto = {
+      user_id,
       order_id,
       text_note: deliveryOrderDto.deliveryNote,
       images: deliveryOrderDto.images,
@@ -1261,11 +1263,13 @@ export class OrderService {
   }
 
   async deliveryComplete(
+    user_id: number,
     order_id: number,
     deliveryOrderDto: DeliveryOrderDto,
     imagePaths: string[],
   ): Promise<Response> {
     return this.updateOrderPickupAndDeliveryStatus(
+      user_id,
       order_id,
       deliveryOrderDto,
       imagePaths,
@@ -1275,11 +1279,13 @@ export class OrderService {
   }
 
   async pickupComplete(
+    user_id: number,
     order_id: number,
     deliveryOrderDto: DeliveryOrderDto,
     imagePaths: string[],
   ): Promise<Response> {
     return this.updateOrderPickupAndDeliveryStatus(
+      user_id,
       order_id,
       deliveryOrderDto,
       imagePaths,

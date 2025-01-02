@@ -194,13 +194,16 @@ export class OrderController {
   )
   async deliveryComplete(
     @Param('order_id') order_id: number,
+    @Request() req,
     @Body() deliveryOrderDto: DeliveryOrderDto,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Response> {
+    const user = req.user;
     const imagePaths = files.map(
       (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
     );
     return this.orderService.deliveryComplete(
+      user.user_id,
       order_id,
       deliveryOrderDto,
       imagePaths,
@@ -214,14 +217,17 @@ export class OrderController {
   )
   async pickupComplete(
     @Param('order_id') order_id: number,
+    @Request() req,
     @Body() deliveryOrderDto: DeliveryOrderDto,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Response> {
+    const user = req.user;
     const imagePaths = files.map(
       (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
     );
 
     return this.orderService.pickupComplete(
+      user.user_id,
       order_id,
       deliveryOrderDto,
       imagePaths,
