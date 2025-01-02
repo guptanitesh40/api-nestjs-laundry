@@ -81,8 +81,7 @@ export class InvoiceService {
     pdfBuffer: Buffer,
   ): Promise<string> {
     const pdfDirectory = FilePath.PDF_DIRECTORY;
-    const file_name = getOrderInvoiceFileFileName();
-    const invoicePdf = getPdfUrl(order_id, file_name);
+    const invoicePdf = getPdfUrl(order_id, getOrderInvoiceFileFileName());
     const filePath = path.join(pdfDirectory, invoicePdf.fileName);
     await fs.writeFile(filePath, pdfBuffer);
     return invoicePdf.fileUrl;
@@ -243,8 +242,7 @@ export class InvoiceService {
 
       const pdfBuffer: Buffer = Buffer.from(pdfBufferUint8);
       await browser.close();
-      const file_name = getRefundFileFileName();
-      const refundReceipt = getPdfUrl(order.order_id, file_name);
+      const refundReceipt = getPdfUrl(order.order_id, getRefundFileFileName());
       const filePath = join(process.cwd(), 'pdf', refundReceipt.fileName);
 
       writeFileSync(filePath, pdfBuffer);
@@ -308,9 +306,10 @@ export class InvoiceService {
       const pdfBuffer = await page.pdf({ format: 'Letter' });
       await browser.close();
 
-      const file_name = getOrderInvoiceFileFileName();
-
-      const orderLabel = getPdfUrl(order.order_id, file_name);
+      const orderLabel = getPdfUrl(
+        order.order_id,
+        getOrderInvoiceFileFileName(),
+      );
 
       const outputPath = join(process.cwd(), 'pdf', orderLabel.fileName);
       writeFileSync(outputPath, pdfBuffer);

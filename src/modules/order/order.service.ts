@@ -578,9 +578,12 @@ export class OrderService {
     if (!orders) {
       throw new NotFoundException(`Order with id ${order_id} not found`);
     }
-    const file_name = getRefundFileFileName();
+
     if (orders.refund_amount !== null) {
-      orders.refund_receipt_url = getPdfUrl(orders.order_id, file_name);
+      orders.refund_receipt_url = getPdfUrl(
+        orders.order_id,
+        getRefundFileFileName(),
+      );
     }
 
     orders.order_status_details = getOrderStatusDetails(orders);
