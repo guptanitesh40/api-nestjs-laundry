@@ -26,7 +26,7 @@ export class Note extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column()
+  @Column({ nullable: true })
   @IsOptional()
   user_id?: number;
 

@@ -12,7 +12,7 @@ import puppeteer, { Browser } from 'puppeteer';
 import { FilePath } from 'src/constants/FilePath';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import numberToWords from 'src/utils/numberToWords';
-import { getRefundReceiptUrl } from 'src/utils/refund-receipt-url.helper';
+import { getPdfUrl } from 'src/utils/pdf-url.helper';
 import { OrderService } from '../order/order.service';
 import { PriceService } from '../price/price.service';
 
@@ -85,10 +85,11 @@ export class InvoiceService {
     pdfBuffer: Buffer,
   ): Promise<string> {
     const pdfDirectory = FilePath.PDF_DIRECTORY;
-    const fileName = `invoice_${order_id}.pdf`;
-    const filePath = path.join(pdfDirectory, fileName);
+    const file_name = 'invoice_';
+    const invoicePdf = getPdfUrl(order_id, file_name);
+    const filePath = path.join(pdfDirectory, invoicePdf.fileName);
     await fs.writeFile(filePath, pdfBuffer);
-    return filePath;
+    return invoicePdf.fileUrl;
   }
 
   private async populateTemplate(html: any, order_id: number): Promise<any> {
@@ -246,7 +247,8 @@ export class InvoiceService {
 
       const pdfBuffer: Buffer = Buffer.from(pdfBufferUint8);
       await browser.close();
-      const refundReceipt = getRefundReceiptUrl(order.order_id);
+      const file_name = 'refund_receipt_';
+      const refundReceipt = getPdfUrl(order.order_id, file_name);
       const filePath = join(process.cwd(), 'pdf', refundReceipt.fileName);
 
       writeFileSync(filePath, pdfBuffer);
@@ -310,11 +312,14 @@ export class InvoiceService {
       const pdfBuffer = await page.pdf({ format: 'Letter' });
       await browser.close();
 
-      const fileName = `order_items_label_${order.order_id}.pdf`;
-      const outputPath = join(process.cwd(), 'pdf', fileName);
+      const file_name = 'order_items_label_';
+
+      const orderLabel = getPdfUrl(order.order_id, file_name);
+
+      const outputPath = join(process.cwd(), 'pdf', orderLabel.fileName);
       writeFileSync(outputPath, pdfBuffer);
 
-      const fileUrl = `${baseUrl}/pdf/${fileName}`;
+      const fileUrl = orderLabel.fileUrl;
 
       return { url: fileUrl };
     } catch (error) {
