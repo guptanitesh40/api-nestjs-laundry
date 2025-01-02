@@ -1594,7 +1594,10 @@ export class OrderService {
     };
   }
 
-  async cancelOrder(cancelOrderDto: CancelOrderDto): Promise<Response> {
+  async cancelOrder(
+    cancelOrderDto: CancelOrderDto,
+    user_id: number,
+  ): Promise<Response> {
     const order = await this.orderRepository.findOne({
       where: { order_id: cancelOrderDto.order_id },
     });
@@ -1613,6 +1616,7 @@ export class OrderService {
     await this.orderRepository.save(order);
 
     const note: CreateNoteDto = {
+      user_id,
       order_id: cancelOrderDto.order_id,
       text_note: cancelOrderDto.text_note,
     };

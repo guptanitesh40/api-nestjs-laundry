@@ -53,8 +53,9 @@ export class OrderController {
 
   @Post('orders/cancel')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
-  async cancelOrder(@Body() cancelOrderDto): Promise<Response> {
-    return this.orderService.cancelOrder(cancelOrderDto);
+  async cancelOrder(@Body() cancelOrderDto, @Request() req): Promise<Response> {
+    const user = req.user;
+    return this.orderService.cancelOrder(cancelOrderDto, user.user_id);
   }
 
   @Get('admin/orders/workshop')
