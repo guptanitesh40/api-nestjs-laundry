@@ -8,24 +8,26 @@ import { UpdateSettingDto } from './dto/update-settings.dto';
 import { SettingService } from './setting.service';
 
 @Controller()
-@UseGuards(RolesGuard)
-@UseGuards(AuthGuard('jwt'))
-@Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
 export class SettingController {
   constructor(private readonly settingService: SettingService) {}
 
   @Put('admin/settings')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async update(@Body() updateSettingDto: UpdateSettingDto): Promise<Response> {
     return await this.settingService.update(updateSettingDto);
   }
 
   @Get('admin/settings')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async findAll(@Query('keys') keys?: string[]): Promise<Response> {
     return await this.settingService.findAll(keys);
   }
 
   @Get('settings')
-  @Roles(Role.CUSTOMER)
   async getAll(@Query('keys') keys?: string[]): Promise<Response> {
     return await this.settingService.findAll(keys);
   }
