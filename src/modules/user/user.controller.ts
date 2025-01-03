@@ -202,21 +202,21 @@ export class UserController {
     return await this.userService.getAllUsers(userFilterDto);
   }
 
-  @Delete(':user_id')
-  @UseGuards(RolesGuard)
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.SUPER_ADMIN)
-  async deleteUser(@Param('user_id') user_id: number): Promise<Response> {
-    return await this.userService.deleteUser(user_id);
-  }
-
-  @Delete('customer/:user_id')
+  @Delete('customer')
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.CUSTOMER)
   async removeUser(@Request() req): Promise<Response> {
     const user = req.user;
     return await this.userService.deleteUser(user.user_id);
+  }
+
+  @Delete(':user_id')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.SUPER_ADMIN)
+  async deleteUser(@Param('user_id') user_id: number): Promise<Response> {
+    return await this.userService.deleteUser(user_id);
   }
 
   @Post('generate')
