@@ -19,6 +19,8 @@ export class NullTransformInterceptor implements NestInterceptor {
       'pickup_boy_id',
     ];
 
+    const nullKeys = ['next_step'];
+
     if (Array.isArray(data)) {
       return data.map((item) => this.transform(item));
     } else if (data !== null && typeof data === 'object') {
@@ -26,7 +28,11 @@ export class NullTransformInterceptor implements NestInterceptor {
 
       for (const key in data) {
         if (data[key] === null) {
-          transformed[key] = numericKeys.includes(key) ? 0 : '';
+          transformed[key] = numericKeys.includes(key)
+            ? 0
+            : nullKeys.includes(key)
+              ? null
+              : '';
         } else if (data[key] instanceof Date) {
           transformed[key] = data[key].toISOString();
         } else if (typeof data[key] === 'object') {
