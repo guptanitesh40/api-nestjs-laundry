@@ -125,13 +125,17 @@ export class UserService {
       return loginErrrorMessage;
     }
 
-    await this.storeLoginHistory(user, device_type);
-    await this.storeDeviceUser(user, device_type, device_token);
+    await this.storeLoginHistory(user);
+    const deviceUser = await this.storeDeviceUser(
+      user,
+      device_type,
+      device_token,
+    );
 
     return {
       statusCode: 200,
       message: 'User Loggedin succssfully',
-      data: { user },
+      data: { user, deviceUser },
     };
   }
 
@@ -168,23 +172,23 @@ export class UserService {
     };
   }
 
-  async storeLoginHistory(user: User, device_type: string): Promise<void> {
+  async storeLoginHistory(user: User): Promise<void> {
     const loginHistory = new LoginHistory();
     loginHistory.user_id = user.user_id;
-    loginHistory.type = device_type || '';
     await this.loginHistoryRepository.save(loginHistory);
   }
 
   async storeDeviceUser(
     user: User,
-    device_type: string,
+    device_type: number,
     device_token: string,
-  ): Promise<void> {
+  ): Promise<any> {
     const deviceUser = new DeviceUser();
-    deviceUser.device_type = device_type || '';
+    deviceUser.device_type = device_type || 0;
     deviceUser.device_token = device_token || '';
     deviceUser.user_id = user.user_id;
-    await this.deviceUserRepository.save(deviceUser);
+    const result = await this.deviceUserRepository.save(deviceUser);
+    return result;
   }
 
   async createUser(
@@ -458,6 +462,36 @@ export class UserService {
       data: {
         user,
         total_pending_amount: pending_due_amount,
+      },
+    };
+  }
+
+  async findOne(user_id: number): Promise<Response> {
+    const userQuery = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.user_id = :user_id', { user_id })
+      .andWhere('user.deleted_at IS NULL')
+      .select([
+        'user.user_id',
+        'user.first_name',
+        'user.last_name',
+        'user.email',
+        'user.mobile_number',
+        'user.gender',
+        'user.image',
+        'user.id_proof',
+        'user.education_qualification',
+        'user.role_id',
+        'user.created_by_user_id',
+      ]);
+
+    const user: any = await userQuery.getOne();
+
+    return {
+      statusCode: 200,
+      message: 'User found',
+      data: {
+        user,
       },
     };
   }

@@ -1,4 +1,5 @@
 import { IsOptional } from 'class-validator';
+import { DeviceType } from 'src/enum/device_type.enum';
 import {
   Column,
   Entity,
@@ -18,7 +19,7 @@ export class DeviceUser {
 
   @Column({ nullable: true })
   @IsOptional()
-  device_type?: string;
+  device_type?: DeviceType;
 
   @Column({ nullable: true })
   @IsOptional()

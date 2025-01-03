@@ -14,6 +14,7 @@ import { RefundStatus } from 'src/enum/refund_status.enum';
 import numberToWords from 'src/utils/numberToWords';
 import {
   getOrderInvoiceFileFileName,
+  getOrderLabelFileFileName,
   getPdfUrl,
   getRefundFileFileName,
 } from 'src/utils/pdf-url.helper';
@@ -306,10 +307,7 @@ export class InvoiceService {
       const pdfBuffer = await page.pdf({ format: 'Letter' });
       await browser.close();
 
-      const orderLabel = getPdfUrl(
-        order.order_id,
-        getOrderInvoiceFileFileName(),
-      );
+      const orderLabel = getPdfUrl(order.order_id, getOrderLabelFileFileName());
 
       const outputPath = join(process.cwd(), 'pdf', orderLabel.fileName);
       writeFileSync(outputPath, pdfBuffer);

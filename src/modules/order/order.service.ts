@@ -29,7 +29,11 @@ import {
   getOrderStatusDetails,
   getWorkshopOrdersStatusLabel,
 } from 'src/utils/order-status.helper';
-import { getPdfUrl, getRefundFileFileName } from 'src/utils/pdf-url.helper';
+import {
+  getOrderInvoiceFileFileName,
+  getPdfUrl,
+  getRefundFileFileName,
+} from 'src/utils/pdf-url.helper';
 import { DataSource, In, Repository } from 'typeorm';
 import { CartService } from '../cart/cart.service';
 import { CouponService } from '../coupon/coupon.service';
@@ -250,8 +254,6 @@ export class OrderService {
       }
       await this.cartService.removeCartByUser(user.user_id);
 
-      await queryRunner.commitTransaction();
-
       const orderDetail = {
         order_id: savedOrder.order_id,
         total: savedOrder.total,
@@ -272,10 +274,15 @@ export class OrderService {
 
       await this.notificationService.sendOrderNotification(orderDetail);
 
+      await queryRunner.commitTransaction();
+
       return {
         statusCode: 200,
         message: 'Order details added successfully',
-        data: { orderDetail, itemsLabel },
+        data: {
+          orderDetail,
+          itemsLabel,
+        },
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -499,6 +506,11 @@ export class OrderService {
             name: `${order.user?.first_name || ''} ${order.user?.last_name || ''}`.trim(),
           }
         : null;
+
+      order.order_invoice = getPdfUrl(
+        order.order_id,
+        getOrderInvoiceFileFileName(),
+      );
     });
 
     return {
@@ -586,7 +598,17 @@ export class OrderService {
       );
     }
 
+    orders.order_invoice = getPdfUrl(
+      orders.order_id,
+      getOrderInvoiceFileFileName(),
+    );
+
     orders.order_status_details = getOrderStatusDetails(orders);
+
+    orders.order_invoice = getPdfUrl(
+      orders.order_id,
+      getOrderInvoiceFileFileName(),
+    );
 
     if (orders.total > orders.paid_amount) {
       orders.pending_due_amount = orders.total - orders.paid_amount;
