@@ -12,12 +12,14 @@ import { InvoiceModule } from '../invoice/invoice.module';
 import { ApiService } from '../mobileapi/api.service';
 import { PriceService } from '../price/price.service';
 import { ServicesService } from '../services/services.service';
+import { SettingModule } from '../settings/setting.module';
 import { WebController } from './web.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Cart, Price, Service, Banner, Category, Product]),
     forwardRef(() => InvoiceModule),
+    SettingModule,
   ],
   controllers: [WebController],
   providers: [

@@ -41,6 +41,12 @@ export class CartController {
     return this.cartService.getAllCarts(user.user_id);
   }
 
+  @Get('mobile')
+  async findAllCart(@Request() req): Promise<Response> {
+    const user = req.user;
+    return this.cartService.findAllCarts(user.user_id);
+  }
+
   @Put(':cart_id')
   async updateCart(
     @Param('cart_id') cart_id: number,

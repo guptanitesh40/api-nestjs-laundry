@@ -8,6 +8,7 @@ import {
   appendBaseUrlToImagesCartItems,
 } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
+import { SettingService } from '../settings/setting.service';
 import { AddCartDto } from './dto/cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 
@@ -16,6 +17,7 @@ export class CartService {
   constructor(
     @InjectRepository(Cart)
     private cartRepository: Repository<Cart>,
+    private readonly settingService: SettingService,
   ) {}
 
   async addToCart(addCartDto: AddCartDto, user_id: number): Promise<Response> {
@@ -83,7 +85,7 @@ export class CartService {
   }
 
   async getAllCarts(user_id: number): Promise<Response> {
-    const carts = await this.cartRepository
+    const cartsQuery = await this.cartRepository
       .createQueryBuilder('cart')
       .innerJoin('cart.category', 'category')
       .innerJoin('cart.product', 'product')
@@ -111,7 +113,7 @@ export class CartService {
       ])
       .getRawMany();
 
-    const cartsWithImages = carts.map((cart) => {
+    const carts = cartsQuery.map((cart) => {
       cart.product_image = appendBaseUrlToImages([
         { image: cart.product_image },
       ])[0].image;
@@ -124,7 +126,29 @@ export class CartService {
     return {
       statusCode: 200,
       message: 'Cart retrieved successfully',
-      data: cartsWithImages,
+      data: carts,
+    };
+  }
+
+  async findAllCarts(user_id: number): Promise<Response> {
+    const carts = (await this.getAllCarts(user_id)).data;
+    const settingkeys = ['shipping_charge'];
+
+    const shippingCharge = (await this.settingService.findAll(settingkeys))
+      .data;
+
+    const shippingCharges = Number(shippingCharge.shipping_charge);
+
+    const subTotal = carts.reduce((total, cart) => {
+      return total + cart.price * cart.quantity;
+    }, 0);
+
+    const total = subTotal + shippingCharges;
+
+    return {
+      statusCode: 200,
+      message: 'Cart retrieved successfully',
+      data: { carts, shippingCharges, subTotal, total },
     };
   }
 
