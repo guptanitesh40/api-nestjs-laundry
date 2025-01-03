@@ -208,7 +208,6 @@ export class UserController {
   @Roles(Role.CUSTOMER)
   async removeUser(@Request() req): Promise<Response> {
     const user = req.user;
-    console.log('user', user);
     return await this.userService.deleteUser(user.user_id);
   }
 
