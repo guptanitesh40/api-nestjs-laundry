@@ -85,6 +85,7 @@ export class WorkshopService {
       )
       .leftJoinAndSelect('workshopManagerMapping.user', 'user')
       .where('workshop.deleted_at IS NULL')
+      .andWhere('user.deleted_at IS NULL')
       .select(['workshop', 'workshopManagerMapping.user_id'])
       .take(perPage)
       .skip(skip);
@@ -135,7 +136,8 @@ export class WorkshopService {
     >();
 
     workshopManagerMappings.forEach((mapping) => {
-      const fullName = `${mapping.user?.first_name} ${mapping.user?.last_name}`;
+      const fullName =
+        `${mapping.user?.first_name} ${mapping.user?.last_name}` || '';
       if (!workshopManagerMap.has(mapping.workshop_id)) {
         workshopManagerMap.set(mapping.workshop_id, []);
       }

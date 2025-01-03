@@ -8,7 +8,7 @@ export class NotificationService {
   private readonly apiUrl = 'https://wts.vision360solutions.co.in/api/sendText';
 
   constructor(private readonly httpService: HttpService) {}
-  async sendOrderNotification(order): Promise<void> {
+  async sendOrderNotification(order: any): Promise<void> {
     if (!order) {
       throw new NotFoundException(`Order with ID ${order.order_id} not found.`);
     }

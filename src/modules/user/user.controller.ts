@@ -59,7 +59,7 @@ export class UserController {
   @Roles(Role.CUSTOMER)
   async findOne(@Request() req): Promise<Response> {
     const user = req.user;
-    return await this.userService.getUserById(user.user_id);
+    return await this.userService.findOne(user.user_id);
   }
 
   @Put('customer')

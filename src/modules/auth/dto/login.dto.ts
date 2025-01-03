@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsOptional } from 'class-validator';
+import { DeviceType } from 'src/enum/device_type.enum';
 
 export class LoginDto {
   @IsNotEmpty()
@@ -11,7 +12,7 @@ export class LoginDto {
   role_id: number;
 
   @IsOptional()
-  device_type?: string;
+  device_type?: DeviceType;
 
   @IsOptional()
   device_token?: string;
