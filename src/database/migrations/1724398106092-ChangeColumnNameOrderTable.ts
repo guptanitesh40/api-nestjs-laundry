@@ -7,7 +7,7 @@ export class ChangeColumnNameOrderTable1724398106092
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE \`orders\` CHANGE \`shipping_charge\` \`shipping_charges\` decimal NOT NULL`,
+      `ALTER TABLE \`orders\` CHANGE \`shipping_charge\` \`shipping_charges\` float NOT NULL`,
     );
   }
 

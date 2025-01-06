@@ -31,6 +31,7 @@ import {
 } from 'src/utils/order-status.helper';
 import {
   getOrderInvoiceFileFileName,
+  getOrderLabelFileFileName,
   getPdfUrl,
   getRefundFileFileName,
 } from 'src/utils/pdf-url.helper';
@@ -605,9 +606,9 @@ export class OrderService {
 
     orders.order_status_details = getOrderStatusDetails(orders);
 
-    orders.order_invoice = getPdfUrl(
+    orders.order_label = getPdfUrl(
       orders.order_id,
-      getOrderInvoiceFileFileName(),
+      getOrderLabelFileFileName(),
     );
 
     if (orders.total > orders.paid_amount) {
@@ -719,8 +720,11 @@ export class OrderService {
           throw new Error(
             `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}`,
           );
+        } else if (item.price !== price) {
+          throw new Error(
+            `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${price}, Received: ${item.price}`,
+          );
         }
-
         if (orderItemsMap.has(key)) {
           const existingItem = orderItemsMap.get(key);
           existingItem.quantity += item.quantity || 1;
