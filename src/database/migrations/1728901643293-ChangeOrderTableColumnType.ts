@@ -16,12 +16,6 @@ export class ChangeOrderTableColumnType1728901643293
     await queryRunner.query(
       `ALTER TABLE \`orders\` ADD \`coupon_discount\` float NULL`,
     );
-    await queryRunner.query(
-      `ALTER TABLE \`orders\` DROP COLUMN \`shipping_charges\``,
-    );
-    await queryRunner.query(
-      `ALTER TABLE \`orders\` ADD \`shipping_charges\` float NOT NULL`,
-    );
     await queryRunner.query(`ALTER TABLE \`orders\` DROP COLUMN \`total\``);
     await queryRunner.query(
       `ALTER TABLE \`orders\` ADD \`total\` float NOT NULL`,

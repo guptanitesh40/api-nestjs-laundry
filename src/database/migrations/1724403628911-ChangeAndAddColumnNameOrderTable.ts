@@ -10,9 +10,6 @@ export class ChangeAndAddColumnNameOrderTable1724403628911
       `ALTER TABLE \`order_items\` DROP FOREIGN KEY \`FK_7fdb8279503d87a8b6a1880e3d4\``,
     );
     await queryRunner.query(
-      `ALTER TABLE \`order_items\` CHANGE \`orderOrderId\` \`order_id\` int NULL`,
-    );
-    await queryRunner.query(
       `ALTER TABLE \`order_items\` CHANGE \`order_id\` \`order_id\` int NOT NULL`,
     );
     await queryRunner.query(

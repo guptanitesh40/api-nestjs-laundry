@@ -7,7 +7,7 @@ export class LoginHistoryAndDeviceUsersTableChangeColumn1724317258016
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE \`device_users\` CHANGE \`device_type\` \`device_type\` varchar(255) NULL`,
+      `ALTER TABLE \`device_users\` CHANGE \`device_type\` \`device_type\` int NULL`,
     );
     await queryRunner.query(
       `ALTER TABLE \`device_users\` CHANGE \`device_token\` \`device_token\` varchar(255) NULL`,
