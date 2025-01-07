@@ -162,4 +162,8 @@ export class Order extends BaseEntity {
 
   @Column({ nullable: true })
   workshop_id: number;
+
+  @Column({ nullable: true })
+  @IsOptional()
+  razorpay_order_id?: string;
 }

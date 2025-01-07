@@ -31,6 +31,7 @@ import { IsUniqueConstraint } from './modules/validator/is-unique-constarint';
 import { WebModule } from './modules/web/web.module';
 import { WorkshopModule } from './modules/workshop/workshop.module';
 import { MorganMiddleware } from './morgan.middleware';
+import { RazorpayModule } from './razorpay/razorpay.module';
 import { ReportModule } from './report/report.module';
 
 @Module({
@@ -63,6 +64,7 @@ import { ReportModule } from './report/report.module';
     WorkshopModule,
     ContactUsModule,
     PriceContentModule,
+    RazorpayModule,
   ],
   controllers: [AppController],
   providers: [
