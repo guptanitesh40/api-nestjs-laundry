@@ -8,6 +8,7 @@ import { Order } from 'src/entities/order.entity';
 import { Product } from 'src/entities/product.entity';
 import { Service } from 'src/entities/service.entity';
 import { User } from 'src/entities/user.entity';
+import { RazorpayModule } from 'src/razorpay/razorpay.module';
 import { CartModule } from '../cart/cart.module';
 import { CouponModule } from '../coupon/coupon.module';
 import { InvoiceModule } from '../invoice/invoice.module';
@@ -40,6 +41,7 @@ import { OrderService } from './order.service';
     WorkshopModule,
     CartModule,
     NotesModule,
+    RazorpayModule,
     forwardRef(() => NotificationModule),
   ],
   providers: [OrderService],

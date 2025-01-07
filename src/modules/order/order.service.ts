@@ -36,6 +36,7 @@ import {
   getRefundFileFileName,
 } from 'src/utils/pdf-url.helper';
 import { DataSource, In, Repository } from 'typeorm';
+import { RazorpayService } from '../../razorpay/razorpay.service';
 import { CartService } from '../cart/cart.service';
 import { CouponService } from '../coupon/coupon.service';
 import { OrderFilterDto } from '../dto/orders-filter.dto';
@@ -80,6 +81,7 @@ export class OrderService {
     private readonly notesService: NotesService,
     @Inject(forwardRef(() => InvoiceService))
     private readonly invoiceService: InvoiceService,
+    private readonly razorpayService: RazorpayService,
     private dataSource: DataSource,
   ) {}
 
@@ -212,6 +214,8 @@ export class OrderService {
         );
       }
 
+      const razorPay = await this.razorpayService.createOrder(total, 'INR');
+
       const order = this.orderRepository.create({
         ...createOrderDto,
         sub_total: calculatedSubTotal,
@@ -225,6 +229,7 @@ export class OrderService {
         estimated_pickup_time,
         estimated_delivery_time: estimated_delivery_date,
         branch_id: createOrderDto.branch_id,
+        transaction_id: razorPay.id,
       });
 
       const savedOrder = await queryRunner.manager.save(order);
@@ -260,9 +265,11 @@ export class OrderService {
         total: savedOrder.total,
         created_at: savedOrder.created_at,
         address_details: savedOrder.address_details,
-        items: orderItems,
         total_items: orderItems.length,
         branch_id: savedOrder.branch_id,
+        transaction_id: savedOrder.transaction_id,
+        razorpay_carrency: razorPay.currency,
+        items: orderItems,
         user: {
           first_name: user.first_name,
           last_name: user.last_name,
@@ -914,7 +921,7 @@ export class OrderService {
   }
 
   async getOrderDetail(order_id: number): Promise<Response> {
-    const order = await this.orderRepository
+    const orderQuery = await this.orderRepository
       .createQueryBuilder('order')
       .innerJoinAndSelect('order.user', 'user')
       .innerJoinAndSelect('order.items', 'items')
@@ -944,11 +951,17 @@ export class OrderService {
       ])
       .groupBy(
         'order.order_id, items.item_id, category.category_id, product.product_id, service.service_id',
-      )
-      .getOne();
+      );
+    const order: any = await orderQuery.getOne();
     if (!order) {
       throw new NotFoundException('Order not found');
     }
+
+
+    order.order_invoice = getPdfUrl(
+      order.order_id,
+      getOrderInvoiceFileFileName(),
+    );
 
     order.items = order.items.map((item) => {
       item.product = appendBaseUrlToImages([item.product])[0];
