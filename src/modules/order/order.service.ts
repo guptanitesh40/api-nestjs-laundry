@@ -229,7 +229,7 @@ export class OrderService {
         estimated_pickup_time,
         estimated_delivery_time: estimated_delivery_date,
         branch_id: createOrderDto.branch_id,
-        razorpay_order_id: razorPay.id,
+        transaction_id: razorPay.id,
       });
 
       const savedOrder = await queryRunner.manager.save(order);
@@ -267,7 +267,7 @@ export class OrderService {
         address_details: savedOrder.address_details,
         total_items: orderItems.length,
         branch_id: savedOrder.branch_id,
-        razorpay_order_id: savedOrder.razorpay_order_id,
+        transaction_id: savedOrder.transaction_id,
         razorpay_carrency: razorPay.currency,
         items: orderItems,
         user: {
@@ -957,6 +957,40 @@ export class OrderService {
       throw new NotFoundException('Order not found');
     }
 
+    const orderStatusFlow = [
+      {
+        status: [
+          OrderStatus.ASSIGNED_PICKUP_BOY,
+          OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+        ],
+        description: 'Confirmed on 20 Mar',
+      },
+      { status: 'Picked Up', description: 'Picked up on 20 Mar' },
+      { status: 'Laundry in Process', description: 'Your laundry in process' },
+      {
+        status: 'Out for Delivery',
+        description: 'Your laundry is out for delivery',
+      },
+      { status: 'Delivered', description: 'Your laundry has been delivered' },
+    ];
+
+    let statusCompleted = true;
+    const statusProgress = orderStatusFlow.map((step) => {
+      if (statusCompleted && step.status === order.order_status) {
+        statusCompleted = false;
+        return {
+          ...step,
+          completed: true,
+          timestamp: new Date(order.updatedAt).toLocaleDateString(),
+        };
+      }
+      return {
+        ...step,
+        completed: statusCompleted,
+        timestamp: statusCompleted ? '20 Mar' : null,
+      };
+    });
+
     order.order_invoice = getPdfUrl(
       order.order_id,
       getOrderInvoiceFileFileName(),
@@ -972,7 +1006,7 @@ export class OrderService {
     return {
       statusCode: 200,
       message: 'Order retrived successfully',
-      data: order,
+      data: { order, statusProgress },
     };
   }
 
