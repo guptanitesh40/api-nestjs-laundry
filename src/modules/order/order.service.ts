@@ -215,7 +215,6 @@ export class OrderService {
       }
 
       const razorPay = await this.razorpayService.createOrder(total, 'INR');
-      console.log('razorpay', razorPay.currency);
 
       const order = this.orderRepository.create({
         ...createOrderDto,
