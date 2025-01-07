@@ -9,7 +9,6 @@ export class RazorpayController {
   @Post('razorpay/verify')
   async verifyPayment(@Body() body: any): Promise<Response> {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
-    console.log(body);
 
     const isValid = await this.razorpayService.verifySignature(
       razorpay_order_id,

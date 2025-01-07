@@ -33,8 +33,6 @@ export class RazorpayService {
       .createHmac('sha256', process.env.RAZORPAY_SECRET)
       .update(body)
       .digest('hex');
-    console.log(generated_signature);
-    console.log(razorpay_signature);
 
     return generated_signature === razorpay_signature;
   }
