@@ -1,11 +1,11 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateSettingDto {
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   setting_key: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   setting_value: string;
 }

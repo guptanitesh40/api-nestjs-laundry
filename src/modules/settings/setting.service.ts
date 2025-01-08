@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Setting } from 'src/entities/setting.entity';
+import { appendBaseUrlToBannerAndPdf } from 'src/utils/image-path.helper';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { UpdateSettingDto } from './dto/update-settings.dto';
 
@@ -12,7 +13,10 @@ export class SettingService {
     private settingRepository: Repository<Setting>,
     private dataSource: DataSource,
   ) {}
-  async update(updateSettingDto: UpdateSettingDto): Promise<Response> {
+  async update(
+    updateSettingDto: UpdateSettingDto,
+    imagePath: string,
+  ): Promise<Response> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -26,6 +30,10 @@ export class SettingService {
         },
         { deleted_at: new Date() },
       );
+
+      if (updateSettingDto.setting_key === 'home_banner_image') {
+        updateSettingDto.setting_value = imagePath;
+      }
 
       await queryRunner.manager.save(Setting, updateSettingDto);
 
@@ -57,6 +65,17 @@ export class SettingService {
     const result = {};
     setting.map((element) => {
       result[element.setting_key] = element.setting_value;
+      if (element.setting_key === 'home_banner_image') {
+        result[element.setting_key] = appendBaseUrlToBannerAndPdf(
+          element.setting_value,
+        );
+      }
+
+      if (element.setting_key === 'price_pdf_url') {
+        result[element.setting_key] = appendBaseUrlToBannerAndPdf(
+          element.setting_value,
+        );
+      }
     });
 
     return {

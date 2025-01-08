@@ -49,6 +49,11 @@ export function appendBaseUrlToLogo<T extends { logo: string }>(
   });
 }
 
+export function appendBaseUrlToBannerAndPdf(name: string) {
+  const baseUrl = process.env.BASE_URL || '';
+  return `${baseUrl}/${name}`;
+}
+
 export function appendBaseUrlToNestedImages(order: any): any {
   const baseUrl = process.env.BASE_URL || '';
 
