@@ -15,7 +15,6 @@ export class SettingService {
   async update(
     updateSettingDto: UpdateSettingDto,
     imagePath: string,
-    pdfPath: string,
   ): Promise<Response> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -30,14 +29,9 @@ export class SettingService {
         },
         { deleted_at: new Date() },
       );
-      const baseurl = process.env.BASE_URL;
-
-      if (updateSettingDto.setting_key === 'price_pdf_url') {
-        updateSettingDto.setting_value = ` ${baseurl}/${pdfPath}`;
-      }
 
       if (updateSettingDto.setting_key === 'home_banner_image') {
-        updateSettingDto.setting_value = ` ${baseurl}/${imagePath}`;
+        updateSettingDto.setting_value = imagePath;
       }
 
       await queryRunner.manager.save(Setting, updateSettingDto);
@@ -57,6 +51,7 @@ export class SettingService {
   }
 
   async findAll(keys?: string[]): Promise<Response> {
+    const baseUrl = process.env.BASE_URL;
     const query = this.settingRepository
       .createQueryBuilder('setting')
       .where('setting.deleted_at IS NULL');
@@ -70,6 +65,12 @@ export class SettingService {
     const result = {};
     setting.map((element) => {
       result[element.setting_key] = element.setting_value;
+      if (element.setting_key === 'home_banner_image') {
+        result[element.setting_key] = `${baseUrl}/${element.setting_value}`;
+      }
+      if (element.setting_key === 'price_pdf_url') {
+        result[element.setting_key] = `${baseUrl}/${element.setting_value}`;
+      }
     });
 
     return {

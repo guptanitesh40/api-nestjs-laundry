@@ -216,7 +216,11 @@ export class OrderService {
 
       let razorPay: any;
       if (createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT) {
-        razorPay = await this.razorpayService.createOrder(total, 'INR');
+        razorPay = await this.razorpayService.createOrder(
+          total,
+          'INR',
+          user.user_id,
+        );
       }
 
       const order = this.orderRepository.create({

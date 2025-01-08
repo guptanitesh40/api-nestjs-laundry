@@ -16,6 +16,7 @@ import { DeviceUser } from './device-user.entity';
 import { LoginHistory } from './login-history.entity';
 import { Note } from './note.entity';
 import { Order } from './order.entity';
+import { RazorpayTransactions } from './razorpay.entity';
 import { Role } from './role.entity';
 import { UserBranchMapping } from './user-branch-mapping.entity';
 import { UserCompanyMapping } from './user-company-mapping.entity';
@@ -133,6 +134,12 @@ export class User extends BaseEntity {
     (userBranchMapping) => userBranchMapping.user,
   )
   userBranchMappings: UserBranchMapping[];
+
+  @OneToMany(
+    () => RazorpayTransactions,
+    (razorpayTransition) => razorpayTransition.user,
+  )
+  razorpayTransition: RazorpayTransactions[];
 
   @OneToMany(
     () => WorkshopManagerMapping,

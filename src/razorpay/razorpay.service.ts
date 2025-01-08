@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
 import Razorpay from 'razorpay';
+import { RazorpayTransactions } from 'src/entities/razorpay.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -9,8 +10,8 @@ export class RazorpayService {
   private razorpay: Razorpay;
 
   constructor(
-    @InjectRepository(Razorpay)
-    private rezorpayRepository: Repository<Razorpay>,
+    @InjectRepository(RazorpayTransactions)
+    private rezorpayRepository: Repository<RazorpayTransactions>,
   ) {
     this.razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
@@ -18,7 +19,7 @@ export class RazorpayService {
     });
   }
 
-  async createOrder(amount: number, currency: string) {
+  async createOrder(amount: number, currency: string, user_id: number) {
     const options = {
       amount: amount * 100,
       currency: currency,
@@ -27,7 +28,10 @@ export class RazorpayService {
 
     const data = await this.razorpay.orders.create(options);
     const razorpay: any = this.rezorpayRepository.create();
+    razorpay.amount = amount;
+    razorpay.currency = data.currency;
     razorpay.razorpay_order_id = data.id;
+    razorpay.user_id = user_id;
     await this.rezorpayRepository.save(razorpay);
 
     return { razorpay_order_id: razorpay.razorpay_order_id };

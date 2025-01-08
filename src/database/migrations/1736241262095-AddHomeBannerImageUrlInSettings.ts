@@ -6,7 +6,7 @@ export class AddHomeBannerImageUrlInSettings1736241262095
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
       `INSERT INTO settings (setting_key, setting_value) 
-        VALUES ('home_banner_image', 'http://35.154.167.170:3000/images/banner/1736139426341.png')`,
+        VALUES ('home_banner_image', 'images/banner/1736139426341.png')`,
     );
   }
 

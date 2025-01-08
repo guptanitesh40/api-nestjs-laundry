@@ -1,17 +1,37 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
+import { Role } from 'src/enum/role.enum';
+import { RolesGuard } from 'src/modules/auth/guard/role.guard';
 import { RazorpayService } from './razorpay.service';
 
-@Controller('payment')
+@Controller('razorpay')
+@UseGuards(RolesGuard)
+@UseGuards(AuthGuard('jwt'))
 export class RazorpayController {
   constructor(private readonly razorpayService: RazorpayService) {}
 
-  @Post('razorpay-order')
-  async createOrder(@Body() body: any) {
-    return this.razorpayService.createOrder(body.amount, body.currency);
+  @Post('create-order')
+  @Roles(Role.CUSTOMER)
+  async createOrder(@Body() body: any, @Request() req) {
+    const user = req.user;
+    return this.razorpayService.createOrder(
+      body.amount,
+      body.currency,
+      user.user_id,
+    );
   }
 
-  @Post('razorpay/verify')
+  @Post('verify')
+  @Roles(Role.CUSTOMER)
   async verifyPayment(@Body() body: any): Promise<Response> {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
 

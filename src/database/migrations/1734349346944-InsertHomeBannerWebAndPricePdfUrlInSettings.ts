@@ -14,7 +14,7 @@ export class InsertHomeBannerWebAndPricePdfUrlInSettings1734349346944
 
     await queryRunner.query(
       `INSERT INTO settings (setting_key, setting_value) 
-             VALUES ('price_pdf_url', 'http://35.154.167.170:3000/pdf/priceList.pdf')`,
+             VALUES ('price_pdf_url', 'pdf/priceList.pdf')`,
     );
   }
 
