@@ -137,7 +137,7 @@ export class User extends BaseEntity {
 
   @OneToMany(
     () => RazorpayTransactions,
-    (razorpayTransition) => razorpayTransition.user,
+    (razorpayTransactions) => razorpayTransactions.user,
   )
   razorpayTransition: RazorpayTransactions[];
 

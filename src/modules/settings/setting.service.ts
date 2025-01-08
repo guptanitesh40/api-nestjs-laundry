@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Setting } from 'src/entities/setting.entity';
+import { appendBaseUrlToBannerAndPdf } from 'src/utils/image-path.helper';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { UpdateSettingDto } from './dto/update-settings.dto';
 
@@ -66,10 +67,15 @@ export class SettingService {
     setting.map((element) => {
       result[element.setting_key] = element.setting_value;
       if (element.setting_key === 'home_banner_image') {
-        result[element.setting_key] = `${baseUrl}/${element.setting_value}`;
+        result[element.setting_key] = appendBaseUrlToBannerAndPdf(
+          element.setting_value,
+        );
       }
+
       if (element.setting_key === 'price_pdf_url') {
-        result[element.setting_key] = `${baseUrl}/${element.setting_value}`;
+        result[element.setting_key] = appendBaseUrlToBannerAndPdf(
+          element.setting_value,
+        );
       }
     });
 
