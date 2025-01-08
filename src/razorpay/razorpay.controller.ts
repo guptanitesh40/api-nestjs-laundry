@@ -2,7 +2,9 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Post,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -11,6 +13,7 @@ import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from 'src/modules/auth/guard/role.guard';
+import { PaginationQueryDto } from 'src/modules/dto/pagination-query.dto';
 import { RazorpayService } from './razorpay.service';
 
 @Controller('razorpay')
@@ -28,6 +31,14 @@ export class RazorpayController {
       body.currency,
       user.user_id,
     );
+  }
+
+  @Get('transaction')
+  @Roles(Role.SUPER_ADMIN)
+  async getAllTransactions(
+    @Query() paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
+    return await this.razorpayService.getAllTransactions(paginationQueryDto);
   }
 
   @Post('verify')
