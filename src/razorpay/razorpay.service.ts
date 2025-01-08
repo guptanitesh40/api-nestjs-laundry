@@ -1,12 +1,17 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
 import Razorpay from 'razorpay';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class RazorpayService {
   private razorpay: Razorpay;
 
-  constructor() {
+  constructor(
+    @InjectRepository(Razorpay)
+    private rezorpayRepository: Repository<Razorpay>,
+  ) {
     this.razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_SECRET,
@@ -20,7 +25,12 @@ export class RazorpayService {
       receipt: `receipt_${Date.now()}`,
     };
 
-    return await this.razorpay.orders.create(options);
+    const data = await this.razorpay.orders.create(options);
+    const razorpay: any = this.rezorpayRepository.create();
+    razorpay.razorpay_order_id = data.id;
+    await this.rezorpayRepository.save(razorpay);
+
+    return { razorpay_order_id: razorpay.razorpay_order_id };
   }
 
   async verifySignature(

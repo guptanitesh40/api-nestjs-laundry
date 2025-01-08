@@ -214,7 +214,10 @@ export class OrderService {
         );
       }
 
-      const razorPay = await this.razorpayService.createOrder(total, 'INR');
+      let razorPay: any;
+      if (createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT) {
+        razorPay = await this.razorpayService.createOrder(total, 'INR');
+      }
 
       const order = this.orderRepository.create({
         ...createOrderDto,
@@ -229,7 +232,7 @@ export class OrderService {
         estimated_pickup_time,
         estimated_delivery_time: estimated_delivery_date,
         branch_id: createOrderDto.branch_id,
-        transaction_id: razorPay.id,
+        transaction_id: razorPay.razorpay_order_id,
       });
 
       const savedOrder = await queryRunner.manager.save(order);
@@ -267,8 +270,7 @@ export class OrderService {
         address_details: savedOrder.address_details,
         total_items: orderItems.length,
         branch_id: savedOrder.branch_id,
-        transaction_id: savedOrder.transaction_id,
-        razorpay_carrency: razorPay.currency,
+        transaction_id: savedOrder.transaction_id || '',
         items: orderItems,
         user: {
           first_name: user.first_name,
@@ -956,7 +958,6 @@ export class OrderService {
     if (!order) {
       throw new NotFoundException('Order not found');
     }
-
 
     order.order_invoice = getPdfUrl(
       order.order_id,

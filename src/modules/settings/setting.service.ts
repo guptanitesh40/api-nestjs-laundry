@@ -12,7 +12,11 @@ export class SettingService {
     private settingRepository: Repository<Setting>,
     private dataSource: DataSource,
   ) {}
-  async update(updateSettingDto: UpdateSettingDto): Promise<Response> {
+  async update(
+    updateSettingDto: UpdateSettingDto,
+    imagePath: string,
+    pdfPath: string,
+  ): Promise<Response> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -26,6 +30,15 @@ export class SettingService {
         },
         { deleted_at: new Date() },
       );
+      const baseurl = process.env.BASE_URL;
+
+      if (updateSettingDto.setting_key === 'price_pdf_url') {
+        updateSettingDto.setting_value = ` ${baseurl}/${pdfPath}`;
+      }
+
+      if (updateSettingDto.setting_key === 'home_banner_image') {
+        updateSettingDto.setting_value = ` ${baseurl}/${imagePath}`;
+      }
 
       await queryRunner.manager.save(Setting, updateSettingDto);
 

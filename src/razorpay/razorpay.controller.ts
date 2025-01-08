@@ -2,9 +2,14 @@ import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import { Response } from 'src/dto/response.dto';
 import { RazorpayService } from './razorpay.service';
 
-@Controller()
+@Controller('payment')
 export class RazorpayController {
   constructor(private readonly razorpayService: RazorpayService) {}
+
+  @Post('razorpay-order')
+  async createOrder(@Body() body: any) {
+    return this.razorpayService.createOrder(body.amount, body.currency);
+  }
 
   @Post('razorpay/verify')
   async verifyPayment(@Body() body: any): Promise<Response> {
