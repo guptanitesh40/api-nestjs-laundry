@@ -20,6 +20,9 @@ export class RazorpayTransactions extends BaseEntity {
   currency: string;
 
   @Column({ nullable: true })
+  status: string;
+
+  @Column({ nullable: true })
   amount: number;
 
   @ManyToOne(() => User, (user) => user.userBranchMappings, { nullable: false })

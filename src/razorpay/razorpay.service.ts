@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
 import Razorpay from 'razorpay';
+import { Response } from 'src/dto/response.dto';
 import { RazorpayTransactions } from 'src/entities/razorpay.entity';
+import { PaginationQueryDto } from 'src/modules/dto/pagination-query.dto';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -28,13 +30,66 @@ export class RazorpayService {
 
     const data = await this.razorpay.orders.create(options);
     const razorpay: any = this.rezorpayRepository.create();
+
     razorpay.amount = amount;
     razorpay.currency = data.currency;
     razorpay.razorpay_order_id = data.id;
+    razorpay.status = data.status;
     razorpay.user_id = user_id;
     await this.rezorpayRepository.save(razorpay);
 
     return { razorpay_order_id: razorpay.razorpay_order_id };
+  }
+
+  async getAllTransactions(
+    paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
+    const { per_page, page_number, search, sort_by, order } =
+      paginationQueryDto;
+
+    const pageNumber = page_number ?? 1;
+    const perPage = per_page ?? 10;
+    const skip = (pageNumber - 1) * perPage;
+
+    const queryBuilder = this.rezorpayRepository
+      .createQueryBuilder('razorpay')
+      .innerJoinAndSelect('razorpay.user', 'user')
+      .where('razorpay.deleted_at IS NULL')
+      .select([
+        'razorpay',
+        'user.first_name',
+        'user.last_name',
+        'user.mobile_number',
+        'user.email',
+      ])
+      .take(perPage)
+      .skip(skip);
+
+    if (search) {
+      queryBuilder.andWhere('razorpay.razorpay_order_id LIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    let sortColumn = 'razorpay.created_at';
+    let sortOrder: 'ASC' | 'DESC' = 'DESC';
+
+    if (sort_by) {
+      sortColumn = sort_by;
+    }
+    if (order) {
+      sortOrder = order;
+    }
+
+    queryBuilder.orderBy(sortColumn, sortOrder);
+
+    const [result, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      statusCode: 200,
+      message: 'transaction retrieved successfully',
+      data: { result, limit: perPage, page_number: pageNumber, count: total },
+    };
   }
 
   async verifySignature(
