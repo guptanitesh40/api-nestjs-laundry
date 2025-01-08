@@ -52,7 +52,6 @@ export class SettingService {
   }
 
   async findAll(keys?: string[]): Promise<Response> {
-    const baseUrl = process.env.BASE_URL;
     const query = this.settingRepository
       .createQueryBuilder('setting')
       .where('setting.deleted_at IS NULL');
