@@ -16,7 +16,6 @@ export class FeedbackService {
 
   async createFeedback(
     createFeedbackDto: CreateFeedbackDto,
-    user_id: number,
   ): Promise<Response> {
     const existingFeedback = await this.feedbackRepository.findOne({
       where: { order_id: createFeedbackDto.order_id },
@@ -25,7 +24,6 @@ export class FeedbackService {
       throw new BadRequestException('Feedback already exists for this order');
     }
 
-    createFeedbackDto.user_id = user_id;
     const feedback = this.feedbackRepository.create(createFeedbackDto);
     const result = await this.feedbackRepository.save(feedback);
 
@@ -63,10 +61,12 @@ export class FeedbackService {
 
     const feedbacksQuery = this.feedbackRepository
       .createQueryBuilder('feedbacks')
-      .innerJoinAndSelect('feedbacks.user', 'user')
+      .leftJoinAndSelect('feedbacks.order', 'order')
+      .leftJoinAndSelect('order.user', 'user')
       .where('feedbacks.deleted_at IS NULL')
       .select([
         'feedbacks',
+        'order.user_id',
         'user.first_name',
         'user.last_name',
         'user.mobile_number',

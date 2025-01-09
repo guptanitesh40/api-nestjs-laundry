@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
@@ -27,10 +19,8 @@ export class FeedbackController {
   @Roles(Role.CUSTOMER)
   async createFeedback(
     @Body() createFeedbackDto: CreateFeedbackDto,
-    @Request() req,
   ): Promise<Response> {
-    const user = req.user;
-    return this.feedbackService.createFeedback(createFeedbackDto, user.user_id);
+    return this.feedbackService.createFeedback(createFeedbackDto);
   }
 
   @Get('approved')
