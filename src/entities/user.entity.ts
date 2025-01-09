@@ -13,6 +13,7 @@ import { BaseEntity } from './base.entity';
 import { Branch } from './branch.entity';
 import { Cart } from './cart.entity';
 import { DeviceUser } from './device-user.entity';
+import { Feedback } from './feedback.entity';
 import { LoginHistory } from './login-history.entity';
 import { Note } from './note.entity';
 import { Order } from './order.entity';
@@ -140,6 +141,9 @@ export class User extends BaseEntity {
     (razorpayTransactions) => razorpayTransactions.user,
   )
   razorpayTransition: RazorpayTransactions[];
+
+  @OneToMany(() => Feedback, (feedback) => feedback.user)
+  feedback: Feedback[];
 
   @OneToMany(
     () => WorkshopManagerMapping,

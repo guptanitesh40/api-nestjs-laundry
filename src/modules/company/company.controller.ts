@@ -14,13 +14,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { FilePath } from 'src/constants/FilePath';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
-import { fileUpload } from 'src/multer/image-upload';
-import { pdfUpload } from 'src/multer/pdf-upload';
+import { fileFieldsInterceptor } from 'src/utils/file-upload.helper';
 import { RolesGuard } from '../auth/guard/role.guard';
 import { CompanyFilterDto } from '../dto/company-filter.dto';
 import { CompanyService } from './company.service';
@@ -35,52 +33,7 @@ export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 
   @Post()
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'logo', maxCount: 1 },
-        { name: 'contract_document', maxCount: 1 },
-      ],
-      {
-        storage: fileUpload(FilePath.COMPANY_LOGO).storage,
-        limits: {
-          fileSize: Math.max(
-            fileUpload(FilePath.COMPANY_LOGO).limits.fileSize,
-            pdfUpload(FilePath.CONTRACT_DOCUMENT).limits.fileSize,
-          ),
-        },
-        fileFilter: (req, file, cb) => {
-          if (file.fieldname === 'logo') {
-            if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-              cb(
-                new HttpException(
-                  'Only JPEG, JPG, or PNG image files are allowed!',
-                  HttpStatus.BAD_REQUEST,
-                ),
-                false,
-              );
-            } else {
-              cb(null, true);
-            }
-          } else if (file.fieldname === 'contract_document') {
-            if (!file.mimetype.match(/\/(pdf)$/)) {
-              cb(
-                new HttpException(
-                  'Only PDF files are allowed!',
-                  HttpStatus.BAD_REQUEST,
-                ),
-                false,
-              );
-            } else {
-              cb(null, true);
-            }
-          } else {
-            cb(null, false);
-          }
-        },
-      },
-    ),
-  )
+  @UseInterceptors(fileFieldsInterceptor())
   async create(
     @Body() createCompanyDto: CreateCompanyDto,
     @UploadedFiles()
@@ -126,52 +79,7 @@ export class CompanyController {
   }
 
   @Put(':id')
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'logo', maxCount: 1 },
-        { name: 'contract_document', maxCount: 1 },
-      ],
-      {
-        storage: fileUpload(FilePath.COMPANY_LOGO).storage,
-        limits: {
-          fileSize: Math.max(
-            fileUpload(FilePath.COMPANY_LOGO).limits.fileSize,
-            pdfUpload(FilePath.CONTRACT_DOCUMENT).limits.fileSize,
-          ),
-        },
-        fileFilter: (req, file, cb) => {
-          if (file.fieldname === 'logo') {
-            if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-              cb(
-                new HttpException(
-                  'Only JPEG, JPG, or PNG image files are allowed!',
-                  HttpStatus.BAD_REQUEST,
-                ),
-                false,
-              );
-            } else {
-              cb(null, true);
-            }
-          } else if (file.fieldname === 'contract_document') {
-            if (!file.mimetype.match(/\/(pdf)$/)) {
-              cb(
-                new HttpException(
-                  'Only PDF files are allowed!',
-                  HttpStatus.BAD_REQUEST,
-                ),
-                false,
-              );
-            } else {
-              cb(null, true);
-            }
-          } else {
-            cb(null, false);
-          }
-        },
-      },
-    ),
-  )
+  @UseInterceptors(fileFieldsInterceptor())
   async update(
     @Param('id') id: number,
     @Body() updateCompanyDto: UpdateCompanyDto,

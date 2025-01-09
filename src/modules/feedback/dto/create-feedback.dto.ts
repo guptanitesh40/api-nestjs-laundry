@@ -13,5 +13,8 @@ export class CreateFeedbackDto {
   order_id?: number;
 
   @IsOptional()
+  user_id?: number;
+
+  @IsOptional()
   is_publish?: IsPublish;
 }

@@ -41,6 +41,12 @@ export class RazorpayService {
     return { razorpay_order_id: razorpay.razorpay_order_id };
   }
 
+  async findTransactionByOrderId(orderId: string): Promise<any> {
+    return this.rezorpayRepository.findOne({
+      where: { razorpay_order_id: orderId },
+    });
+  }
+
   async getAllTransactions(
     paginationQueryDto: PaginationQueryDto,
   ): Promise<Response> {
