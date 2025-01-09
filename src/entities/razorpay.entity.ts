@@ -11,7 +11,7 @@ import { User } from './user.entity';
 @Entity({ name: 'razorpay_transactions' })
 export class RazorpayTransactions extends BaseEntity {
   @PrimaryGeneratedColumn()
-  razorpay_transition_id: number;
+  razorpay_transaction_id: number;
 
   @Column({ nullable: true })
   razorpay_order_id: string;

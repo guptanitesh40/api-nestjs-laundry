@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Feedback } from 'src/entities/feedback.entity';
 import { IsPublish } from 'src/enum/is_publish.enum';
-import { Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 
 @Injectable()
@@ -47,17 +48,66 @@ export class FeedbackService {
     };
   }
 
-  async getAllFeedbacks(): Promise<Response> {
-    const approvedFeedbacks = await this.feedbackRepository.find({
-      where: {
-        is_publish: Not(IsPublish.NONE),
-      },
-    });
+  async getAllFeedbacks(
+    status?: IsPublish,
+    paginationQueryDto?: PaginationQueryDto,
+  ): Promise<Response> {
+    const { per_page, page_number, search, sort_by, order } =
+      paginationQueryDto;
+
+    const pageNumber = page_number ?? 1;
+    const perPage = per_page ?? 10;
+    const skip = (pageNumber - 1) * perPage;
+
+    const feedbacksQuery = this.feedbackRepository
+      .createQueryBuilder('feedbacks')
+      .leftJoinAndSelect('feedbacks.order', 'order')
+      .leftJoinAndSelect('order.user', 'user')
+      .where('feedbacks.deleted_at IS NULL')
+      .select([
+        'feedbacks',
+        'order.user_id',
+        'user.first_name',
+        'user.last_name',
+        'user.mobile_number',
+        'user.email',
+      ])
+      .take(perPage)
+      .skip(skip);
+
+    if (status) {
+      feedbacksQuery.andWhere('feedbacks.is_publish= :status', { status });
+    }
+
+    if (search) {
+      feedbacksQuery.andWhere('feedbacks.rating LIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    let sortColumn = 'feedbacks.created_at';
+    let sortOrder: 'ASC' | 'DESC' = 'DESC';
+
+    if (sort_by) {
+      sortColumn = sort_by;
+    }
+    if (order) {
+      sortOrder = order;
+    }
+
+    feedbacksQuery.orderBy(sortColumn, sortOrder);
+
+    const [feedbacks, total] = await feedbacksQuery.getManyAndCount();
 
     return {
       statusCode: 200,
       message: 'Approved feedbacks fetch successfully',
-      data: approvedFeedbacks,
+      data: {
+        feedbacks,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+      },
     };
   }
 }
