@@ -51,6 +51,14 @@ export class OrderController {
     );
   }
 
+  @Get('orders/invoice-list')
+  @Roles(Role.CUSTOMER)
+  async getOrderInvoiceList(@Request() req): Promise<Response> {
+    const user = req.user;
+
+    return this.orderService.getOrderInvoiceList(user.user_id);
+  }
+
   @Post('orders/cancel')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async cancelOrder(@Body() cancelOrderDto, @Request() req): Promise<Response> {

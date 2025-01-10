@@ -80,9 +80,18 @@ export class FeedbackService {
     }
 
     if (search) {
-      feedbacksQuery.andWhere('feedbacks.rating LIKE :search', {
-        search: `%${search}%`,
-      });
+      feedbacksQuery.andWhere(
+        '(feedbacks.rating LIKE :search OR ' +
+          'feedbacks.comment LIKE :search OR ' +
+          'feedbacks.is_publish LIKE :search OR' +
+          'user.first_name LIKE :search OR ' +
+          'user.last_name LIKE :search OR ' +
+          'user.email LIKE :search OR ' +
+          'user.mobile_number LIKE :search)',
+        {
+          search: `%${search}%`,
+        },
+      );
     }
 
     let sortColumn = 'feedbacks.created_at';
@@ -97,13 +106,33 @@ export class FeedbackService {
 
     feedbacksQuery.orderBy(sortColumn, sortOrder);
 
-    const [feedbacks, total] = await feedbacksQuery.getManyAndCount();
+    const [feedbacks, total]: any = await feedbacksQuery.getManyAndCount();
+
+    const ratingCounts = feedbacks.reduce((acc, feedbacks) => {
+      if (acc[feedbacks.rating]) {
+        acc[feedbacks.rating] = ++acc[feedbacks.rating];
+      } else {
+        acc[feedbacks.rating] = 1;
+      }
+
+      return acc;
+    }, {});
+
+    const totalRating = feedbacks.reduce((acc, feedbacks) => {
+      acc = acc + feedbacks.rating;
+      return acc;
+    }, 0);
+
+    const average = totalRating / feedbacks.length;
+    const averageRating = parseFloat(average.toFixed(2));
 
     return {
       statusCode: 200,
       message: 'Approved feedbacks fetch successfully',
       data: {
         feedbacks,
+        averageRating,
+        ratingCounts,
         limit: perPage,
         page_number: pageNumber,
         count: total,

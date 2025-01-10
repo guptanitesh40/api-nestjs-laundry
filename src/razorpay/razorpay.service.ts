@@ -72,9 +72,19 @@ export class RazorpayService {
       .skip(skip);
 
     if (search) {
-      queryBuilder.andWhere('razorpay.razorpay_order_id LIKE :search', {
-        search: `%${search}%`,
-      });
+      queryBuilder.andWhere(
+        '(razorpay.razorpay_order_id LIKE :search OR ' +
+          'razorpay.amount LIKE :search OR ' +
+          'razorpay.currency LIKE :search OR ' +
+          ' razorpay.status LIKE :search OR' +
+          'user.first_name LIKE :search OR ' +
+          'user.last_name LIKE :search OR ' +
+          'user.email LIKE :search OR ' +
+          'user.mobile_number LIKE :search)',
+        {
+          search: `%${search}%`,
+        },
+      );
     }
 
     let sortColumn = 'razorpay.created_at';

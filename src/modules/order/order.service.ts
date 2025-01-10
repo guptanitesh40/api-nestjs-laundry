@@ -1132,6 +1132,47 @@ export class OrderService {
     };
   }
 
+  async getOrderInvoiceList(user_id: number): Promise<Response> {
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.user_id=:user_id', {
+        user_id: user_id,
+      })
+      .andWhere('order.order_status= :status', {
+        status: OrderStatus.DELIVERED,
+      })
+      .andWhere('order.deleted_at IS NULL')
+      .select(['order.order_id', 'order.total', 'order.paid_amount']);
+
+    const result: any = await queryBuilder.getMany();
+
+    result.map((order) => {
+      order.order_invoice = getPdfUrl(
+        order.order_id,
+        getOrderInvoiceFileFileName(),
+      );
+    });
+
+    const totalPendingAmount = await this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.user_id=:user_id', { user_id: user_id })
+      .andWhere('order.deleted_at IS NULL')
+      .select(
+        'SUM(order.total - order.paid_amount - order.kasar_amount)',
+        'total_pending_due_amount',
+      )
+      .addSelect('SUM(order.total) as total')
+      .addSelect('SUM(order.paid_amount) as paid_amount')
+      .addSelect('SUM(order.kasar_amount) as kasar_amount')
+      .getRawOne();
+
+    return {
+      statusCode: 200,
+      message: 'orders invoice retrived successfully',
+      data: { result, totalPendingAmount },
+    };
+  }
+
   async getAssignedOrders(
     delivery_boy_id: number,
     search?: string,
