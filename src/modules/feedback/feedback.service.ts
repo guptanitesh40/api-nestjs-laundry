@@ -108,31 +108,42 @@ export class FeedbackService {
 
     const [feedbacks, total]: any = await feedbacksQuery.getManyAndCount();
 
-    const ratingCounts = feedbacks.reduce((acc, feedbacks) => {
-      if (acc[feedbacks.rating]) {
-        acc[feedbacks.rating] = ++acc[feedbacks.rating];
-      } else {
-        acc[feedbacks.rating] = 1;
-      }
+    const allFeedbacksQuery = this.feedbackRepository
+      .createQueryBuilder('feedbacks')
+      .select([
+        'COUNT(feedbacks.rating) AS totalRatings',
+        'AVG(feedbacks.rating) AS averageRating',
+        'feedbacks.rating',
+        'COUNT(feedbacks.rating) AS ratingCount',
+      ])
+      .groupBy('feedbacks.rating');
 
+    const overallStats = await allFeedbacksQuery.getRawMany();
+
+    const ratingCounts = overallStats.reduce((acc, feedback) => {
+      acc[feedback.feedbacks_rating] = Number(feedback.ratingCount);
       return acc;
     }, {});
 
-    const totalRating = feedbacks.reduce((acc, feedbacks) => {
-      acc = acc + feedbacks.rating;
+    const totalRating = overallStats.reduce((acc, feedback) => {
+      acc = acc + feedback.feedbacks_rating * feedback.ratingCount;
       return acc;
     }, 0);
 
-    const average = totalRating / feedbacks.length;
-    const averageRating = parseFloat(average.toFixed(2));
+    const data = overallStats.reduce((acc, curr) => {
+      acc += Number(curr.ratingCount);
+      return acc;
+    }, 0);
+    const average = totalRating / data;
+    const averageRating = Number(average.toFixed(2));
 
     return {
       statusCode: 200,
       message: 'Approved feedbacks fetch successfully',
       data: {
         feedbacks,
-        averageRating,
         ratingCounts,
+        averageRating,
         limit: perPage,
         page_number: pageNumber,
         count: total,

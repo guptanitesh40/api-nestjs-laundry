@@ -1141,8 +1141,15 @@ export class OrderService {
       .andWhere('order.order_status= :status', {
         status: OrderStatus.DELIVERED,
       })
+      .andWhere('order.total > order.paid_amount')
       .andWhere('order.deleted_at IS NULL')
-      .select(['order.order_id', 'order.total', 'order.paid_amount']);
+      .select([
+        'order.order_id',
+        'order.total',
+        'order.paid_amount',
+        'order.payment_status',
+        'order.transaction_id',
+      ]);
 
     const result: any = await queryBuilder.getMany();
 
@@ -1157,6 +1164,10 @@ export class OrderService {
       .createQueryBuilder('order')
       .where('order.user_id=:user_id', { user_id: user_id })
       .andWhere('order.deleted_at IS NULL')
+      .andWhere('order.total > order.paid_amount')
+      .andWhere('order.order_status= :status', {
+        status: OrderStatus.DELIVERED,
+      })
       .select(
         'SUM(order.total - order.paid_amount - order.kasar_amount)',
         'total_pending_due_amount',
@@ -1170,6 +1181,67 @@ export class OrderService {
       statusCode: 200,
       message: 'orders invoice retrived successfully',
       data: { result, totalPendingAmount },
+    };
+  }
+
+  async clearCustomerDue(
+    user_id: number,
+    pay_amount: number,
+    payment_status: number,
+    transaction_id: string,
+  ): Promise<Response> {
+    const orders = (await this.getOrderInvoiceList(user_id)).data;
+
+    const total_due_amount = orders.totalPendingAmount.total_pending_due_amount;
+
+    const razorPay =
+      await this.razorpayService.findTransactionByOrderId(transaction_id);
+
+    if (!razorPay) {
+      throw new NotFoundException(`Razorpay transaction with ID not found`);
+    }
+
+    const updatedOrders = [];
+    if (pay_amount !== total_due_amount) {
+      throw new BadRequestException(
+        'You cannot pay more or less than the total due amount',
+      );
+    }
+
+    if (payment_status !== PaymentStatus.FULL_PAYMENT_RECEIVED) {
+      throw new BadRequestException('You cannot mark as full payment received');
+    }
+
+    const order_ids = orders.result.map((order) => {
+      return order.order_id;
+    });
+
+    const orderdata = await this.orderRepository.find({
+      where: { order_id: In(order_ids), user_id: user_id },
+    });
+
+    for (const orderData of orders.result) {
+      const order = orderdata.find((o) => o.order_id === orderData.order_id);
+
+      const due_amount =
+        order.total - order.paid_amount - order.kasar_amount || 0;
+
+      order.paid_amount += due_amount;
+      order.payment_status = payment_status;
+
+      if (order.transaction_id) {
+        order.transaction_id = order.transaction_id + ', ' + transaction_id;
+      } else {
+        order.transaction_id = transaction_id;
+      }
+      console.log(order.transaction_id);
+      updatedOrders.push(order);
+    }
+    await this.orderRepository.save(updatedOrders);
+
+    return {
+      statusCode: 200,
+      message: 'payment successfully',
     };
   }
 
