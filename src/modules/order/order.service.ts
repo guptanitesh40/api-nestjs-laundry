@@ -50,6 +50,7 @@ import { SettingService } from '../settings/setting.service';
 import { UserService } from '../user/user.service';
 import { WorkshopService } from '../workshop/workshop.service';
 import { CancelOrderDto } from './dto/cancel-order.dto';
+import { ClearDueAmount } from './dto/clear-due-amount.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { DeliveryOrderDto } from './dto/delivery-order.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
@@ -1129,6 +1130,140 @@ export class OrderService {
         inProgressCount,
         totalPendingAmount,
       },
+    };
+  }
+
+  async getOrderInvoiceList(
+    user_id: number,
+    paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
+    const { per_page, page_number } = paginationQueryDto;
+    const pageNumber = page_number ?? 1;
+    const perPage = per_page ?? 10;
+    const skip = (pageNumber - 1) * perPage;
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.user_id=:user_id', {
+        user_id: user_id,
+      })
+      .andWhere('order.order_status= :status', {
+        status: OrderStatus.DELIVERED,
+      })
+      .andWhere('order.total > order.paid_amount')
+      .andWhere('order.deleted_at IS NULL')
+      .select([
+        'order.order_id',
+        'order.total',
+        'order.paid_amount',
+        'order.payment_status',
+        'order.transaction_id',
+      ])
+      .take(perPage)
+      .skip(skip);
+
+    const [result, total]: any = await queryBuilder.getManyAndCount();
+
+    result.map((order) => {
+      order.order_invoice = getPdfUrl(
+        order.order_id,
+        getOrderInvoiceFileFileName(),
+      );
+    });
+
+    const orders = this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.user_id=:user_id', { user_id: user_id })
+      .andWhere('order.deleted_at IS NULL')
+      .andWhere('order.total > order.paid_amount')
+      .andWhere('order.order_status= :status', {
+        status: OrderStatus.DELIVERED,
+      })
+      .select([
+        'order.order_id as order_id',
+        'SUM(order.total - order.paid_amount - order.kasar_amount) as total_pending_due_amount',
+      ])
+      .groupBy('order.order_id');
+    const orderData = await orders.getRawMany();
+
+    const order_ids = [];
+    let totalPendingAmount = 0;
+    orderData.map((order) => {
+      order_ids.push(order.order_id);
+      totalPendingAmount += order.total_pending_due_amount;
+    });
+
+    return {
+      statusCode: 200,
+      message: 'orders invoice retrived successfully',
+      data: {
+        result,
+        order_ids,
+        totalPendingAmount,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+      },
+    };
+  }
+
+  async clearCustomerDue(
+    clearDueAmount: ClearDueAmount,
+    user_id: number,
+  ): Promise<Response> {
+    const orders = await this.orderRepository.find({
+      where: {
+        order_id: In(clearDueAmount.order_ids),
+        user_id: user_id,
+      },
+    });
+
+    let total_pending_amount = 0;
+
+    orders.map((order) => {
+      total_pending_amount +=
+        order.total - order.paid_amount - order.kasar_amount;
+    });
+
+    if (clearDueAmount.pay_amount !== total_pending_amount) {
+      throw new BadRequestException(
+        'You cannot pay more than the total pending due amount',
+      );
+    }
+
+    if (clearDueAmount.payment_status !== PaymentStatus.FULL_PAYMENT_RECEIVED) {
+      throw new BadRequestException('You cannot mark as full payment received');
+    }
+
+    const razorPay = await this.razorpayService.findTransactionByOrderId(
+      clearDueAmount.transaction_id,
+    );
+
+    if (!razorPay) {
+      throw new NotFoundException(
+        `Razorpay transaction with ID ${clearDueAmount.transaction_id} not found`,
+      );
+    }
+
+    const updatedOrders = [];
+
+    for (const order of orders) {
+      const due_amount = order.total - order.paid_amount - order.kasar_amount;
+
+      order.paid_amount += due_amount;
+      order.payment_status = clearDueAmount.payment_status;
+
+      order.transaction_id = order.transaction_id
+        ? `${order.transaction_id}, ${clearDueAmount.transaction_id}`
+        : clearDueAmount.transaction_id;
+
+      updatedOrders.push(order);
+    }
+
+    await this.orderRepository.save(updatedOrders);
+
+    return {
+      statusCode: 200,
+      message: 'Payment applied successfully',
     };
   }
 

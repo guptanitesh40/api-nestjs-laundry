@@ -80,9 +80,18 @@ export class FeedbackService {
     }
 
     if (search) {
-      feedbacksQuery.andWhere('feedbacks.rating LIKE :search', {
-        search: `%${search}%`,
-      });
+      feedbacksQuery.andWhere(
+        '(feedbacks.rating LIKE :search OR ' +
+          'feedbacks.comment LIKE :search OR ' +
+          'feedbacks.is_publish LIKE :search OR' +
+          'user.first_name LIKE :search OR ' +
+          'user.last_name LIKE :search OR ' +
+          'user.email LIKE :search OR ' +
+          'user.mobile_number LIKE :search)',
+        {
+          search: `%${search}%`,
+        },
+      );
     }
 
     let sortColumn = 'feedbacks.created_at';
@@ -97,13 +106,32 @@ export class FeedbackService {
 
     feedbacksQuery.orderBy(sortColumn, sortOrder);
 
-    const [feedbacks, total] = await feedbacksQuery.getManyAndCount();
+    const [feedbacks, total]: any = await feedbacksQuery.getManyAndCount();
+
+    const allFeedbacksQuery = this.feedbackRepository
+      .createQueryBuilder('feedbacks')
+      .select(['feedbacks.rating', 'COUNT(feedbacks.rating) AS ratingCount'])
+      .groupBy('feedbacks.rating');
+
+    const overallRating = await allFeedbacksQuery.getRawMany();
+
+    let totalRating = 0;
+    const feedbackRating = overallRating.map((feedback) => {
+      feedback.ratingCount = Number(feedback.ratingCount);
+      totalRating += feedback.feedbacks_rating * feedback.ratingCount;
+      return feedback;
+    });
+
+    const average = totalRating / total;
+    const averageRating = Number(average.toFixed(2));
 
     return {
       statusCode: 200,
       message: 'Approved feedbacks fetch successfully',
       data: {
         feedbacks,
+        feedbackRating,
+        averageRating,
         limit: perPage,
         page_number: pageNumber,
         count: total,

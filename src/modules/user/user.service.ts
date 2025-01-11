@@ -859,6 +859,7 @@ export class UserService {
         'role_id',
         'first_name',
         'last_name',
+        'email',
         'mobile_number',
         'image',
         'id_proof',
