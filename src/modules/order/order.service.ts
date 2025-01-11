@@ -1160,7 +1160,7 @@ export class OrderService {
       );
     });
 
-    const totalPendingAmount = await this.orderRepository
+    const orders = this.orderRepository
       .createQueryBuilder('order')
       .where('order.user_id=:user_id', { user_id: user_id })
       .andWhere('order.deleted_at IS NULL')
@@ -1168,19 +1168,22 @@ export class OrderService {
       .andWhere('order.order_status= :status', {
         status: OrderStatus.DELIVERED,
       })
-      .select(
-        'SUM(order.total - order.paid_amount - order.kasar_amount)',
-        'total_pending_due_amount',
-      )
-      .addSelect('SUM(order.total) as total')
-      .addSelect('SUM(order.paid_amount) as paid_amount')
-      .addSelect('SUM(order.kasar_amount) as kasar_amount')
-      .getRawOne();
+      .select([
+        'order.order_id as order_id',
+        'SUM(order.total - order.paid_amount - order.kasar_amount) as total_pending_due_amount',
+      ])
+      .groupBy('order.order_id');
+    const orderData = await orders.getRawMany();
+
+    let totalPendingAmount = 0;
+    orderData.map((order) => {
+      totalPendingAmount += order.total_pending_due_amount;
+    });
 
     return {
       statusCode: 200,
       message: 'orders invoice retrived successfully',
-      data: { result, totalPendingAmount },
+      data: { result, orderData, totalPendingAmount },
     };
   }
 
@@ -1192,7 +1195,19 @@ export class OrderService {
   ): Promise<Response> {
     const orders = (await this.getOrderInvoiceList(user_id)).data;
 
-    const total_due_amount = orders.totalPendingAmount.total_pending_due_amount;
+    let total_pending_amount = 0;
+    const orders_ids = orders.orderData.map((order) => {
+      return order.order_id;
+    });
+
+    const orderdata = await this.orderRepository.find({
+      where: { order_id: In(orders_ids), user_id: user_id },
+    });
+
+    orderdata.forEach((order) => {
+      total_pending_amount +=
+        order.total - order.paid_amount - order.kasar_amount;
+    });
 
     const razorPay =
       await this.razorpayService.findTransactionByOrderId(transaction_id);
@@ -1202,7 +1217,7 @@ export class OrderService {
     }
 
     const updatedOrders = [];
-    if (pay_amount !== total_due_amount) {
+    if (pay_amount !== total_pending_amount) {
       throw new BadRequestException(
         'You cannot pay more or less than the total due amount',
       );
@@ -1211,14 +1226,6 @@ export class OrderService {
     if (payment_status !== PaymentStatus.FULL_PAYMENT_RECEIVED) {
       throw new BadRequestException('You cannot mark as full payment received');
     }
-
-    const order_ids = orders.result.map((order) => {
-      return order.order_id;
-    });
-
-    const orderdata = await this.orderRepository.find({
-      where: { order_id: In(order_ids), user_id: user_id },
-    });
 
     for (const orderData of orders.result) {
       const order = orderdata.find((o) => o.order_id === orderData.order_id);
@@ -1229,14 +1236,12 @@ export class OrderService {
       order.paid_amount += due_amount;
       order.payment_status = payment_status;
 
-      if (order.transaction_id) {
-        order.transaction_id = order.transaction_id + ', ' + transaction_id;
-      } else {
-        order.transaction_id = transaction_id;
-      }
-      console.log(order.transaction_id);
+      order.transaction_id = order.transaction_id
+        ? `${order.transaction_id}, ${transaction_id}`
+        : transaction_id;
       updatedOrders.push(order);
     }
+
     await this.orderRepository.save(updatedOrders);
 
     return {
