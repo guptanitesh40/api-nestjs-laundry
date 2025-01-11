@@ -1175,15 +1175,17 @@ export class OrderService {
       .groupBy('order.order_id');
     const orderData = await orders.getRawMany();
 
+    const order_ids = [];
     let totalPendingAmount = 0;
     orderData.map((order) => {
+      order_ids.push(order.order_id);
       totalPendingAmount += order.total_pending_due_amount;
     });
 
     return {
       statusCode: 200,
       message: 'orders invoice retrived successfully',
-      data: { result, orderData, totalPendingAmount },
+      data: { result, order_ids, totalPendingAmount },
     };
   }
 
@@ -1192,34 +1194,22 @@ export class OrderService {
     pay_amount: number,
     payment_status: number,
     transaction_id: string,
+    order_ids: number[],
   ): Promise<Response> {
-    const orders = (await this.getOrderInvoiceList(user_id)).data;
+    const orders = await this.orderRepository.find({
+      where: { order_id: In(order_ids), user_id: user_id },
+    });
 
     let total_pending_amount = 0;
-    const orders_ids = orders.orderData.map((order) => {
-      return order.order_id;
-    });
 
-    const orderdata = await this.orderRepository.find({
-      where: { order_id: In(orders_ids), user_id: user_id },
-    });
-
-    orderdata.forEach((order) => {
+    orders.map((order) => {
       total_pending_amount +=
         order.total - order.paid_amount - order.kasar_amount;
     });
 
-    const razorPay =
-      await this.razorpayService.findTransactionByOrderId(transaction_id);
-
-    if (!razorPay) {
-      throw new NotFoundException(`Razorpay transaction with ID not found`);
-    }
-
-    const updatedOrders = [];
     if (pay_amount !== total_pending_amount) {
       throw new BadRequestException(
-        'You cannot pay more or less than the total due amount',
+        'You cannot pay more than the total pending due amount',
       );
     }
 
@@ -1227,11 +1217,19 @@ export class OrderService {
       throw new BadRequestException('You cannot mark as full payment received');
     }
 
-    for (const orderData of orders.result) {
-      const order = orderdata.find((o) => o.order_id === orderData.order_id);
+    const razorPay =
+      await this.razorpayService.findTransactionByOrderId(transaction_id);
 
-      const due_amount =
-        order.total - order.paid_amount - order.kasar_amount || 0;
+    if (!razorPay) {
+      throw new NotFoundException(
+        `Razorpay transaction with ID ${transaction_id} not found`,
+      );
+    }
+
+    const updatedOrders = [];
+
+    for (const order of orders) {
+      const due_amount = order.total - order.paid_amount - order.kasar_amount;
 
       order.paid_amount += due_amount;
       order.payment_status = payment_status;
@@ -1239,6 +1237,7 @@ export class OrderService {
       order.transaction_id = order.transaction_id
         ? `${order.transaction_id}, ${transaction_id}`
         : transaction_id;
+
       updatedOrders.push(order);
     }
 
@@ -1246,7 +1245,7 @@ export class OrderService {
 
     return {
       statusCode: 200,
-      message: 'payment successfully',
+      message: 'Payment applied successfully',
     };
   }
 

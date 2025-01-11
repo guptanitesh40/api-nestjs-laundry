@@ -66,6 +66,7 @@ export class OrderController {
     @Body('pay_amount') pay_amount: number,
     @Body('payment_status') payment_status: number,
     @Body('transaction_id') transaction_id: string,
+    @Body('order_ids') order_ids: number[],
   ): Promise<Response> {
     const user = req.user;
     return this.orderService.clearCustomerDue(
@@ -73,6 +74,7 @@ export class OrderController {
       pay_amount,
       payment_status,
       transaction_id,
+      order_ids,
     );
   }
 
