@@ -50,6 +50,7 @@ import { SettingService } from '../settings/setting.service';
 import { UserService } from '../user/user.service';
 import { WorkshopService } from '../workshop/workshop.service';
 import { CancelOrderDto } from './dto/cancel-order.dto';
+import { ClearDueAmount } from './dto/clear-due-amount.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { DeliveryOrderDto } from './dto/delivery-order.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
@@ -1132,7 +1133,14 @@ export class OrderService {
     };
   }
 
-  async getOrderInvoiceList(user_id: number): Promise<Response> {
+  async getOrderInvoiceList(
+    user_id: number,
+    paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
+    const { per_page, page_number } = paginationQueryDto;
+    const pageNumber = page_number ?? 1;
+    const perPage = per_page ?? 10;
+    const skip = (pageNumber - 1) * perPage;
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .where('order.user_id=:user_id', {
@@ -1149,9 +1157,11 @@ export class OrderService {
         'order.paid_amount',
         'order.payment_status',
         'order.transaction_id',
-      ]);
+      ])
+      .take(perPage)
+      .skip(skip);
 
-    const result: any = await queryBuilder.getMany();
+    const [result, total]: any = await queryBuilder.getManyAndCount();
 
     result.map((order) => {
       order.order_invoice = getPdfUrl(
@@ -1185,19 +1195,26 @@ export class OrderService {
     return {
       statusCode: 200,
       message: 'orders invoice retrived successfully',
-      data: { result, order_ids, totalPendingAmount },
+      data: {
+        result,
+        order_ids,
+        totalPendingAmount,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+      },
     };
   }
 
   async clearCustomerDue(
+    clearDueAmount: ClearDueAmount,
     user_id: number,
-    pay_amount: number,
-    payment_status: number,
-    transaction_id: string,
-    order_ids: number[],
   ): Promise<Response> {
     const orders = await this.orderRepository.find({
-      where: { order_id: In(order_ids), user_id: user_id },
+      where: {
+        order_id: In(clearDueAmount.order_ids),
+        user_id: user_id,
+      },
     });
 
     let total_pending_amount = 0;
@@ -1207,22 +1224,23 @@ export class OrderService {
         order.total - order.paid_amount - order.kasar_amount;
     });
 
-    if (pay_amount !== total_pending_amount) {
+    if (clearDueAmount.pay_amount !== total_pending_amount) {
       throw new BadRequestException(
         'You cannot pay more than the total pending due amount',
       );
     }
 
-    if (payment_status !== PaymentStatus.FULL_PAYMENT_RECEIVED) {
+    if (clearDueAmount.payment_status !== PaymentStatus.FULL_PAYMENT_RECEIVED) {
       throw new BadRequestException('You cannot mark as full payment received');
     }
 
-    const razorPay =
-      await this.razorpayService.findTransactionByOrderId(transaction_id);
+    const razorPay = await this.razorpayService.findTransactionByOrderId(
+      clearDueAmount.transaction_id,
+    );
 
     if (!razorPay) {
       throw new NotFoundException(
-        `Razorpay transaction with ID ${transaction_id} not found`,
+        `Razorpay transaction with ID ${clearDueAmount.transaction_id} not found`,
       );
     }
 
@@ -1232,11 +1250,11 @@ export class OrderService {
       const due_amount = order.total - order.paid_amount - order.kasar_amount;
 
       order.paid_amount += due_amount;
-      order.payment_status = payment_status;
+      order.payment_status = clearDueAmount.payment_status;
 
       order.transaction_id = order.transaction_id
-        ? `${order.transaction_id}, ${transaction_id}`
-        : transaction_id;
+        ? `${order.transaction_id}, ${clearDueAmount.transaction_id}`
+        : clearDueAmount.transaction_id;
 
       updatedOrders.push(order);
     }

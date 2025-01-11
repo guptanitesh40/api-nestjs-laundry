@@ -25,6 +25,7 @@ import { fileUpload } from 'src/multer/image-upload';
 import { RolesGuard } from '../auth/guard/role.guard';
 import { OrderFilterDto } from '../dto/orders-filter.dto';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { ClearDueAmount } from './dto/clear-due-amount.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { DeliveryOrderDto } from './dto/delivery-order.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
@@ -53,29 +54,26 @@ export class OrderController {
 
   @Get('orders/invoice-list')
   @Roles(Role.CUSTOMER)
-  async getOrderInvoiceList(@Request() req): Promise<Response> {
+  async getOrderInvoiceList(
+    @Request() req,
+    @Query() paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
     const user = req.user;
 
-    return this.orderService.getOrderInvoiceList(user.user_id);
+    return this.orderService.getOrderInvoiceList(
+      user.user_id,
+      paginationQueryDto,
+    );
   }
 
   @Post('orders/customer/clear-due')
   @Roles(Role.CUSTOMER)
   async clearCustomerDue(
     @Request() req,
-    @Body('pay_amount') pay_amount: number,
-    @Body('payment_status') payment_status: number,
-    @Body('transaction_id') transaction_id: string,
-    @Body('order_ids') order_ids: number[],
+    @Body() clearDueAmount: ClearDueAmount,
   ): Promise<Response> {
     const user = req.user;
-    return this.orderService.clearCustomerDue(
-      user.user_id,
-      pay_amount,
-      payment_status,
-      transaction_id,
-      order_ids,
-    );
+    return this.orderService.clearCustomerDue(clearDueAmount, user.user_id);
   }
 
   @Post('orders/cancel')
