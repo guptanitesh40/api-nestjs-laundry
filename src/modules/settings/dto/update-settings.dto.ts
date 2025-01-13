@@ -9,10 +9,6 @@ export class UpdateSettingDto {
   @IsString()
   @IsOptional()
   setting_value?: string;
-
-  @IsOptional()
-  @IsString()
-  home_banner_image?: string;
 }
 
 export class ArraySettingDto {
