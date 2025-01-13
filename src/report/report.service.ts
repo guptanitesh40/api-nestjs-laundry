@@ -49,7 +49,7 @@ export class ReportService {
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
-      .select("DATE_FORMAT(orders.created_at, '%b-%Y') AS day")
+      .select("DATE_FORMAT(orders.created_at, '%y-%b') AS day")
       .addSelect('COUNT(*) AS count')
       .addSelect('SUM(orders.total) AS totalAmount')
       .addSelect('SUM(orders.total - orders.paid_amount) AS pendingAmount')
@@ -68,22 +68,10 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('day')
-      .orderBy('day', 'DESC')
+      .orderBy('day', 'ASC')
       .getRawMany();
 
-    return result.map(
-      (row: {
-        day: string;
-        count: string;
-        totalAmount: string;
-        pendingAmount: string;
-      }) => ({
-        day: row.day,
-        count: Number(row.count),
-        totalAmount: Number(row.totalAmount),
-        pendingAmount: Number(row.pendingAmount),
-      }),
-    );
+    return result;
   }
 
   async getDeliveryCompletedReport(

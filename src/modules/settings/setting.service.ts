@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Setting } from 'src/entities/setting.entity';
 import { appendBaseUrlToBannerAndPdf } from 'src/utils/image-path.helper';
-import { DataSource, IsNull, Repository } from 'typeorm';
+import { DataSource, In, IsNull, Repository } from 'typeorm';
 import { ArraySettingDto, UpdateSettingDto } from './dto/update-settings.dto';
 
 @Injectable()
@@ -19,24 +19,32 @@ export class SettingService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
+      const updateSettings = [];
+      const newSettings = [];
       for (const setting of arraySettingDto.settings) {
-        await queryRunner.manager.update(
-          Setting,
-          {
-            setting_key: setting.setting_key,
-            deleted_at: IsNull(),
-          },
-          { deleted_at: new Date() },
-        );
+        updateSettings.push({
+          setting_key: setting.setting_key,
+          deleted_at: new Date(),
+        });
 
         const newString = queryRunner.manager.create(Setting, {
           setting_key: setting.setting_key,
           setting_value: setting.setting_value,
         });
 
-        await queryRunner.manager.save(Setting, newString);
+        newSettings.push(newString);
       }
 
+      await queryRunner.manager.update(
+        Setting,
+        {
+          setting_key: In(updateSettings.map((s) => s.setting_key)),
+          deleted_at: IsNull(),
+        },
+        { deleted_at: new Date() },
+      );
+
+      await queryRunner.manager.save(Setting, newSettings);
       await queryRunner.commitTransaction();
 
       return {
