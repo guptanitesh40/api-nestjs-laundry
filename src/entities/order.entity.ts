@@ -65,6 +65,9 @@ export class Order extends BaseEntity {
   @Column({ type: 'varchar', length: 255 })
   address_details: string;
 
+  @Column()
+  address_type: number;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;

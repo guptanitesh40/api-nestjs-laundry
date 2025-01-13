@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { addDays, addHours } from 'date-fns';
+import * as fs from 'fs';
 import { Response } from 'src/dto/response.dto';
 import { UserAddress } from 'src/entities/address.entity';
 import { Branch } from 'src/entities/branch.entity';
@@ -127,6 +128,8 @@ export class OrderService {
 
       const address_details = `${address.building_number}, ${address.area}, ${address.city}, ${address.state}, ${address.country} - ${address.pincode}`;
 
+      const addess_type = address.address_type;
+
       const settingKeys = [
         'estimate_pickup_normal_hour',
         'estimate_pickup_express_hour',
@@ -243,6 +246,7 @@ export class OrderService {
         address_details,
         kasar_amount,
         paid_amount,
+        address_type: addess_type,
         payment_status: createOrderDto.payment_status,
         estimated_pickup_time,
         estimated_delivery_time: estimated_delivery_date,
@@ -623,10 +627,14 @@ export class OrderService {
       );
     }
 
-    orders.order_invoice = getPdfUrl(
+    const order_invoice = getPdfUrl(
       orders.order_id,
       getOrderInvoiceFileFileName(),
     );
+
+    const file = fs.existsSync(order_invoice.fileName);
+
+    orders.order_invoice = file ? order_invoice : '';
 
     orders.order_status_details = getOrderStatusDetails(orders);
 

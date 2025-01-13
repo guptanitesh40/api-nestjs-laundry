@@ -148,6 +148,7 @@ export class ReportService {
       .andWhere('orders.order_status NOT IN (:...completedStatuses)', {
         completedStatuses: [
           OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+          OrderStatus.CANCELLED,
         ],
       });
 
@@ -183,7 +184,8 @@ export class ReportService {
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
-      .select(
+      .select(`DATE_FORMAT(orders.created_at, '%Y-%b')`, 'month')
+      .addSelect(
         `CASE WHEN orders.payment_type = ${PaymentType.CASH_ON_DELIVERY} THEN 'Cash on Delivery' ELSE 'Online Payment' END`,
         'paymentType',
       )
@@ -198,14 +200,18 @@ export class ReportService {
     }
 
     const result = await queryBuilder
-      .groupBy('paymentType')
-      .orderBy('paymentType', 'ASC')
+      .groupBy('month, paymentType')
+      .orderBy('month', 'ASC')
+      .addOrderBy('paymentType', 'ASC')
       .getRawMany();
 
-    return result.map((row: { paymentType: string; count: string }) => ({
-      paymentType: row.paymentType,
-      count: Number(row.count),
-    }));
+    return result.map(
+      (row: { month: string; paymentType: string; count: string }) => ({
+        month: row.month,
+        paymentType: row.paymentType,
+        count: Number(row.count),
+      }),
+    );
   }
 
   async getPendingAmountReport(
@@ -374,7 +380,7 @@ export class ReportService {
 
     let queryBuilder = this.userRespository
       .createQueryBuilder('user')
-      .select("DATE_FORMAT(user.created_at, '%Y-%m-%d') AS month")
+      .select("DATE_FORMAT(user.created_at, '%Y-%b') AS month")
       .addSelect('COUNT(*) AS notActiveCount')
       .where('user.deleted_at IS NULL')
       .andWhere(
@@ -412,7 +418,7 @@ export class ReportService {
       this.convertDateParameters(startDate, endDate);
     let queryBuilder = this.userRespository
       .createQueryBuilder('user')
-      .select("DATE_FORMAT(user.created_at, '%y-%m')", 'month')
+      .select("DATE_FORMAT(user.created_at, '%y-%b')", 'month')
       .addSelect('COUNT(user.user_id)', 'customerCount')
       .where('user.role_id = :customerRoleId', {
         customerRoleId: Role.CUSTOMER,
@@ -426,8 +432,8 @@ export class ReportService {
     }
 
     const result = await queryBuilder
-      .groupBy("DATE_FORMAT(user.created_at,'%y-%m')")
-      .orderBy("DATE_FORMAT(user.created_at,'%y-%m')", 'ASC')
+      .groupBy("DATE_FORMAT(user.created_at,'%y-%b')")
+      .orderBy("DATE_FORMAT(user.created_at,'%y-%b')", 'ASC')
       .getRawMany();
     return result;
   }
@@ -550,14 +556,7 @@ export class ReportService {
   async getBranchWiseSalesAndCollectionsReport(
     startDate?: string,
     endDate?: string,
-  ): Promise<
-    {
-      branchID: string;
-      branchName: string;
-      totalSales: number;
-      totalCollection: number;
-    }[]
-  > {
+  ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       this.convertDateParameters(startDate, endDate);
 
@@ -568,11 +567,14 @@ export class ReportService {
       .addSelect('branch.branch_name', 'branchName')
       .addSelect('SUM(orders.total)', 'totalSales')
       .addSelect('SUM(orders.paid_amount)', 'totalCollection')
+      .addSelect(`DATE_FORMAT(orders.created_at, '%Y-%b')`, 'month')
       .where('orders.deleted_at IS NULL')
       .andWhere('orders.branch_id IS NOT NULL')
       .groupBy('orders.branch_id')
       .addGroupBy('branch.branch_name')
-      .orderBy('totalSales', 'DESC');
+      .addGroupBy('month')
+      .addOrderBy('month', 'ASC')
+      .orderBy('totalSales', 'ASC');
 
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
@@ -604,10 +606,10 @@ export class ReportService {
       .select([
         'branch.branch_name AS branch_name',
         'company.company_name AS company_name',
-        "DATE_FORMAT(order.created_at, '%Y-%m') AS month",
+        "DATE_FORMAT(order.created_at, '%Y-%b') AS month",
         'SUM(order.total) AS total_sales',
         'SUM(order.paid_amount) AS total_collection',
-        '(SUM(order.total) - SUM(order.paid_amount)) AS unpaid_Amount',
+        '(SUM(order.total) - SUM(order.paid_amount) - SUM(order.kasar_amount) ) AS unpaid_Amount',
       ])
       .groupBy('branch.branch_id, company.company_id, month')
       .orderBy('company.company_name', 'ASC')
@@ -632,7 +634,7 @@ export class ReportService {
       );
     }
 
-    const report = await queryBuilder.getRawMany();
+    const report = await queryBuilder.orderBy('month', 'ASC').getRawMany();
 
     return {
       statusCode: 200,
