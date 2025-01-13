@@ -1,4 +1,5 @@
-import { IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 export class UpdateSettingDto {
   @IsString()
@@ -7,5 +8,12 @@ export class UpdateSettingDto {
 
   @IsString()
   @IsOptional()
-  setting_value: string;
+  setting_value?: string;
+}
+
+export class ArraySettingDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateSettingDto)
+  settings: UpdateSettingDto[];
 }

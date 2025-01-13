@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Setting } from 'src/entities/setting.entity';
 import { appendBaseUrlToBannerAndPdf } from 'src/utils/image-path.helper';
-import { DataSource, IsNull, Repository } from 'typeorm';
-import { UpdateSettingDto } from './dto/update-settings.dto';
+import { DataSource, In, IsNull, Repository } from 'typeorm';
+import { ArraySettingDto, UpdateSettingDto } from './dto/update-settings.dto';
 
 @Injectable()
 export class SettingService {
@@ -13,7 +13,53 @@ export class SettingService {
     private settingRepository: Repository<Setting>,
     private dataSource: DataSource,
   ) {}
-  async update(
+
+  async update(arraySettingDto: ArraySettingDto): Promise<Response> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const updateSettings = [];
+      const newSettings = [];
+      for (const setting of arraySettingDto.settings) {
+        updateSettings.push({
+          setting_key: setting.setting_key,
+          deleted_at: new Date(),
+        });
+
+        const newString = queryRunner.manager.create(Setting, {
+          setting_key: setting.setting_key,
+          setting_value: setting.setting_value,
+        });
+
+        newSettings.push(newString);
+      }
+
+      await queryRunner.manager.update(
+        Setting,
+        {
+          setting_key: In(updateSettings.map((s) => s.setting_key)),
+          deleted_at: IsNull(),
+        },
+        { deleted_at: new Date() },
+      );
+
+      await queryRunner.manager.save(Setting, newSettings);
+      await queryRunner.commitTransaction();
+
+      return {
+        statusCode: 200,
+        message: 'Settings updated successfully',
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async imageUpdate(
     updateSettingDto: UpdateSettingDto,
     imagePath: string,
   ): Promise<Response> {
@@ -30,8 +76,7 @@ export class SettingService {
         },
         { deleted_at: new Date() },
       );
-
-      if (updateSettingDto.setting_key === 'home_banner_image') {
+      if (updateSettingDto.setting_key === 'home_banner_image' && imagePath) {
         updateSettingDto.setting_value = imagePath;
       }
 

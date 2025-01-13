@@ -13,6 +13,7 @@ export class NullTransformInterceptor implements NestInterceptor {
     const numericKeys = [
       'created_by_user_id',
       'vendor_id',
+      'workshop_id',
       'commission_percentage',
       'security_deposit',
       'delivery_boy_id',

@@ -16,7 +16,7 @@ import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
 import { fileUpload } from 'src/multer/image-upload';
 import { RolesGuard } from '../auth/guard/role.guard';
-import { UpdateSettingDto } from './dto/update-settings.dto';
+import { ArraySettingDto, UpdateSettingDto } from './dto/update-settings.dto';
 import { SettingService } from './setting.service';
 
 @Controller()
@@ -27,18 +27,23 @@ export class SettingController {
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  async update(@Body() arraySettingDto: ArraySettingDto): Promise<Response> {
+    return await this.settingService.update(arraySettingDto);
+  }
+
+  @Put('admin/settings/image')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   @UseInterceptors(
     FileFieldsInterceptor(
       [{ name: 'home_banner_image', maxCount: 1 }],
       fileUpload(FilePath.BANNER_IMAGES),
     ),
   )
-  async update(
+  async imageUpdate(
     @Body() updateSettingDto: UpdateSettingDto,
-    @UploadedFiles()
-    files: {
-      home_banner_image?: Express.Multer.File[];
-    },
+    @UploadedFiles() files: { home_banner_image?: Express.Multer.File[] },
   ): Promise<Response> {
     const imageFile = files?.home_banner_image?.[0];
 
@@ -46,7 +51,7 @@ export class SettingController {
       ? FilePath.BANNER_IMAGES + '/' + imageFile.filename
       : null;
 
-    return await this.settingService.update(updateSettingDto, imagePath);
+    return await this.settingService.imageUpdate(updateSettingDto, imagePath);
   }
 
   @Get('admin/settings')

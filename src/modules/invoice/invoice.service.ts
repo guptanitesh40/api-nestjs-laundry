@@ -309,7 +309,7 @@ export class InvoiceService {
 
       const orderLabel = getPdfUrl(order.order_id, getOrderLabelFileFileName());
 
-      const outputPath = join(process.cwd(), 'pdf', orderLabel.fileName);
+      const outputPath = join(process.cwd(), '', orderLabel.fileName);
       writeFileSync(outputPath, pdfBuffer);
 
       const fileUrl = orderLabel.fileUrl;
