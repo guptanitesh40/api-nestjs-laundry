@@ -180,6 +180,8 @@ export class ReportService {
         'orders.created_at BETWEEN :startDate AND :endDate',
         { startDate: formattedStartDate, endDate: formattedEndDate },
       );
+    } else {
+      queryBuilder.andWhere('orders.created_at >= NOW() - INTERVAL 6 MONTH');
     }
 
     const result = await queryBuilder
