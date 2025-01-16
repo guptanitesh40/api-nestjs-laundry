@@ -5,7 +5,7 @@ import { Response } from 'src/dto/response.dto';
 import { IsPublish } from 'src/enum/is_publish.enum';
 import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from '../auth/guard/role.guard';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { FeedbackFilterDto } from '../dto/feedback-filter.dto';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { FeedbackService } from './feedback.service';
 
@@ -36,8 +36,8 @@ export class FeedbackController {
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async getAllFeedbacks(
     @Query('status') status: IsPublish,
-    @Query() paginationQueryDto: PaginationQueryDto,
+    @Query() feedbackFilterDto: FeedbackFilterDto,
   ): Promise<Response> {
-    return this.feedbackService.getAllFeedbacks(status, paginationQueryDto);
+    return this.feedbackService.getAllFeedbacks(status, feedbackFilterDto);
   }
 }

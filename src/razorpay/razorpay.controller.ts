@@ -13,7 +13,7 @@ import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from 'src/modules/auth/guard/role.guard';
-import { PaginationQueryDto } from 'src/modules/dto/pagination-query.dto';
+import { RazorpayFilterDto } from 'src/modules/dto/razorpay-filter.dto';
 import { RazorpayService } from './razorpay.service';
 
 @Controller('razorpay')
@@ -36,9 +36,9 @@ export class RazorpayController {
   @Get('transaction')
   @Roles(Role.SUPER_ADMIN)
   async getAllTransactions(
-    @Query() paginationQueryDto: PaginationQueryDto,
+    @Query() razorpayFilterDto: RazorpayFilterDto,
   ): Promise<Response> {
-    return await this.razorpayService.getAllTransactions(paginationQueryDto);
+    return await this.razorpayService.getAllTransactions(razorpayFilterDto);
   }
 
   @Post('verify')

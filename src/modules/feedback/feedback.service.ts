@@ -4,7 +4,7 @@ import { Response } from 'src/dto/response.dto';
 import { Feedback } from 'src/entities/feedback.entity';
 import { IsPublish } from 'src/enum/is_publish.enum';
 import { Repository } from 'typeorm';
-import { PaginationQueryDto } from '../dto/pagination-query.dto';
+import { FeedbackFilterDto } from '../dto/feedback-filter.dto';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 
 @Injectable()
@@ -50,10 +50,18 @@ export class FeedbackService {
 
   async getAllFeedbacks(
     status?: IsPublish,
-    paginationQueryDto?: PaginationQueryDto,
+    feedbackFilterDto?: FeedbackFilterDto,
   ): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order } =
-      paginationQueryDto;
+    const {
+      per_page,
+      page_number,
+      search,
+      sort_by,
+      order,
+      is_publish,
+      rating,
+      user_id,
+    } = feedbackFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
@@ -83,7 +91,7 @@ export class FeedbackService {
       feedbacksQuery.andWhere(
         '(feedbacks.rating LIKE :search OR ' +
           'feedbacks.comment LIKE :search OR ' +
-          'feedbacks.is_publish LIKE :search OR' +
+          'feedbacks.is_publish LIKE :search OR ' +
           'user.first_name LIKE :search OR ' +
           'user.last_name LIKE :search OR ' +
           'user.email LIKE :search OR ' +
@@ -92,6 +100,27 @@ export class FeedbackService {
           search: `%${search}%`,
         },
       );
+    }
+
+    if (is_publish) {
+      feedbacksQuery.andWhere(
+        'feedbacks.is_publish In(:...isPublishStatuses)',
+        {
+          isPublishStatuses: IsPublish,
+        },
+      );
+    }
+
+    if (rating) {
+      feedbacksQuery.andWhere('feedbacks.rating In(:...feedbackRating)', {
+        feedbackRating: rating,
+      });
+    }
+
+    if (user_id) {
+      feedbacksQuery.andWhere('order.user_id In(:...userId)', {
+        userId: user_id,
+      });
     }
 
     let sortColumn = 'feedbacks.created_at';
