@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
@@ -30,6 +39,15 @@ export class FeedbackController {
     if (status) {
       return this.feedbackService.getFeedBacksByStatus(status);
     }
+  }
+
+  @Patch('approved/:feedback_id')
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  async approveFeedback(
+    @Param('feedback_id') feedback_id: number,
+    @Body('status') status: number,
+  ): Promise<Response> {
+    return await this.feedbackService.approveFeedback(feedback_id, status);
   }
 
   @Get()
