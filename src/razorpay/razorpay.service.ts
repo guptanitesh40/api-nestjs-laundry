@@ -4,7 +4,7 @@ import * as crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { Response } from 'src/dto/response.dto';
 import { RazorpayTransactions } from 'src/entities/razorpay.entity';
-import { PaginationQueryDto } from 'src/modules/dto/pagination-query.dto';
+import { RazorpayFilterDto } from 'src/modules/dto/razorpay-filter.dto';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -48,10 +48,10 @@ export class RazorpayService {
   }
 
   async getAllTransactions(
-    paginationQueryDto: PaginationQueryDto,
+    razorpayFilterDto: RazorpayFilterDto,
   ): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order } =
-      paginationQueryDto;
+    const { per_page, page_number, search, sort_by, order, status, user_id } =
+      razorpayFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
@@ -76,7 +76,7 @@ export class RazorpayService {
         '(razorpay.razorpay_order_id LIKE :search OR ' +
           'razorpay.amount LIKE :search OR ' +
           'razorpay.currency LIKE :search OR ' +
-          ' razorpay.status LIKE :search OR' +
+          ' razorpay.status LIKE :search OR ' +
           'user.first_name LIKE :search OR ' +
           'user.last_name LIKE :search OR ' +
           'user.email LIKE :search OR ' +
@@ -85,6 +85,18 @@ export class RazorpayService {
           search: `%${search}%`,
         },
       );
+    }
+
+    if (status) {
+      queryBuilder.andWhere('razorpay.status In(:...razorPayStatuses)', {
+        razorPayStatuses: status,
+      });
+    }
+
+    if (user_id) {
+      queryBuilder.andWhere('user.user_id In(:...userId)', {
+        userId: user_id,
+      });
     }
 
     let sortColumn = 'razorpay.created_at';

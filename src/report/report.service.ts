@@ -231,6 +231,8 @@ export class ReportService {
         'orders.created_at BETWEEN :startDate AND :endDate',
         { startDate: formattedStartDate, endDate: formatedEndDate },
       );
+    } else {
+      queryBuilder.andWhere('orders.created_at >= NOW() - INTERVAL 6 MONTH');
     }
 
     const result = await queryBuilder
@@ -252,7 +254,7 @@ export class ReportService {
       .createQueryBuilder('orders')
       .select(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
       .addSelect('COUNT(*)', 'count')
-      .addSelect('SUM(orders.refund_amount)', 'refund_amount')
+      .addSelect('SUM(orders.refund_amount)', 'total_refund_amount')
       .addSelect('SUM(orders.total)', 'total_amount')
       .addSelect(
         `CASE 
@@ -307,6 +309,8 @@ export class ReportService {
         'orders.created_at BETWEEN :startDate AND :endDate',
         { startDate: formattedStartDate, endDate: formatedEndDate },
       );
+    } else {
+      queryBuilder.andWhere('orders.created_at >= NOW() - INTERVAL 6 MONTH');
     }
 
     const result = await queryBuilder
@@ -490,6 +494,8 @@ export class ReportService {
         'feedback.created_at BETWEEN :startDate AND :endDate',
         { startDate: formattedStartDate, endDate: formattedEndDate },
       );
+    } else {
+      queryBuilder.andWhere('feedback.created_at >= NOW() - INTERVAL 6 MONTH');
     }
 
     const result = await queryBuilder
@@ -499,10 +505,7 @@ export class ReportService {
       .addOrderBy('feedback.rating', 'ASC')
       .getRawMany();
 
-    result.map((c) => {
-      c.count = Number(c.count);
-    });
-
+    this.convertCountToNumber(result);
     return result;
   }
 
@@ -534,6 +537,8 @@ export class ReportService {
         'orders.created_at BETWEEN :startDate AND :endDate',
         { startDate: formattedStartDate, endDate: formattedEndDate },
       );
+    } else {
+      queryBuilder.andWhere('orders.created_at >= NOW() - INTERVAL 6 MONTH');
     }
 
     const result = await queryBuilder.getRawMany();
