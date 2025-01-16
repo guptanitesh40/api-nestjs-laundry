@@ -125,14 +125,9 @@ export class ReportController {
 
   @Get('sales-report')
   async getSalesReport(
-    @Query()
-    filterDto: {
-      company_id?: number;
-      branch_id?: number;
-      start_date?: string;
-      end_date?: string;
-    },
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ): Promise<Response> {
-    return await this.reportService.getSalesReport(filterDto);
+    return await this.reportService.getSalesReport(startDate, endDate);
   }
 }

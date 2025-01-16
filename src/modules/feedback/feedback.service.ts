@@ -48,6 +48,24 @@ export class FeedbackService {
     };
   }
 
+  async approveFeedback(
+    feedback_id: number,
+    status: IsPublish,
+  ): Promise<Response> {
+    const feedbacks = await this.feedbackRepository.findOne({
+      where: { feedback_id: feedback_id },
+    });
+
+    feedbacks.is_publish = status;
+
+    await this.feedbackRepository.save(feedbacks);
+
+    return {
+      statusCode: 200,
+      message: 'Feedbacks publish successfully',
+    };
+  }
+
   async getAllFeedbacks(
     status?: IsPublish,
     feedbackFilterDto?: FeedbackFilterDto,
