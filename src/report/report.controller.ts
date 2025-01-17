@@ -130,4 +130,15 @@ export class ReportController {
   ): Promise<Response> {
     return await this.reportService.getSalesReport(startDate, endDate);
   }
+
+  @Get('payment-transaction')
+  async getPaymentTransactionReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ): Promise<Response> {
+    return await this.reportService.getPaymentTransactionReport(
+      startDate,
+      endDate,
+    );
+  }
 }
