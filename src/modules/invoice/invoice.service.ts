@@ -244,7 +244,7 @@ export class InvoiceService {
       const pdfBuffer: Buffer = Buffer.from(pdfBufferUint8);
       await browser.close();
       const refundReceipt = getPdfUrl(order.order_id, getRefundFileFileName());
-      const filePath = join(process.cwd(), 'pdf', refundReceipt.fileName);
+      const filePath = join(process.cwd(), '', refundReceipt.fileName);
 
       writeFileSync(filePath, pdfBuffer);
 
