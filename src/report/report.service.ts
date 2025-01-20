@@ -55,7 +55,9 @@ export class ReportService {
       .select("DATE_FORMAT(orders.created_at, '%b-%Y') AS month")
       .addSelect('COUNT(*) AS count')
       .addSelect('SUM(orders.total) AS total_amount')
-      .addSelect('SUM(orders.total - orders.paid_amount) AS pending_amount')
+      .addSelect(
+        'SUM(orders.total - orders.paid_amount - orders.kasar_amount - orders.refund_amount) AS pending_amount',
+      )
       .where('orders.deleted_at IS NULL');
 
     if (formattedStartDate && formattedEndDate) {
@@ -205,7 +207,7 @@ export class ReportService {
       .addSelect('COUNT(*)', 'count')
       .addSelect('SUM(orders.total)', 'total_amount')
       .addSelect(
-        'SUM(orders.total - COALESCE(orders.paid_amount,0) - COALESCE(orders.kasar_amount,0))',
+        'SUM(orders.total - COALESCE(orders.paid_amount,0) - COALESCE(orders.kasar_amount,0)) - COALESCE(orders.refund_amount,0))',
         'pending_amount',
       )
       .where('orders.deleted_at IS NULL')
@@ -574,7 +576,6 @@ export class ReportService {
       .select("DATE_FORMAT(orders.created_at, '%b-%Y') AS month")
       .addSelect('SUM(orders.total) AS total_amount')
       .addSelect('SUM(orders.paid_amount) AS paid_amount')
-      .addSelect('SUM(orders.total - orders.paid_amount) AS pending_amount')
       .where('orders.deleted_at IS NULL');
 
     if (formattedStartDate && formattedEndDate) {

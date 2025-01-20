@@ -103,25 +103,29 @@ export class OrderService {
       }
 
       const user = await this.userService.findUserById(createOrderDto.user_id);
+
       if (createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT) {
-        const razorPayTransaction =
-          await this.razorpayService.findTransactionByOrderId(
-            createOrderDto.transaction_id,
-          );
+        if (!createOrderDto.created_by_user_id) {
+          const razorPayTransaction =
+            await this.razorpayService.findTransactionByOrderId(
+              createOrderDto.transaction_id,
+            );
 
-        if (!razorPayTransaction) {
-          throw new NotFoundException(
-            `Razorpay transaction with ID ${createOrderDto.transaction_id} not found`,
-          );
-        }
+          if (!razorPayTransaction) {
+            throw new NotFoundException(
+              `Razorpay transaction with ID ${createOrderDto.transaction_id} not found`,
+            );
+          }
 
-        if (razorPayTransaction.amount !== createOrderDto.paid_amount) {
-          throw new BadRequestException(
-            `Paid amount does not match the expected amount. Expected: ${razorPayTransaction.amount}, Received: ${createOrderDto.paid_amount}`,
-          );
+          if (razorPayTransaction.amount !== createOrderDto.paid_amount) {
+            throw new BadRequestException(
+              `Paid amount does not match the expected amount. Expected: ${razorPayTransaction.amount}, Received: ${createOrderDto.paid_amount}`,
+            );
+          }
+          createOrderDto.transaction_id = razorPayTransaction.razorpay_order_id;
         }
-        createOrderDto.transaction_id = razorPayTransaction.razorpay_order_id;
       }
+
       await queryRunner.manager.findOne(Branch, {
         where: { branch_id: createOrderDto.branch_id, deleted_at: null },
       });
@@ -1119,7 +1123,7 @@ export class OrderService {
       .where('order.user_id=:user_id', { user_id: user_id })
       .andWhere('order.deleted_at IS NULL')
       .select(
-        'SUM(order.total - order.paid_amount - order.kasar_amount)',
+        'SUM(order.total - order.paid_amount - order.kasar_amount - order.refund_amount)',
         'total_pending_due_amount',
       )
       .addSelect('SUM(order.total) as total')
@@ -1158,6 +1162,9 @@ export class OrderService {
         status: OrderStatus.DELIVERED,
       })
       .andWhere('order.total > order.paid_amount')
+      .andWhere('order.refund_status !=:refundStatus ', {
+        refundStatus: RefundStatus.FULL,
+      })
       .andWhere('order.deleted_at IS NULL')
       .select([
         'order.order_id',
@@ -1183,12 +1190,15 @@ export class OrderService {
       .where('order.user_id=:user_id', { user_id: user_id })
       .andWhere('order.deleted_at IS NULL')
       .andWhere('order.total > order.paid_amount')
+      .andWhere('order.refund_status !=:refundStatus ', {
+        refundStatus: RefundStatus.FULL,
+      })
       .andWhere('order.order_status= :status', {
         status: OrderStatus.DELIVERED,
       })
       .select([
         'order.order_id as order_id',
-        'SUM(order.total - order.paid_amount - order.kasar_amount) as total_pending_due_amount',
+        'SUM(order.total - order.paid_amount - order.kasar_amount - order.refund_amount) as total_pending_due_amount',
       ])
       .groupBy('order.order_id');
     const orderData = await orders.getRawMany();
@@ -1226,10 +1236,12 @@ export class OrderService {
     });
 
     let total_pending_amount = 0;
-
     orders.map((order) => {
       total_pending_amount +=
-        order.total - order.paid_amount - order.kasar_amount;
+        order.total -
+        order.paid_amount -
+        order.kasar_amount -
+        order.refund_amount;
     });
 
     if (clearDueAmount.pay_amount !== total_pending_amount) {
@@ -1255,7 +1267,13 @@ export class OrderService {
     const updatedOrders = [];
 
     for (const order of orders) {
-      const due_amount = order.total - order.paid_amount - order.kasar_amount;
+      let due_amount = 0;
+
+      due_amount =
+        order.total -
+          order.paid_amount -
+          order.kasar_amount -
+          order.refund_amount || 0;
 
       order.paid_amount += due_amount;
       order.payment_status = clearDueAmount.payment_status;
@@ -1682,11 +1700,20 @@ export class OrderService {
       );
     }
 
+    if (order.order_status == OrderStatus.CANCELLED) {
+      throw new BadRequestException('Cannot refund a cancelled order');
+    }
+
     let newRefundAmount = 0;
 
     if (refundOrderDto.refund_status === RefundStatus.FULL) {
       newRefundAmount = order.total;
     } else if (refundOrderDto.refund_status === RefundStatus.PARTIAL) {
+      if (refundOrderDto.refund_amount > order.total) {
+        throw new BadRequestException(
+          'Refund amount cannot exceed order total',
+        );
+      }
       newRefundAmount = refundOrderDto.refund_amount;
     }
 
@@ -1745,11 +1772,20 @@ export class OrderService {
       }
 
       const dueAmount =
-        order.total - order.paid_amount - (order.kasar_amount || 0);
+        order.total -
+        order.paid_amount -
+        (order.kasar_amount || 0) -
+        (order.refund_amount || 0);
 
       if (dueAmount <= 0) {
         throw new BadRequestException(
           `No pending due amount for order ${orderData.order_id}`,
+        );
+      }
+
+      if (order.refund_status === RefundStatus.FULL) {
+        throw new BadRequestException(
+          `This order ${orderData.order_id} is fully refunded`,
         );
       }
 
@@ -1788,7 +1824,11 @@ export class OrderService {
       paid_amount: order.paid_amount,
       kasar_amount: order.kasar_amount,
       payment_status: order.payment_status,
-      pending_amount: order.total - order.paid_amount - order.kasar_amount,
+      pending_amount:
+        order.total -
+        order.paid_amount -
+        order.kasar_amount -
+        order.refund_amount,
     }));
 
     return {

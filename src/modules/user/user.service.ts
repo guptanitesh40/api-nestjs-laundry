@@ -507,7 +507,10 @@ export class UserService {
       order.payment_status == PaymentStatus.PARTIAL_PAYMENT_RECEIVED
     ) {
       const pending_amount =
-        order.total - order.paid_amount - (order.kasar_amount || 0);
+        order.total -
+        order.paid_amount -
+        (order.kasar_amount || 0) -
+        (order.refund_amount || 0);
       pending_due_amount += pending_amount;
     }
 
@@ -558,6 +561,7 @@ export class UserService {
         'orders.total',
         'orders.paid_amount',
         'orders.kasar_amount',
+        'orders.refund_amount',
         'items.item_id',
       ])
       .addSelect("CONCAT(user.first_name, ' ', user.last_name)", 'full_name')
