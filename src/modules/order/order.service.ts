@@ -28,6 +28,7 @@ import {
 import {
   getCustomerOrderStatusLabel,
   getOrderStatusDetails,
+  getOrderStatusList,
   getWorkshopOrdersStatusLabel,
 } from 'src/utils/order-status.helper';
 import {
@@ -982,6 +983,9 @@ export class OrderService {
         'order.order_id, items.item_id, category.category_id, product.product_id, service.service_id',
       );
     const order: any = await orderQuery.getOne();
+
+    order.order_statuses = getOrderStatusList(order.order_status);
+
     if (!order) {
       throw new NotFoundException('Order not found');
     }
