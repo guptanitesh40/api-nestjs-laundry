@@ -984,8 +984,7 @@ export class OrderService {
       );
     const order: any = await orderQuery.getOne();
 
-    const statuses = getOrderStatusList(order.order_status);
-    order.order_statuses = statuses;
+    order.order_statuses = getOrderStatusList(order.order_status);
 
     if (!order) {
       throw new NotFoundException('Order not found');
