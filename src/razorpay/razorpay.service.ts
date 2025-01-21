@@ -120,34 +120,10 @@ export class RazorpayService {
     };
   }
 
-  // async generatePaymentLink(paymentDetails: {
-  //   amount: number;
-  //   currency: string;
-  //   customer: {
-  //     name: string;
-  //     contact: number;
-  //   };
-  // }): Promise<string> {
-  //   const options = {
-  //     amount: paymentDetails.amount * 100,
-  //     currency: paymentDetails.currency,
-  //     customer: paymentDetails.customer,
-  //     notify: {
-  //       sms: true,
-  //     },
-  //     reminder_enable: true,
-  //   };
-
-  //   try {
-  //     const response = await this.razorpay.paymentLink.create(options);
-  //     return response.short_url;
-  //   } catch (error) {
-  //     throw new Error(`Failed to generate payment link: ${error.message}`);
-  //   }
-  // }
   async generatePaymentLink(paymentDetails: {
     amount: number;
     currency: string;
+    user_id: number;
     customer: {
       name: string;
       contact: number;
@@ -171,6 +147,16 @@ export class RazorpayService {
 
     try {
       const response = await this.razorpay.paymentLink.create(options);
+      const razorpay: any = this.rezorpayRepository.create();
+
+      razorpay.amount = paymentDetails.amount;
+      razorpay.currency = paymentDetails.currency;
+      razorpay.razorpay_order_id = response.id;
+      razorpay.status = response.status;
+      razorpay.user_id = paymentDetails.user_id;
+
+      await this.rezorpayRepository.save(razorpay);
+
       return response.short_url;
     } catch (error) {
       throw new Error(`Failed to generate payment link: ${error.message}`);
