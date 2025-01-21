@@ -207,7 +207,7 @@ export class ReportService {
       .addSelect('COUNT(*)', 'count')
       .addSelect('SUM(orders.total)', 'total_amount')
       .addSelect(
-        'SUM(orders.total - COALESCE(orders.paid_amount,0) - COALESCE(orders.kasar_amount,0)) - COALESCE(orders.refund_amount,0))',
+        'SUM(orders.total - COALESCE(orders.paid_amount,0) - COALESCE(orders.kasar_amount,0) - COALESCE(orders.refund_amount,0))',
         'pending_amount',
       )
       .where('orders.deleted_at IS NULL')
@@ -398,7 +398,7 @@ export class ReportService {
       .createQueryBuilder('user')
       .leftJoin('user.loginHistories', 'loginHistories')
       .select("DATE_FORMAT(loginHistories.created_at, '%b-%Y')", 'month')
-      .addSelect('COUNT(DISTINCT loginHistories.user_id)', 'loginCount')
+      .addSelect('COUNT(DISTINCT loginHistories.user_id)', 'login_count')
       .where('user.deleted_at IS NULL')
       .andWhere('loginHistories.user_id IS NOT NULL');
 
@@ -419,7 +419,7 @@ export class ReportService {
       .getRawMany();
 
     result.map((l) => {
-      l.loginCount = Number(l.loginCount);
+      l.login_count = Number(l.login_count);
     });
 
     return result;
@@ -575,7 +575,7 @@ export class ReportService {
       .createQueryBuilder('orders')
       .select("DATE_FORMAT(orders.created_at, '%b-%Y') AS month")
       .addSelect('SUM(orders.total) AS total_amount')
-      .addSelect('SUM(orders.paid_amount) AS paid_amount')
+      .addSelect('SUM(orders.paid_amount) AS received_amount')
       .where('orders.deleted_at IS NULL');
 
     if (formattedStartDate && formattedEndDate) {
