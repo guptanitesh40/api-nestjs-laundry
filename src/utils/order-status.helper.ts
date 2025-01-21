@@ -186,3 +186,49 @@ export const getWorkshopOrdersStatusLabel = (orderStatus: number): string => {
       return WorkshopOrderStatus.COMPLETED;
   }
 };
+
+export const getOrderStatusList = (currentStatus: number): any[] => {
+  const statusFlow = [
+    {
+      order_status: [1],
+      status: 'Order Placed',
+      description: 'Order placed successfully.',
+    },
+    {
+      order_status: [2],
+      status: 'Waiting for Pickup',
+      description: 'Pickup boy assigned.',
+    },
+    {
+      order_status: [3, 4, 5, 6],
+      status: 'Pickup Complete',
+      description: 'Clothes picked up.',
+    },
+    {
+      order_status: [7, 8],
+      status: 'Work In Progress',
+      description: 'Workshop processing items.',
+    },
+    {
+      order_status: [9],
+      status: 'Ready for Delivery',
+      description: 'Items ready for delivery.',
+    },
+    {
+      order_status: [10],
+      status: 'Delivered',
+      description: 'Order delivered.',
+    },
+  ];
+
+  const currentStatusIndex = statusFlow.findIndex((status) =>
+    status.order_status.includes(currentStatus),
+  );
+
+  return statusFlow.map((status, index) => ({
+    status: status.status,
+    date: index <= currentStatusIndex ? new Date().toDateString() : null,
+    statusDescription: status.description,
+    isProgress: index <= currentStatusIndex,
+  }));
+};
