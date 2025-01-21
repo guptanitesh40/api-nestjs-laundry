@@ -9,7 +9,6 @@ import ejs from 'ejs';
 import { promises as fs, writeFileSync } from 'fs';
 import path, { join } from 'path';
 import puppeteer, { Browser } from 'puppeteer';
-import { FilePath } from 'src/constants/FilePath';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import numberToWords from 'src/utils/numberToWords';
 import {
@@ -81,9 +80,8 @@ export class InvoiceService {
     order_id: number,
     pdfBuffer: Buffer,
   ): Promise<string> {
-    const pdfDirectory = FilePath.PDF_DIRECTORY;
     const invoicePdf = getPdfUrl(order_id, getOrderInvoiceFileFileName());
-    const filePath = path.join(pdfDirectory, invoicePdf.fileName);
+    const filePath = join(process.cwd(), '', invoicePdf.fileName);
     await fs.writeFile(filePath, pdfBuffer);
     return invoicePdf.fileUrl;
   }

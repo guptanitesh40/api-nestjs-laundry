@@ -41,6 +41,12 @@ export class RazorpayController {
     return await this.razorpayService.getAllTransactions(razorpayFilterDto);
   }
 
+  @Post('generate-payment-link')
+  @Roles(Role.SUPER_ADMIN)
+  async generatePaymentLink(@Body() paymentDetails: any): Promise<any> {
+    return this.razorpayService.generatePaymentLink(paymentDetails);
+  }
+
   @Post('verify')
   @Roles(Role.CUSTOMER)
   async verifyPayment(@Body() body: any): Promise<Response> {
