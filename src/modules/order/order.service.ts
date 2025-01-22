@@ -1024,6 +1024,7 @@ export class OrderService {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .innerJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('order.feedback', 'feedback')
       .where('order.user_id = :user_id', { user_id: user_id })
       .andWhere('order.deleted_at IS NULL')
       .select([
@@ -1037,6 +1038,10 @@ export class OrderService {
         'order.estimated_delivery_time',
         'order.created_at',
         'items',
+        'feedback.feedback_id',
+        'feedback.rating',
+        'feedback.comment',
+        'feedback.is_publish',
       ])
       .groupBy('order.order_id,items.item_id')
       .take(perPage)

@@ -124,7 +124,7 @@ export class FeedbackService {
       feedbacksQuery.andWhere(
         'feedbacks.is_publish In(:...isPublishStatuses)',
         {
-          isPublishStatuses: IsPublish,
+          isPublishStatuses: is_publish,
         },
       );
     }

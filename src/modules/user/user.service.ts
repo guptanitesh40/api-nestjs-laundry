@@ -21,7 +21,10 @@ import { PaymentStatus } from 'src/enum/payment.enum';
 import { Role } from 'src/enum/role.enum';
 import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
-import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
+import {
+  appendBaseUrlToImages,
+  appendBaseUrlToImagesIdProof,
+} from 'src/utils/image-path.helper';
 import { getOrderStatusDetails } from 'src/utils/order-status.helper';
 import twilio from 'twilio';
 import { In, MoreThan, Repository } from 'typeorm';
@@ -378,11 +381,11 @@ export class UserService {
     const updatedData = { ...user, ...updateUserDto };
 
     if (imagePath) {
-      updatedData.image = this.appendBaseUrl(imagePath);
+      updatedData.image = imagePath;
     }
 
     if (idProofPath) {
-      updatedData.id_proof = this.appendBaseUrl(idProofPath);
+      updatedData.id_proof = idProofPath;
     }
 
     if (updateUserDto.password) {
@@ -393,19 +396,19 @@ export class UserService {
     }
 
     await this.userRepository.update(user_id, updatedData);
+    const updateUser = await this.userRepository.findOne({
+      where: { user_id, deleted_at: null },
+    });
+
+    const userImageWithUrl = appendBaseUrlToImagesIdProof([updateUser])[0];
 
     return {
       statusCode: 200,
       message: 'User updated successfully',
       data: {
-        user: { updatedData },
+        user: userImageWithUrl,
       },
     };
-  }
-
-  private appendBaseUrl(path: string): string {
-    const baseUrl = process.env.BASE_URL;
-    return baseUrl ? `${baseUrl}/${path}` : path;
   }
 
   async getUserById(user_id: number): Promise<Response> {

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Company } from 'src/entities/company.entity';
-import { appendBaseUrlToLogo } from 'src/utils/image-path.helper';
+import { appendBaseUrlToLogoContractDoc } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
 import { CompanyFilterDto } from '../dto/company-filter.dto';
 import { CreateCompanyDto } from './dto/create-company.dto';
@@ -28,7 +28,7 @@ export class CompanyService {
 
     const result = await this.companyRepository.save(company);
 
-    const companyWithLogoUrl = appendBaseUrlToLogo([result])[0];
+    const companyWithLogoUrl = appendBaseUrlToLogoContractDoc([result])[0];
 
     return {
       statusCode: 201,
@@ -81,7 +81,7 @@ export class CompanyService {
 
     const [result, total] = await queryBuilder.getManyAndCount();
 
-    const companiesWithBaseUrl = appendBaseUrlToLogo(result);
+    const companiesWithBaseUrl = appendBaseUrlToLogoContractDoc(result);
 
     return {
       statusCode: 200,
@@ -100,7 +100,7 @@ export class CompanyService {
       where: { company_id: id, deleted_at: null },
     });
 
-    const Company = appendBaseUrlToLogo([result])[0];
+    const Company = appendBaseUrlToLogoContractDoc([result])[0];
     return {
       statusCode: 200,
       message: 'company retrieved successfully',
@@ -144,7 +144,9 @@ export class CompanyService {
       where: { company_id: id, deleted_at: null },
     });
 
-    const companyWithLogoUrl = appendBaseUrlToLogo([updatedCompany])[0];
+    const companyWithLogoUrl = appendBaseUrlToLogoContractDoc([
+      updatedCompany,
+    ])[0];
 
     return {
       statusCode: 200,
@@ -165,7 +167,7 @@ export class CompanyService {
       };
     }
 
-    const Company = appendBaseUrlToLogo([company])[0];
+    const Company = appendBaseUrlToLogoContractDoc([company])[0];
 
     company.deleted_at = new Date();
     await this.companyRepository.save(company);

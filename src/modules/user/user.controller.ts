@@ -17,16 +17,14 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import {
-  FileFieldsInterceptor,
-  FileInterceptor,
-} from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { FilePath } from 'src/constants/FilePath';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { OtpType } from 'src/enum/otp.enum';
 import { Role } from 'src/enum/role.enum';
 import { fileUpload } from 'src/multer/image-upload';
+import { fileFieldsInterceptor } from 'src/utils/file-upload.helper';
 import { RolesGuard } from '../auth/guard/role.guard';
 import { UserFilterDto } from '../dto/users-filter.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -66,52 +64,7 @@ export class UserController {
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.CUSTOMER)
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'image', maxCount: 1 },
-        { name: 'id_proof', maxCount: 1 },
-      ],
-      {
-        storage: fileUpload(FilePath.USER_IMAGES).storage,
-        limits: {
-          fileSize: Math.max(
-            fileUpload(FilePath.USER_IMAGES).limits.fileSize,
-            fileUpload(FilePath.USER_ID_PROOF).limits.fileSize,
-          ),
-        },
-        fileFilter: (req, file, cb) => {
-          if (file.fieldname === 'image') {
-            if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-              cb(
-                new HttpException(
-                  'Only JPEG, JPG, or PNG image files are allowed!',
-                  HttpStatus.BAD_REQUEST,
-                ),
-                false,
-              );
-            } else {
-              cb(null, true);
-            }
-          } else if (file.fieldname === 'id_proof') {
-            if (!file.mimetype.match(/\/(jpg|jpeg|png|pdf)$/)) {
-              cb(
-                new HttpException(
-                  'Only PDF and IMAGE files are allowed!',
-                  HttpStatus.BAD_REQUEST,
-                ),
-                false,
-              );
-            } else {
-              cb(null, true);
-            }
-          } else {
-            cb(null, false);
-          }
-        },
-      },
-    ),
-  )
+  @UseInterceptors(fileFieldsInterceptor())
   async update(
     @Request() req,
     @Body() updateUserDto: UpdateUserDto,
