@@ -37,13 +37,31 @@ export function appendBaseUrlToArrayImages<T extends { images?: string[] }>(
   });
 }
 
-export function appendBaseUrlToLogo<T extends { logo: string }>(
-  items: T[],
-): T[] {
+export function appendBaseUrlToLogoContractDoc<
+  T extends { logo?: string; contract_document?: string },
+>(items: T[]): T[] {
   const baseUrl = process.env.BASE_URL || '';
   return items.map((item) => {
     if (item.logo) {
       item.logo = `${baseUrl}/${item.logo}`;
+    }
+    if (item.contract_document) {
+      item.contract_document = `${baseUrl}/${item.contract_document}`;
+    }
+    return item;
+  });
+}
+
+export function appendBaseUrlToImagesIdProof<
+  T extends { image?: string; id_proof?: string },
+>(items: T[]): T[] {
+  const baseUrl = process.env.BASE_URL || '';
+  return items.map((item) => {
+    if (item.image) {
+      item.image = `${baseUrl}/${item.image}`;
+    }
+    if (item.id_proof) {
+      item.id_proof = `${baseUrl}/${item.id_proof}`;
     }
     return item;
   });
