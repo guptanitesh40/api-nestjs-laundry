@@ -490,11 +490,13 @@ export class UserService {
 
     const user: any = await userQuery.getOne();
 
+    const userImageWithUrl = appendBaseUrlToImagesIdProof([user])[0];
+
     return {
       statusCode: 200,
       message: 'User found',
       data: {
-        user,
+        user: userImageWithUrl,
       },
     };
   }
