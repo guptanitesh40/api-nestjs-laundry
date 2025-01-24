@@ -21,10 +21,7 @@ import { PaymentStatus } from 'src/enum/payment.enum';
 import { Role } from 'src/enum/role.enum';
 import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
-import {
-  appendBaseUrlToImages,
-  appendBaseUrlToImagesIdProof,
-} from 'src/utils/image-path.helper';
+import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { getOrderStatusDetails } from 'src/utils/order-status.helper';
 import twilio from 'twilio';
 import { In, MoreThan, Repository } from 'typeorm';
@@ -351,7 +348,7 @@ export class UserService {
     const updatedUser = await this.userRepository.findOne({
       where: { user_id },
     });
-    const userWithImageUrl = appendBaseUrlToImages([updatedUser])[0];
+    const userWithImageUrl = appendBaseUrlToImagesOrPdf([updatedUser])[0];
 
     return {
       statusCode: 201,
@@ -400,7 +397,7 @@ export class UserService {
       where: { user_id, deleted_at: null },
     });
 
-    const userImageWithUrl = appendBaseUrlToImagesIdProof([updateUser])[0];
+    const userImageWithUrl = appendBaseUrlToImagesOrPdf([updateUser])[0];
 
     return {
       statusCode: 200,
@@ -490,7 +487,7 @@ export class UserService {
 
     const user: any = await userQuery.getOne();
 
-    const userImageWithUrl = appendBaseUrlToImagesIdProof([user])[0];
+    const userImageWithUrl = appendBaseUrlToImagesOrPdf([user])[0];
 
     return {
       statusCode: 200,

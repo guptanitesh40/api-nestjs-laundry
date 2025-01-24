@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Banner } from 'src/entities/banner.entity';
-import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
+import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
 import { BannerFilterDto } from '../dto/banner-filter.dto';
 import { CreateBannerDto } from './dto/create-banner.dto';
@@ -20,7 +20,7 @@ export class BannerService {
       where: { deleted_at: null },
     });
 
-    const Banner = appendBaseUrlToImages(banner);
+    const Banner = appendBaseUrlToImagesOrPdf(banner);
 
     return {
       statusCode: 200,
@@ -39,7 +39,7 @@ export class BannerService {
     });
 
     const result = await this.BannerRepository.save(banner);
-    const Banner = appendBaseUrlToImages([result])[0];
+    const Banner = appendBaseUrlToImagesOrPdf([result])[0];
     return {
       statusCode: 201,
       message: 'banner added successfully',
@@ -87,7 +87,7 @@ export class BannerService {
     queryBuilder.orderBy(sortColumn, sortOrder);
 
     const [result, total] = await queryBuilder.getManyAndCount();
-    const Banner = appendBaseUrlToImages(result);
+    const Banner = appendBaseUrlToImagesOrPdf(result);
 
     return {
       statusCode: 200,
@@ -108,7 +108,7 @@ export class BannerService {
     if (!banner) {
       throw new NotFoundException(`Banner with ID ${id} not found`);
     }
-    const Banner = appendBaseUrlToImages([banner])[0];
+    const Banner = appendBaseUrlToImagesOrPdf([banner])[0];
     return {
       statusCode: 200,
       message: 'Banner retrieved successfully',
@@ -145,7 +145,7 @@ export class BannerService {
       where: { banner_id: id, deleted_at: null },
     });
 
-    const Banner = appendBaseUrlToImages([update_banner])[0];
+    const Banner = appendBaseUrlToImagesOrPdf([update_banner])[0];
 
     return {
       statusCode: 200,
@@ -166,7 +166,7 @@ export class BannerService {
       };
     }
 
-    const Banner = appendBaseUrlToImages([banner])[0];
+    const Banner = appendBaseUrlToImagesOrPdf([banner])[0];
     banner.deleted_at = new Date();
     await this.BannerRepository.save(banner);
 

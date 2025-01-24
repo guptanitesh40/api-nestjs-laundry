@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Product } from 'src/entities/product.entity';
-import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
+import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -20,7 +20,7 @@ export class ProductService {
       where: { deleted_at: null },
     });
 
-    const products = appendBaseUrlToImages(product);
+    const products = appendBaseUrlToImagesOrPdf(product);
     return {
       statusCode: 200,
       message: 'Product retrieved successfully',
@@ -63,7 +63,7 @@ export class ProductService {
 
     const [result, total] = await queryBuilder.getManyAndCount();
 
-    const products = appendBaseUrlToImages(result);
+    const products = appendBaseUrlToImagesOrPdf(result);
 
     return {
       statusCode: 200,
@@ -84,7 +84,7 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
-    const products = appendBaseUrlToImages([product])[0];
+    const products = appendBaseUrlToImagesOrPdf([product])[0];
     return {
       statusCode: 200,
       message: 'product retrieved successfully',
@@ -102,7 +102,7 @@ export class ProductService {
     });
 
     const result = await this.productRepository.save(product);
-    const Product = appendBaseUrlToImages([result])[0];
+    const Product = appendBaseUrlToImagesOrPdf([result])[0];
 
     return {
       statusCode: 201,
@@ -141,7 +141,7 @@ export class ProductService {
       where: { product_id: id, deleted_at: null },
     });
 
-    const products = appendBaseUrlToImages([update_product])[0];
+    const products = appendBaseUrlToImagesOrPdf([update_product])[0];
 
     return {
       statusCode: 200,
@@ -162,7 +162,7 @@ export class ProductService {
       };
     }
 
-    const products = appendBaseUrlToImages([product])[0];
+    const products = appendBaseUrlToImagesOrPdf([product])[0];
 
     product.deleted_at = new Date();
     await this.productRepository.save(product);

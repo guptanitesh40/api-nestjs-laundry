@@ -4,8 +4,8 @@ import { Response } from 'src/dto/response.dto';
 import { Cart } from 'src/entities/cart.entity';
 import { Price } from 'src/entities/price.entity';
 import {
-  appendBaseUrlToImages,
   appendBaseUrlToImagesCartItems,
+  appendBaseUrlToImagesOrPdf,
 } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
 import { SettingService } from '../settings/setting.service';
@@ -114,10 +114,10 @@ export class CartService {
       .getRawMany();
 
     const carts = cartsQuery.map((cart) => {
-      cart.product_image = appendBaseUrlToImages([
+      cart.product_image = appendBaseUrlToImagesOrPdf([
         { image: cart.product_image },
       ])[0].image;
-      cart.service_image = appendBaseUrlToImages([
+      cart.service_image = appendBaseUrlToImagesOrPdf([
         { image: cart.service_image },
       ])[0].image;
       return cart;
