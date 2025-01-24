@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
-import { appendBaseUrlToImagesIdProof } from 'src/utils/image-path.helper';
+import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { Response } from '../../dto/response.dto';
 import { UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
@@ -44,7 +44,7 @@ export class AuthService {
       if (!user) {
         throw new UnauthorizedException('invalid or expire token');
       }
-      const userImageWithUrl = appendBaseUrlToImagesIdProof([user])[0];
+      const userImageWithUrl = appendBaseUrlToImagesOrPdf([user])[0];
       return {
         statusCode: 200,
         message: 'user data retrived successfully',

@@ -123,14 +123,6 @@ export class ReportController {
     );
   }
 
-  @Get('sales-report')
-  async getSalesReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ): Promise<Response> {
-    return await this.reportService.getSalesReport(startDate, endDate);
-  }
-
   @Get('payment-transaction')
   async getPaymentTransactionReport(
     @Query('startDate') startDate?: string,

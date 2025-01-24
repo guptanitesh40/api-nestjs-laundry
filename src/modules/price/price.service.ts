@@ -5,7 +5,7 @@ import { Category } from 'src/entities/category.entity';
 import { Price } from 'src/entities/price.entity';
 import { Product } from 'src/entities/product.entity';
 import { Service } from 'src/entities/service.entity';
-import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
+import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { InvoiceService } from '../invoice/invoice.service';
 import { CreatePriceDto } from './dto/create-price.dto';
@@ -143,7 +143,8 @@ export class PriceService {
       ...price,
       product: {
         ...price.product,
-        image: appendBaseUrlToImages([{ image: price.product.image }])[0].image,
+        image: appendBaseUrlToImagesOrPdf([{ image: price.product.image }])[0]
+          .image,
       },
     }));
   }

@@ -22,7 +22,7 @@ import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import {
-  appendBaseUrlToImages,
+  appendBaseUrlToImagesOrPdf,
   appendBaseUrlToNestedImages,
 } from 'src/utils/image-path.helper';
 import {
@@ -541,10 +541,14 @@ export class OrderService {
           }
         : null;
 
-      order.order_invoice = getPdfUrl(
+      const order_invoice = getPdfUrl(
         order.order_id,
         getOrderInvoiceFileFileName(),
       );
+
+      const file = fs.existsSync(order_invoice.fileName);
+
+      order.order_invoice = file ? order_invoice : '';
     });
 
     return {
@@ -996,9 +1000,9 @@ export class OrderService {
     );
 
     order.items = order.items.map((item) => {
-      item.product = appendBaseUrlToImages([item.product])[0];
+      item.product = appendBaseUrlToImagesOrPdf([item.product])[0];
 
-      item.service = appendBaseUrlToImages([item.service])[0];
+      item.service = appendBaseUrlToImagesOrPdf([item.service])[0];
 
       return item;
     });
@@ -1210,6 +1214,7 @@ export class OrderService {
         'SUM(order.total - order.paid_amount - order.kasar_amount - order.refund_amount) as total_pending_due_amount',
       ])
       .groupBy('order.order_id');
+
     const orderData = await orders.getRawMany();
 
     const order_ids = [];
@@ -1800,7 +1805,9 @@ export class OrderService {
 
       if (
         orderData.payment_status === PaymentStatus.FULL_PAYMENT_RECEIVED &&
-        orderData.paid_amount + orderData.kasar_amount + order.paid_amount !=
+        orderData.paid_amount +
+          (orderData.kasar_amount || 0) +
+          order.paid_amount !=
           order.total
       ) {
         throw new BadRequestException(
@@ -1810,8 +1817,9 @@ export class OrderService {
 
       if (
         orderData.payment_status === PaymentStatus.PARTIAL_PAYMENT_RECEIVED &&
-        orderData.paid_amount + orderData.kasar_amount + order.paid_amount >=
-          order.total
+        orderData.paid_amount +
+          (orderData.kasar_amount || 0) +
+          order.paid_amount
       ) {
         throw new BadRequestException(
           `you can not pay more than total order amount as partial paymnet `,

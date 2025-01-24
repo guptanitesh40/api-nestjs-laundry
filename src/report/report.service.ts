@@ -73,7 +73,7 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('month')
-      .orderBy('month', 'ASC')
+      .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
     this.convertCountToNumber(result);
@@ -115,7 +115,7 @@ export class ReportService {
     const result = await queryBuilder
       .groupBy('month')
       .addGroupBy('status')
-      .orderBy('month', 'ASC')
+      .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
     this.convertCountToNumber(result);
@@ -154,7 +154,7 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('month')
-      .orderBy('month', 'ASC')
+      .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
     this.convertCountToNumber(result);
@@ -171,7 +171,7 @@ export class ReportService {
       .select(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
       .addSelect(
         `CASE WHEN orders.payment_type = ${PaymentType.CASH_ON_DELIVERY} THEN 'Cash on Delivery' ELSE 'Online Payment' END`,
-        'paymentType',
+        'payment_type',
       )
       .addSelect('COUNT(*)', 'count')
       .where('orders.deleted_at IS NULL');
@@ -186,8 +186,9 @@ export class ReportService {
     }
 
     const result = await queryBuilder
-      .groupBy('month, paymentType')
-      .orderBy('month', 'ASC')
+      .groupBy('month')
+      .addGroupBy('payment_type')
+      .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
     this.convertCountToNumber(result);
@@ -229,7 +230,7 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('month')
-      .orderBy('month', 'ASC')
+      .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
     this.convertCountToNumber(result);
@@ -262,7 +263,7 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('month')
-      .orderBy('month', 'ASC')
+      .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
     result.map((r) => {
@@ -283,8 +284,7 @@ export class ReportService {
       .addSelect('COUNT(*)', 'count')
       .addSelect('SUM(orders.kasar_amount)', 'total_kasar_amount')
       .addSelect('SUM(orders.total)', 'total_order_amount')
-      .where('orders.kasar_amount IS NOT NULL')
-      .andWhere('orders.kasar_amount > 0');
+      .where('orders.kasar_amount IS NOT NULL');
 
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
@@ -297,7 +297,7 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('month')
-      .orderBy('month', 'ASC')
+      .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
     this.convertCountToNumber(result);
@@ -340,7 +340,7 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('month')
-      .orderBy('month', 'ASC')
+      .orderBy('MIN(user.created_at)', 'ASC')
       .getRawMany();
 
     result.map((c) => {
@@ -377,7 +377,7 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('month')
-      .orderBy('month', 'ASC')
+      .orderBy('MIN(user.created_at)', 'ASC')
       .getRawMany();
 
     result.map((c) => {
@@ -415,7 +415,7 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('month')
-      .orderBy('month', 'ASC')
+      .orderBy('MIN(loginHistories.created_at)', 'ASC')
       .getRawMany();
 
     result.map((l) => {
@@ -434,9 +434,11 @@ export class ReportService {
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
-      .select("DATE_FORMAT(orders.created_at, '%b-%Y') AS day")
+      .select("DATE_FORMAT(orders.created_at, '%b-%Y') AS month")
       .addSelect('COUNT(*) AS bookings_count')
-      .addSelect('SUM(orders.total) AS total_sales_amount')
+      .addSelect('SUM(orders.total) AS total_sales')
+      .addSelect('SUM(orders.paid_amount) AS total_collection')
+      .addSelect('SUM(orders.total) - SUM(orders.paid_amount) AS unpaid_amount')
       .where('orders.deleted_at IS NULL');
 
     if (formattedStartDate && formattedEndDate) {
@@ -451,8 +453,8 @@ export class ReportService {
     }
 
     const result = await queryBuilder
-      .groupBy('day')
-      .orderBy('day', 'DESC')
+      .groupBy('month')
+      .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
     result.map((b) => {
@@ -485,7 +487,7 @@ export class ReportService {
     const result = await queryBuilder
       .groupBy('month')
       .addGroupBy('feedback.rating')
-      .orderBy('month', 'ASC')
+      .orderBy('MIN(feedback.created_at)', 'ASC')
       .addOrderBy('feedback.rating', 'ASC')
       .getRawMany();
 
@@ -517,7 +519,7 @@ export class ReportService {
       .groupBy('orders.branch_id')
       .addGroupBy('branch.branch_name')
       .addGroupBy('month')
-      .addOrderBy('month', 'ASC')
+      .addOrderBy('MIN(orders.created_at)', 'ASC')
       .orderBy('total_sales', 'ASC');
 
     if (formattedStartDate && formattedEndDate) {
@@ -532,36 +534,6 @@ export class ReportService {
     const result = await queryBuilder.getRawMany();
 
     return result;
-  }
-
-  async getSalesReport(startDate?: string, endDate?: string): Promise<any> {
-    const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
-
-    const queryBuilder = this.orderRepository
-      .createQueryBuilder('order')
-      .select([
-        "DATE_FORMAT(order.created_at, '%Y-%b') AS month",
-        'SUM(order.total) AS total_sales',
-        'SUM(order.paid_amount) AS total_collection',
-        '(SUM(order.total) - SUM(order.paid_amount) - SUM(order.kasar_amount) ) AS unpaid_Amount',
-      ])
-      .groupBy('month')
-      .orderBy('month', 'ASC');
-
-    if (formattedStartDate && formattedEndDate) {
-      queryBuilder.andWhere(
-        'order.created_at BETWEEN :start_date AND :end_date',
-        {
-          start_date: formattedStartDate,
-          end_date: formattedEndDate,
-        },
-      );
-    }
-
-    const report = await queryBuilder.getRawMany();
-
-    return report;
   }
 
   async getPaymentTransactionReport(
@@ -587,7 +559,7 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('month')
-      .orderBy('month', 'ASC')
+      .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
     return result;

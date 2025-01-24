@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Service } from 'src/entities/service.entity';
-import { appendBaseUrlToImages } from 'src/utils/image-path.helper';
+import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { CreateServiceDto } from './dto/create-service.dto';
@@ -20,7 +20,7 @@ export class ServicesService {
       where: { deleted_at: null },
     });
 
-    const service = appendBaseUrlToImages(services);
+    const service = appendBaseUrlToImagesOrPdf(services);
     return {
       statusCode: 200,
       message: 'Services retrieved successfully',
@@ -62,7 +62,7 @@ export class ServicesService {
 
     const [result, total] = await queryBuilder.getManyAndCount();
 
-    const services = appendBaseUrlToImages(result);
+    const services = appendBaseUrlToImagesOrPdf(result);
 
     return {
       statusCode: 200,
@@ -79,7 +79,7 @@ export class ServicesService {
       throw new NotFoundException(`Service with ID ${id} not found`);
     }
 
-    const services = appendBaseUrlToImages([service])[0];
+    const services = appendBaseUrlToImagesOrPdf([service])[0];
 
     return {
       statusCode: 200,
@@ -99,7 +99,7 @@ export class ServicesService {
 
     const result = await this.serviceRepository.save(service);
 
-    const services = appendBaseUrlToImages([result])[0];
+    const services = appendBaseUrlToImagesOrPdf([result])[0];
 
     return {
       statusCode: 201,
@@ -135,7 +135,7 @@ export class ServicesService {
       where: { service_id: id, deleted_at: null },
     });
 
-    const services = appendBaseUrlToImages([update_service])[0];
+    const services = appendBaseUrlToImagesOrPdf([update_service])[0];
 
     return {
       statusCode: 200,
@@ -157,7 +157,7 @@ export class ServicesService {
       };
     }
 
-    const services = appendBaseUrlToImages([service])[0];
+    const services = appendBaseUrlToImagesOrPdf([service])[0];
 
     service.deleted_at = new Date();
     await this.serviceRepository.save(service);
