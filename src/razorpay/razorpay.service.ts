@@ -43,7 +43,7 @@ export class RazorpayService {
 
   async findTransactionByOrderId(orderId: string): Promise<any> {
     return this.rezorpayRepository.findOne({
-      where: { razorpay_order_id: orderId },
+      where: { razorpay_order_id: orderId, deleted_at: null },
     });
   }
 

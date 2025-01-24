@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Feedback } from 'src/entities/feedback.entity';
 import { Order } from 'src/entities/order.entity';
+import { RazorpayTransactions } from 'src/entities/razorpay.entity';
 import { User } from 'src/entities/user.entity';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
@@ -17,6 +18,8 @@ export class ReportService {
     private readonly userRespository: Repository<User>,
     @InjectRepository(Feedback)
     private readonly feedbackRepository: Repository<Feedback>,
+    @InjectRepository(RazorpayTransactions)
+    private readonly razorpayRepository: Repository<RazorpayTransactions>,
   ) {}
 
   private formattedDateToSQL(dateStr: string): string {
@@ -543,24 +546,39 @@ export class ReportService {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       this.convertDateParameters(startDate, endDate);
 
-    let queryBuilder = this.orderRepository
-      .createQueryBuilder('orders')
-      .select("DATE_FORMAT(orders.created_at, '%b-%Y') AS month")
-      .addSelect('SUM(orders.total) AS total_amount')
-      .addSelect('SUM(orders.paid_amount) AS received_amount')
-      .where('orders.deleted_at IS NULL');
+    let queryBuilder = this.razorpayRepository
+      .createQueryBuilder('razorpay')
+      .select("DATE_FORMAT(razorpay.created_at, '%b-%Y') AS month")
+      .addSelect('SUM(razorpay.amount) AS total_amount')
+      .addSelect(
+        "COUNT(CASE WHEN razorpay.status = 'created' THEN 1 END) AS created_count",
+      )
+      .addSelect(
+        "COUNT(CASE WHEN razorpay.status = 'paid' THEN 1 END) AS paid_count",
+      )
+      .addSelect(
+        "COUNT(CASE WHEN razorpay.status = 'attempted' THEN 1 END) AS attempted_count",
+      )
+      .where('razorpay.deleted_at IS NULL');
 
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
-        'orders.created_at BETWEEN :startDate AND :endDate',
+        'razorpay.created_at BETWEEN :startDate AND :endDate',
         { startDate: formattedStartDate, endDate: formattedEndDate },
       );
     }
 
     const result = await queryBuilder
       .groupBy('month')
-      .orderBy('MIN(orders.created_at)', 'ASC')
+      .orderBy('MIN(razorpay.created_at)', 'ASC')
       .getRawMany();
+
+    result.map((num) => {
+      num.total_amount = Number(num.total_amount);
+      num.created_count = Number(num.created_count);
+      num.paid_count = Number(num.paid_count);
+      num.attempted_count = Number(num.attempted_count);
+    });
 
     return result;
   }
