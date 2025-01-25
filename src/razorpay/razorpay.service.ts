@@ -149,7 +149,7 @@ export class RazorpayService {
       contact: number;
       email: string;
     };
-  }): Promise<any> {
+  }): Promise<Response> {
     const options = {
       amount: paymentDetails.amount * 100,
       currency: paymentDetails.currency,
@@ -177,7 +177,11 @@ export class RazorpayService {
 
       await this.rezorpayRepository.save(razorpay);
 
-      return { payment_link: response.short_url, razorpay };
+      return {
+        message: 'Payment link send successfully',
+        statusCode: 201,
+        data: { payment_link: response.short_url, razorpay },
+      };
     } catch (error) {
       throw new Error(`Failed to generate payment link: ${error.message}`);
     }

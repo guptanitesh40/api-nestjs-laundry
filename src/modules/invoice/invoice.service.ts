@@ -93,11 +93,13 @@ export class InvoiceService {
     const branchName = orderData.branch?.branch_name;
 
     const branchMobileNumber = orderData.branch?.branch_phone_number;
+    let itemsTotal = 0;
     const items =
       orderData.items?.map((item) => {
         const quantity = item.quantity || 1;
         const rate = item.price || 0;
         const amount = (quantity * rate).toFixed(2);
+        itemsTotal += Number(amount);
         return {
           quantity,
           product: item.product?.name || 'Unknown Product',
@@ -106,6 +108,7 @@ export class InvoiceService {
           logo: item.product.image,
           rate,
           amount,
+          itemsTotal,
         };
       }) || [];
 
@@ -135,7 +138,10 @@ export class InvoiceService {
       : 0;
 
     const pendingDueAmount =
-      orderData.total - orderData.paid_amount - (orderData.kasar_amount || 0);
+      orderData.total -
+      orderData.paid_amount -
+      (orderData.kasar_amount || 0) -
+      (orderData.refund_amount || 0);
 
     const gst = orderData.gst ? parseFloat(orderData.gst.toString()) : 0;
 
@@ -152,6 +158,7 @@ export class InvoiceService {
         ? new Date(orderData.estimated_delivery_time).toLocaleString()
         : 'N/A',
       items,
+      itemsTotal,
       subTotal: subTotal,
       Gst: gst,
       shippingCharges,

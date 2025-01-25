@@ -193,9 +193,9 @@
                         <% totalAmount += item.amount; %>
                     <% }) %>
                     <tr class="total-row">
-                        <td colspan="3">Sub total and Total Quantity</td>
+                        <td colspan="3">Items Amount total and Total Quantity</td>
                         <td><%= totalQuantity %></td>
-                        <td><%= invoice.subTotal.toFixed(2) %></td>
+                        <td><%= invoice.itemsTotal.toFixed(2) %></td>
                     </tr>
                     <tr>
                         <td colspan="4">In Words: <%= invoice.totalInWords %></td>
@@ -217,6 +217,8 @@
                     <p><span>Kasar Amount:</span><span><%= invoice.adjustmentCharges.toFixed(2) %></span></p>
                     <p><span>Gst:</span><span><%= invoice.Gst.toFixed(2) %></span></p>
                     <p><span>Discount:</span><span><%= invoice.discount.toFixed(2) %></span></p>
+                    <p><span>Sub Total:</span><span><%= invoice.
+                    subTotal.toFixed(2) %></span></p>
                     <p><span style="color: green;">Paid Amount:</span><span style="color: green;"><%= invoice.paidAmount.toFixed(2) %></span></p>
                     <p><span style="color: red;">Pending Due Amount:</span><span style="color: red;"><%= invoice.pendingDueAmount.toFixed(2) %></span></p>
                     <p><span>Total Amount:</span><span><%= invoice.totalAmount.toFixed(2) %></span></p>
