@@ -527,7 +527,8 @@ export class OrderService {
     const [orders, total]: any = await queryBuilder.getManyAndCount();
     orders.map((order) => {
       if (order.total > order.paid_amount) {
-        order.pending_due_amount = order.total - order.paid_amount;
+        order.pending_due_amount =
+          order.total - order.paid_amount - order.refund_amount;
       }
       order.order_status_details = getOrderStatusDetails(order);
       order.pickup_boy = order.pickup_boy_id
@@ -656,7 +657,8 @@ export class OrderService {
     );
 
     if (orders.total > orders.paid_amount) {
-      orders.pending_due_amount = orders.total - orders.paid_amount;
+      orders.pending_due_amount =
+        orders.total - orders.paid_amount - orders.refund_amount;
     }
     orders.workshop_status_name = getWorkshopOrdersStatusLabel(
       orders.order_status,
@@ -1724,11 +1726,11 @@ export class OrderService {
     let newRefundAmount = 0;
 
     if (refundOrderDto.refund_status === RefundStatus.FULL) {
-      newRefundAmount = order.total;
+      newRefundAmount = order.paid_amount;
     } else if (refundOrderDto.refund_status === RefundStatus.PARTIAL) {
-      if (refundOrderDto.refund_amount > order.total) {
+      if (refundOrderDto.refund_amount > order.paid_amount) {
         throw new BadRequestException(
-          'Refund amount cannot exceed order total',
+          'Partial refund amount cannot exceed the paid amountl',
         );
       }
       newRefundAmount = refundOrderDto.refund_amount;
@@ -1737,6 +1739,7 @@ export class OrderService {
     order.refund_amount = newRefundAmount;
     order.refund_status = refundOrderDto.refund_status;
     order.refund_descriptions = refundOrderDto.refund_description;
+
     await this.orderRepository.save(order);
 
     const refundReceipt =

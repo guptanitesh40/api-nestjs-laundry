@@ -238,6 +238,11 @@ export class ReportService {
 
     this.convertCountToNumber(result);
 
+    result.map((n) => {
+      n.total_amount = Number(n.total_amount.toFixed(2));
+      n.pending_amount = Number(n.pending_amount.toFixed(2));
+    });
+
     return result;
   }
 
@@ -271,6 +276,7 @@ export class ReportService {
 
     result.map((r) => {
       r.total_refund_amount = Number(r.total_refund_amount);
+      r.total_amount = Number(r.total_amount.toFixed(2));
       r.count = Number(r.count);
     });
 
@@ -304,6 +310,10 @@ export class ReportService {
       .getRawMany();
 
     this.convertCountToNumber(result);
+
+    result.map((n) => {
+      n.total_order_amount = Number(n.total_order_amount.toFixed(2));
+    });
 
     return result;
   }
@@ -462,6 +472,9 @@ export class ReportService {
 
     result.map((b) => {
       b.bookings_count = Number(b.bookings_count);
+      b.total_sales = Number(b.total_sales.toFixed(2));
+      b.total_collection = Number(b.total_collection.toFixed(2));
+      b.unpaid_amount = Number(b.unpaid_amount.toFixed(2));
     });
 
     return result;
