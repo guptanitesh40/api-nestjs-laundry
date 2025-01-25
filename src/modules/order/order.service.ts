@@ -238,25 +238,28 @@ export class OrderService {
       });
 
       if (createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT) {
-        if (!createOrderDto.created_by_user_id) {
-          const razorPayTransaction =
-            await this.razorpayService.findTransactionByOrderId(
-              createOrderDto.transaction_id,
-            );
+        const razorPayTransaction =
+          await this.razorpayService.findTransactionByOrderId(
+            createOrderDto.transaction_id,
+          );
 
-          if (!razorPayTransaction) {
-            throw new NotFoundException(
-              `Razorpay transaction with ID ${createOrderDto.transaction_id} not found`,
-            );
-          }
-
-          if (razorPayTransaction.amount !== createOrderDto.paid_amount) {
-            throw new BadRequestException(
-              `Paid amount does not match the expected amount. Expected: ${razorPayTransaction.amount}, Received: ${createOrderDto.paid_amount}`,
-            );
-          }
-          createOrderDto.transaction_id = razorPayTransaction.razorpay_order_id;
+        if (!razorPayTransaction) {
+          throw new NotFoundException(
+            `Razorpay transaction with ID ${createOrderDto.transaction_id} not found`,
+          );
         }
+
+        if (razorPayTransaction.amount !== createOrderDto.paid_amount) {
+          throw new BadRequestException(
+            `Paid amount does not match the expected amount. Expected: ${razorPayTransaction.amount}, Received: ${createOrderDto.paid_amount}`,
+          );
+        }
+
+        await this.razorpayService.updateTransactionStatus(
+          createOrderDto.transaction_id,
+          'paid',
+        );
+        createOrderDto.transaction_id = razorPayTransaction.razorpay_order_id;
       }
 
       const savedOrder = await queryRunner.manager.save(order);

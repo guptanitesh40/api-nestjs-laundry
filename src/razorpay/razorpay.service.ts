@@ -47,6 +47,26 @@ export class RazorpayService {
     });
   }
 
+  async updateTransactionStatus(
+    transactionId: string,
+    status: string,
+  ): Promise<any> {
+    try {
+      const razorpay = await this.rezorpayRepository.findOne({
+        where: { razorpay_order_id: transactionId, deleted_at: null },
+      });
+
+      razorpay.status = status;
+
+      await this.rezorpayRepository.save(razorpay);
+
+      return { success: true, data: razorpay };
+    } catch (error) {
+      console.error('Failed to update Razorpay transaction status:', error);
+      return { success: false };
+    }
+  }
+
   async getAllTransactions(
     razorpayFilterDto: RazorpayFilterDto,
   ): Promise<Response> {
@@ -129,7 +149,7 @@ export class RazorpayService {
       contact: number;
       email: string;
     };
-  }): Promise<string> {
+  }): Promise<any> {
     const options = {
       amount: paymentDetails.amount * 100,
       currency: paymentDetails.currency,
@@ -157,7 +177,7 @@ export class RazorpayService {
 
       await this.rezorpayRepository.save(razorpay);
 
-      return response.short_url;
+      return { payment_link: response.short_url, razorpay };
     } catch (error) {
       throw new Error(`Failed to generate payment link: ${error.message}`);
     }
