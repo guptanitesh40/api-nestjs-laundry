@@ -11,19 +11,16 @@ import {
   Put,
   Query,
   Request,
-  UploadedFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { FilePath } from 'src/constants/FilePath';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { OtpType } from 'src/enum/otp.enum';
 import { Role } from 'src/enum/role.enum';
-import { fileUpload } from 'src/multer/image-upload';
 import { fileFieldsInterceptor } from 'src/utils/file-upload.helper';
 import { RolesGuard } from '../auth/guard/role.guard';
 import { UserFilterDto } from '../dto/users-filter.dto';
@@ -121,14 +118,33 @@ export class UserController {
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN)
-  @UseInterceptors(FileInterceptor('image', fileUpload(FilePath.USER_IMAGES)))
+  @UseInterceptors(fileFieldsInterceptor())
   async updateUser(
     @Param('user_id') user_id: number,
     @Body() updateUserDto: UpdateUserDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles()
+    files: {
+      image?: Express.Multer.File[];
+      id_proof?: Express.Multer.File[];
+    },
   ): Promise<Response> {
-    const imagepath = file ? FilePath.USER_IMAGES + '/' + file.filename : null;
-    return await this.userService.updateUser(user_id, updateUserDto, imagepath);
+    const imageFile = files?.image?.[0];
+    const idProofFile = files?.id_proof?.[0];
+
+    const imagePath = imageFile
+      ? FilePath.USER_IMAGES + '/' + imageFile.filename
+      : null;
+
+    const idProofPath = idProofFile
+      ? FilePath.USER_ID_PROOF + '/' + idProofFile.filename
+      : null;
+
+    return await this.userService.updateUser(
+      user_id,
+      updateUserDto,
+      imagePath,
+      idProofPath,
+    );
   }
 
   @Get('delivery-boys')

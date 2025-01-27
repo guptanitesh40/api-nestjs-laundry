@@ -81,6 +81,11 @@ export class ReportService {
 
     this.convertCountToNumber(result);
 
+    result.map((r) => {
+      r.total_amount = Number(r.total_amount.toFixed(2));
+      r.pending_amount = Number(r.pending_amount.toFixed(2));
+    });
+
     return result;
   }
 
@@ -514,6 +519,7 @@ export class ReportService {
   async getBranchWiseSalesAndCollectionsReport(
     startDate?: string,
     endDate?: string,
+    branch_id?: number,
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       this.convertDateParameters(startDate, endDate);
@@ -545,6 +551,12 @@ export class ReportService {
       );
     } else {
       queryBuilder.andWhere('orders.created_at >= NOW() - INTERVAL 6 MONTH');
+    }
+
+    if (branch_id) {
+      queryBuilder = queryBuilder.andWhere('orders.branch_id =:branchId', {
+        branchId: branch_id,
+      });
     }
 
     const result = await queryBuilder.getRawMany();

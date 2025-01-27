@@ -806,7 +806,7 @@ export class OrderService {
       statusCode: 200,
       message: 'Order updated successfully',
       data: {
-        order_id: updatedOrder.order_id,
+        order: order,
         branch_id: updatedOrder.branch_id,
         total: updatedOrder.total,
         address_details: updatedOrder.address_details,
@@ -1280,6 +1280,12 @@ export class OrderService {
     if (!razorPay) {
       throw new NotFoundException(
         `Razorpay transaction with ID ${clearDueAmount.transaction_id} not found`,
+      );
+    }
+
+    if (razorPay.amount !== clearDueAmount.pay_amount) {
+      throw new BadRequestException(
+        `Paid amount does not match the expected amount. Expected: ${razorPay.amount}, Received: ${clearDueAmount.pay_amount}`,
       );
     }
 

@@ -18,6 +18,8 @@ export class NullTransformInterceptor implements NestInterceptor {
       'security_deposit',
       'delivery_boy_id',
       'pickup_boy_id',
+      'branch_id',
+      'refund_amount',
     ];
 
     const nullKeys = ['next_step'];
