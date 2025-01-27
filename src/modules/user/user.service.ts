@@ -277,6 +277,7 @@ export class UserService {
     user_id: number,
     updateUserDto: UpdateUserDto,
     imagePath?: string,
+    idProofPath?: string,
   ): Promise<Response> {
     const user = await this.userRepository.findOne({
       where: { user_id, deleted_at: null },
@@ -290,6 +291,10 @@ export class UserService {
 
     if (imagePath) {
       userUpdateData.image = imagePath;
+    }
+
+    if (idProofPath) {
+      userUpdateData.id_proof = idProofPath;
     }
 
     if (userUpdateData.password) {

@@ -116,10 +116,12 @@ export class ReportController {
   async getBranchWiseSalesAndCollectionReport(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('branch_id') branch_id?: number,
   ) {
     return this.reportService.getBranchWiseSalesAndCollectionsReport(
       startDate,
       endDate,
+      branch_id,
     );
   }
 

@@ -161,12 +161,15 @@ export const getCustomerOrderStatusLabel = (
       return CustomerOrderStatus.IN_PROCESS;
 
     case 9:
-      return CustomerOrderStatus.READY_FOR_DELIVERY;
+      return CustomerOrderStatus.IN_PROCESS;
 
     case 10:
-      return CustomerOrderStatus.DELIVERED;
+      return CustomerOrderStatus.READY_FOR_DELIVERY;
 
     case 11:
+      return CustomerOrderStatus.DELIVERED;
+
+    case 12:
       return CustomerOrderStatus.ORDER_CANCELLED;
 
     default:
