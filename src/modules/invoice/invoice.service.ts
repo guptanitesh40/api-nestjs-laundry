@@ -6,7 +6,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import ejs from 'ejs';
-import { promises as fs, writeFileSync } from 'fs';
+import * as fs from 'fs';
+import { writeFileSync } from 'fs';
 import path, { join } from 'path';
 import puppeteer, { Browser } from 'puppeteer';
 import { RefundStatus } from 'src/enum/refund_status.enum';
@@ -30,6 +31,12 @@ export class InvoiceService {
   ) {}
 
   async generateAndSaveInvoicePdf(order_id: number): Promise<any> {
+    const order_invoice = getPdfUrl(order_id, getOrderInvoiceFileFileName());
+    const file = fs.existsSync(order_invoice.fileName);
+    if (file) {
+      return { url: order_invoice.fileUrl };
+    }
+
     const templatePath = path.join(
       __dirname,
       '..',
@@ -37,7 +44,7 @@ export class InvoiceService {
       '..',
       'src/templates/invoice.ejs',
     );
-    const html = await fs.readFile(templatePath, 'utf8');
+    const html = fs.readFileSync(templatePath, 'utf8');
 
     const populatedHtml = await this.populateTemplate(html, order_id);
 
@@ -82,7 +89,8 @@ export class InvoiceService {
   ): Promise<string> {
     const invoicePdf = getPdfUrl(order_id, getOrderInvoiceFileFileName());
     const filePath = join(process.cwd(), '', invoicePdf.fileName);
-    await fs.writeFile(filePath, pdfBuffer);
+
+    fs.writeFileSync(filePath, pdfBuffer);
     return invoicePdf.fileUrl;
   }
 
