@@ -1113,6 +1113,7 @@ export class OrderService {
     queryBuilder.orderBy(sortColumn, sortOrder);
 
     const [result, total]: any = await queryBuilder.getManyAndCount();
+
     result.map((order) => {
       order.order_status_name = getCustomerOrderStatusLabel(
         order.order_status,
@@ -1197,10 +1198,14 @@ export class OrderService {
     const [result, total]: any = await queryBuilder.getManyAndCount();
 
     result.map((order) => {
-      order.order_invoice = getPdfUrl(
+      const order_invoice = getPdfUrl(
         order.order_id,
         getOrderInvoiceFileFileName(),
       );
+
+      const file = fs.existsSync(order_invoice.fileName);
+
+      order.order_invoice = file ? order_invoice : '';
     });
 
     const orders = this.orderRepository
@@ -1831,12 +1836,14 @@ export class OrderService {
         orderData.payment_status === PaymentStatus.PARTIAL_PAYMENT_RECEIVED &&
         orderData.paid_amount +
           (orderData.kasar_amount || 0) +
-          order.paid_amount
+          order.paid_amount >=
+          order.total
       ) {
         throw new BadRequestException(
-          `you can not pay more than total order amount as partial paymnet `,
+          `you can not pay more than total order amount as partial payment `,
         );
       }
+
       order.paid_amount += orderData.paid_amount;
       order.kasar_amount = orderData.kasar_amount;
 
