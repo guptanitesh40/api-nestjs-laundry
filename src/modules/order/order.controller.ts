@@ -28,6 +28,7 @@ import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { ClearDueAmount } from './dto/clear-due-amount.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { DeliveryOrderDto } from './dto/delivery-order.dto';
+import { OrdersDto } from './dto/pay-due-amount.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderService } from './order.service';
@@ -278,8 +279,8 @@ export class OrderController {
   @Roles(Role.SUPER_ADMIN)
   async payDueAmount(
     @Body('user_id') user_id: number,
-    @Body() body: { orders: any[] },
+    @Body() body: OrdersDto,
   ): Promise<Response> {
-    return await this.orderService.payDueAmount(user_id, body.orders);
+    return await this.orderService.payDueAmount(user_id, body);
   }
 }
