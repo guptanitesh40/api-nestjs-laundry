@@ -14,7 +14,7 @@ export class RazorpayService {
 
   constructor(
     @InjectRepository(RazorpayTransactions)
-    private rezorpayRepository: Repository<RazorpayTransactions>,
+    private razorpayRepository: Repository<RazorpayTransactions>,
   ) {
     this.razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
@@ -30,7 +30,8 @@ export class RazorpayService {
     };
 
     const data = await this.razorpay.orders.create(options);
-    const razorpay: any = this.rezorpayRepository.create({
+
+    const razorpay: any = this.razorpayRepository.create({
       amount: amount,
       currency: data.currency,
       razorpay_order_id: data.id,
@@ -38,13 +39,16 @@ export class RazorpayService {
       user_id: user_id,
     });
 
-    await this.rezorpayRepository.save(razorpay);
-
-    return { razorpay_order_id: razorpay.razorpay_order_id };
+    await this.razorpayRepository.save(razorpay);
+    return {
+      razorpay_order_id: razorpay.razorpay_order_id,
+      razorpay_key_id: process.env.RAZORPAY_KEY_ID,
+      razorpay_secret: process.env.RAZORPAY_SECRET,
+    };
   }
 
   async findTransactionByOrderId(orderId: string): Promise<any> {
-    return this.rezorpayRepository.findOne({
+    return this.razorpayRepository.findOne({
       where: { razorpay_order_id: orderId, deleted_at: null },
     });
   }
@@ -54,13 +58,13 @@ export class RazorpayService {
     status: string,
   ): Promise<any> {
     try {
-      const razorpay = await this.rezorpayRepository.findOne({
+      const razorpay = await this.razorpayRepository.findOne({
         where: { razorpay_order_id: transactionId, deleted_at: null },
       });
 
       razorpay.status = status;
 
-      await this.rezorpayRepository.save(razorpay);
+      await this.razorpayRepository.save(razorpay);
 
       return { success: true, data: razorpay };
     } catch (error) {
@@ -79,7 +83,7 @@ export class RazorpayService {
     const perPage = per_page ?? 10;
     const skip = (pageNumber - 1) * perPage;
 
-    const queryBuilder = this.rezorpayRepository
+    const queryBuilder = this.razorpayRepository
       .createQueryBuilder('razorpay')
       .innerJoinAndSelect('razorpay.user', 'user')
       .where('razorpay.deleted_at IS NULL')
@@ -171,7 +175,7 @@ export class RazorpayService {
     const response =
       await this.razorpay.paymentLink.create(paymentLinkResponse);
 
-    const razorpay: any = this.rezorpayRepository.create({
+    const razorpay: any = this.razorpayRepository.create({
       amount: paymentDetails.amount,
       currency: paymentDetails.currency,
       razorpay_order_id: data.id,
@@ -179,7 +183,7 @@ export class RazorpayService {
       user_id: paymentDetails.user_id,
     });
 
-    await this.rezorpayRepository.save(razorpay);
+    await this.razorpayRepository.save(razorpay);
 
     return {
       message: 'Payment link sent successfully',

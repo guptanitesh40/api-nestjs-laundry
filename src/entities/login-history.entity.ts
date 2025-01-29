@@ -1,16 +1,16 @@
 import { IsOptional } from 'class-validator';
 import {
   Column,
-  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
 
 @Entity({ name: 'login_history' })
-export class LoginHistory {
+export class LoginHistory extends BaseEntity {
   @PrimaryGeneratedColumn()
   login_id: number;
 
@@ -24,7 +24,4 @@ export class LoginHistory {
   @Column({ type: 'varchar', length: 20, nullable: true })
   @IsOptional()
   type?: string;
-
-  @CreateDateColumn()
-  created_at: Date;
 }

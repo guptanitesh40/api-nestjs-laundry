@@ -135,7 +135,7 @@ export class Order extends BaseEntity {
   @Column('float', { nullable: true })
   gst: number;
 
-  @Column({ type: 'decimal', nullable: true, default: 0 })
+  @Column({ type: 'float', nullable: true, default: 0 })
   refund_amount: number;
 
   @Column({ type: 'int', default: RefundStatus.NONE })

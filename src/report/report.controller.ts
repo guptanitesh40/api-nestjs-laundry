@@ -37,6 +37,14 @@ export class ReportController {
     return this.reportService.getDeliveryPendingReport(startDate, endDate);
   }
 
+  @Get('delivery-report')
+  async getDelievryReport(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getDeliveryReport(startDate, endDate);
+  }
+
   @Get('payment-type-report')
   async getPaymentTypeReport(
     @Query('startDate') startDate?: string,

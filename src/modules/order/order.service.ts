@@ -1012,6 +1012,7 @@ export class OrderService {
 
       return item;
     });
+
     return {
       statusCode: 200,
       message: 'Order retrived successfully',
@@ -1318,9 +1319,24 @@ export class OrderService {
 
     await this.orderRepository.save(updatedOrders);
 
+    const updateOrders = updatedOrders.map((order) => ({
+      order_id: order.order_id,
+      total_amount: order.total,
+      paid_amount: order.paid_amount,
+      kasar_amount: order.kasar_amount,
+      payment_status: order.payment_status,
+      transaction_id: order.transaction_id,
+      pending_amount:
+        order.total -
+        order.paid_amount -
+        order.kasar_amount -
+        order.refund_amount,
+    }));
+
     return {
       statusCode: 200,
       message: 'Payment applied successfully',
+      data: updateOrders,
     };
   }
 
