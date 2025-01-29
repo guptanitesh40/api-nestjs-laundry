@@ -14,6 +14,7 @@ import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from 'src/modules/auth/guard/role.guard';
 import { RazorpayFilterDto } from 'src/modules/dto/razorpay-filter.dto';
+import { GeneratePaymentLinkDto } from './dto/generate-payment-link.dto';
 import { RazorpayService } from './razorpay.service';
 
 @Controller('razorpay')
@@ -43,7 +44,9 @@ export class RazorpayController {
 
   @Post('generate-payment-link')
   @Roles(Role.SUPER_ADMIN)
-  async generatePaymentLink(@Body() paymentDetails: any): Promise<any> {
+  async generatePaymentLink(
+    @Body() paymentDetails: GeneratePaymentLinkDto,
+  ): Promise<any> {
     return this.razorpayService.generatePaymentLink(paymentDetails);
   }
 

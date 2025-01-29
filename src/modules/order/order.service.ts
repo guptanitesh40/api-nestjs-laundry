@@ -55,6 +55,7 @@ import { CancelOrderDto } from './dto/cancel-order.dto';
 import { ClearDueAmount } from './dto/clear-due-amount.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { DeliveryOrderDto } from './dto/delivery-order.dto';
+import { OrdersDto } from './dto/pay-due-amount.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 
@@ -244,7 +245,7 @@ export class OrderService {
           );
 
         if (!razorPayTransaction) {
-          throw new NotFoundException(
+          throw new BadRequestException(
             `Razorpay transaction with ID ${createOrderDto.transaction_id} not found`,
           );
         }
@@ -1767,15 +1768,7 @@ export class OrderService {
     return this.orderRepository.count({ where: condition });
   }
 
-  async payDueAmount(
-    user_id: number,
-    orders: Array<{
-      order_id: number;
-      paid_amount: number;
-      payment_status: number;
-      kasar_amount: number;
-    }>,
-  ): Promise<Response> {
+  async payDueAmount(user_id: number, ordersDto: OrdersDto): Promise<Response> {
     const user = await this.userService.findUserById(user_id);
 
     if (!user) {
@@ -1784,7 +1777,7 @@ export class OrderService {
 
     const updatedOrders = [];
 
-    const orders_ids = orders.map((order) => order.order_id);
+    const orders_ids = ordersDto.orders.map((order) => order.order_id);
 
     const orderdata = await this.orderRepository.find({
       where: {
@@ -1793,7 +1786,7 @@ export class OrderService {
       },
     });
 
-    for (const orderData of orders) {
+    for (const orderData of ordersDto.orders) {
       const order = orderdata.find((o) => o.order_id === orderData.order_id);
 
       if (!order) {

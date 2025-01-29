@@ -6,6 +6,7 @@ import { Response } from 'src/dto/response.dto';
 import { RazorpayTransactions } from 'src/entities/razorpay.entity';
 import { RazorpayFilterDto } from 'src/modules/dto/razorpay-filter.dto';
 import { Repository } from 'typeorm';
+import { GeneratePaymentLinkDto } from './dto/generate-payment-link.dto';
 
 @Injectable()
 export class RazorpayService {
@@ -29,13 +30,14 @@ export class RazorpayService {
     };
 
     const data = await this.razorpay.orders.create(options);
-    const razorpay: any = this.rezorpayRepository.create();
+    const razorpay: any = this.rezorpayRepository.create({
+      amount: amount,
+      currency: data.currency,
+      razorpay_order_id: data.id,
+      status: data.status,
+      user_id: user_id,
+    });
 
-    razorpay.amount = amount;
-    razorpay.currency = data.currency;
-    razorpay.razorpay_order_id = data.id;
-    razorpay.status = data.status;
-    razorpay.user_id = user_id;
     await this.rezorpayRepository.save(razorpay);
 
     return { razorpay_order_id: razorpay.razorpay_order_id };
@@ -140,17 +142,18 @@ export class RazorpayService {
     };
   }
 
-  async generatePaymentLink(paymentDetails: {
-    amount: number;
-    currency: string;
-    user_id: number;
-    customer: {
-      name: string;
-      contact: number;
-      email: string;
+  async generatePaymentLink(
+    paymentDetails: GeneratePaymentLinkDto,
+  ): Promise<Response> {
+    const orderResponse = {
+      amount: paymentDetails.amount * 100,
+      currency: paymentDetails.currency,
+      receipt: `receipt_${Date.now()}`,
     };
-  }): Promise<Response> {
-    const options = {
+
+    const data = await this.razorpay.orders.create(orderResponse);
+
+    const paymentLinkResponse = {
       amount: paymentDetails.amount * 100,
       currency: paymentDetails.currency,
       customer: {
@@ -165,26 +168,24 @@ export class RazorpayService {
       reminder_enable: true,
     };
 
-    try {
-      const response = await this.razorpay.paymentLink.create(options);
-      const razorpay: any = this.rezorpayRepository.create();
+    const response =
+      await this.razorpay.paymentLink.create(paymentLinkResponse);
 
-      razorpay.amount = paymentDetails.amount;
-      razorpay.currency = paymentDetails.currency;
-      razorpay.razorpay_order_id = response.id;
-      razorpay.status = response.status;
-      razorpay.user_id = paymentDetails.user_id;
+    const razorpay: any = this.rezorpayRepository.create({
+      amount: paymentDetails.amount,
+      currency: paymentDetails.currency,
+      razorpay_order_id: data.id,
+      status: response.status,
+      user_id: paymentDetails.user_id,
+    });
 
-      await this.rezorpayRepository.save(razorpay);
+    await this.rezorpayRepository.save(razorpay);
 
-      return {
-        message: 'Payment link send successfully',
-        statusCode: 201,
-        data: { payment_link: response.short_url, razorpay },
-      };
-    } catch (error) {
-      throw new Error(`Failed to generate payment link: ${error.message}`);
-    }
+    return {
+      message: 'Payment link sent successfully',
+      statusCode: 201,
+      data: { payment_link: response.short_url, razorpay },
+    };
   }
 
   async verifySignature(
