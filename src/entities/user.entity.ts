@@ -76,11 +76,11 @@ export class User extends BaseEntity {
   @IsOptional()
   vendor_code_expiry?: Date;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  @Column({ type: 'float', nullable: true })
   @IsOptional()
   commission_percentage?: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'float', nullable: true })
   @IsOptional()
   security_deposit?: number;
 

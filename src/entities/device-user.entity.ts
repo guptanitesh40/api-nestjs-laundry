@@ -7,10 +7,11 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
 
 @Entity({ name: 'device_users' })
-export class DeviceUser {
+export class DeviceUser extends BaseEntity {
   @PrimaryGeneratedColumn()
   device_id: number;
 

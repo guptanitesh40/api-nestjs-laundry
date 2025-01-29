@@ -49,7 +49,7 @@ export class OrderItem extends BaseEntity {
   @JoinColumn({ name: 'service_id' })
   service: Service;
 
-  @Column({ type: 'decimal' })
+  @Column({ type: 'float' })
   price: number;
 
   @Column({ type: 'int', default: 1 })

@@ -147,6 +147,7 @@ export class ReportService {
       .andWhere('orders.order_status NOT IN (:...completedStatuses)', {
         completedStatuses: [
           OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+          OrderStatus.DELIVERED,
           OrderStatus.CANCELLED,
         ],
       });
@@ -162,6 +163,49 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('month')
+      .orderBy('MIN(orders.created_at)', 'ASC')
+      .getRawMany();
+
+    this.convertCountToNumber(result);
+
+    return result;
+  }
+
+  async getDeliveryReport(startDate?: string, endDate?: string): Promise<any> {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(startDate, endDate);
+
+    const excludedStatuses = [
+      OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+      OrderStatus.CANCELLED,
+    ];
+
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('orders')
+      .select("DATE_FORMAT(orders.created_at,'%b-%y')", 'month')
+      .addSelect(
+        `CASE WHEN orders.order_status = :deliveredStatus THEN 'Completed' ELSE 'Pending' END `,
+        'status',
+      )
+      .addSelect('COUNT(*)', 'count')
+      .where('orders.deleted_at IS NULL')
+      .andWhere('orders.order_status NOT IN (:...excludedStatuses)', {
+        excludedStatuses,
+      })
+      .setParameter('deliveredStatus', OrderStatus.DELIVERED);
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder.andWhere(
+        'orders.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    } else {
+      queryBuilder.andWhere('orders.created_at >= NOW() - INTERVAL 6 MONTH');
+    }
+
+    const result = await queryBuilder
+      .groupBy('month')
+      .addGroupBy('status')
       .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
@@ -416,8 +460,9 @@ export class ReportService {
       .createQueryBuilder('user')
       .leftJoin('user.loginHistories', 'loginHistories')
       .select("DATE_FORMAT(loginHistories.created_at, '%b-%Y')", 'month')
-      .addSelect('COUNT(DISTINCT loginHistories.user_id)', 'login_count')
-      .where('user.deleted_at IS NULL')
+      .addSelect('COUNT(loginHistories.user_id)', 'login_count')
+      .where('user.role_id =:roleId', { roleId: Role.CUSTOMER })
+      .andWhere('user.deleted_at IS NULL')
       .andWhere('loginHistories.user_id IS NOT NULL');
 
     if (formattedStartDate && formattedEndDate) {
