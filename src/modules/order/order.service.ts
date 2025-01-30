@@ -312,6 +312,16 @@ export class OrderService {
 
       await this.notificationService.sendOrderNotification(orderDetail);
 
+      const deviceToken = await this.userService.getDeviceToken(user.user_id);
+
+      if (deviceToken) {
+        await this.notificationService.sendPushNotification(
+          deviceToken,
+          'New Order Created',
+          `Your order #${order.order_id} has been placed successfully!`,
+        );
+      }
+
       await queryRunner.commitTransaction();
 
       return {
@@ -1000,10 +1010,11 @@ export class OrderService {
       throw new NotFoundException('Order not found');
     }
 
-    order.order_invoice = getPdfUrl(
-      order.order_id,
-      getOrderInvoiceFileFileName(),
-    );
+    const invoice = getPdfUrl(order.order_id, getOrderInvoiceFileFileName());
+
+    const file = fs.existsSync(invoice.fileName);
+
+    order.order_invoice = file ? invoice.fileUrl : '';
 
     order.items = order.items.map((item) => {
       item.product = appendBaseUrlToImagesOrPdf([item.product])[0];
@@ -1151,6 +1162,12 @@ export class OrderService {
       .addSelect('SUM(order.paid_amount) as paid_amount')
       .addSelect('SUM(order.kasar_amount) as kasar_amount')
       .getRawOne();
+
+    totalPendingAmount.total_pending_due_amount = Number(
+      totalPendingAmount.total_pending_due_amount.toFixed(2),
+    );
+
+    totalPendingAmount.total = Number(totalPendingAmount.total.toFixed(2));
 
     return {
       statusCode: 200,
