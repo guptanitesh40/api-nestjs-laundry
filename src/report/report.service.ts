@@ -178,11 +178,6 @@ export class ReportService {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
       .select("DATE_FORMAT(orders.created_at,'%b-%y')", 'month')
-      // .addSelect(
-      //   `CASE WHEN orders.order_status = :deliveredStatus THEN 'Completed' ELSE 'Pending' END `,
-      //   'status',
-      // )
-
       .addSelect(
         `SUM(CASE WHEN orders.order_status = :deliveredStatus THEN 1 ELSE 0 END)`,
         'completed',
@@ -226,10 +221,6 @@ export class ReportService {
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
       .select(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
-      // .addSelect(
-      //   `CASE WHEN orders.payment_type = ${PaymentType.CASH_ON_DELIVERY} THEN 'Cash on Delivery' ELSE 'Online Payment' END`,
-      //   'payment_type',
-      // )
       .addSelect(
         `SUM(CASE WHEN orders.payment_status = ${PaymentType.CASH_ON_DELIVERY} THEN 1 ELSE 0 END)`,
         'cash_on_delivery',

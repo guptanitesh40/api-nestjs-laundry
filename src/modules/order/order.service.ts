@@ -313,15 +313,13 @@ export class OrderService {
       await this.notificationService.sendOrderNotification(orderDetail);
 
       const deviceToken = await this.userService.getDeviceToken(user.user_id);
-      console.log('deviceToken', deviceToken);
 
       if (deviceToken) {
-        const message = await this.notificationService.sendPushNotification(
+        await this.notificationService.sendPushNotification(
           deviceToken,
           'New Order Created',
           `Your order #${order.order_id} has been placed successfully!`,
         );
-        console.log(message);
       }
 
       await queryRunner.commitTransaction();

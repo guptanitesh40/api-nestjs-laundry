@@ -48,7 +48,6 @@ export class NotificationService {
 
     try {
       const response = await admin.messaging().send(message);
-      console.log('Notification sent successfully:', response);
       return { success: true, response };
     } catch (error) {
       console.error('Error sending notification:', error);
