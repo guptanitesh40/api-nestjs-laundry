@@ -919,4 +919,12 @@ export class UserService {
       data: users,
     };
   }
+
+  async getDeviceToken(user_id: number): Promise<any> {
+    const token = await this.deviceUserRepository.findOne({
+      where: { user_id: user_id },
+    });
+
+    return token.device_token;
+  }
 }

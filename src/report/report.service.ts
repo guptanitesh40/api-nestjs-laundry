@@ -175,22 +175,25 @@ export class ReportService {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       this.convertDateParameters(startDate, endDate);
 
-    const excludedStatuses = [
-      OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
-      OrderStatus.CANCELLED,
-    ];
-
     const queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
       .select("DATE_FORMAT(orders.created_at,'%b-%y')", 'month')
+      // .addSelect(
+      //   `CASE WHEN orders.order_status = :deliveredStatus THEN 'Completed' ELSE 'Pending' END `,
+      //   'status',
+      // )
+
       .addSelect(
-        `CASE WHEN orders.order_status = :deliveredStatus THEN 'Completed' ELSE 'Pending' END `,
-        'status',
+        `SUM(CASE WHEN orders.order_status = :deliveredStatus THEN 1 ELSE 0 END)`,
+        'completed',
       )
-      .addSelect('COUNT(*)', 'count')
+      .addSelect(
+        `SUM(CASE WHEN orders.order_status != :deliveredStatus THEN 1 ELSE 0 END)`,
+        'pending',
+      )
       .where('orders.deleted_at IS NULL')
-      .andWhere('orders.order_status NOT IN (:...excludedStatuses)', {
-        excludedStatuses,
+      .andWhere('orders.order_status !=:cancelOrder', {
+        cancelOrder: OrderStatus.CANCELLED,
       })
       .setParameter('deliveredStatus', OrderStatus.DELIVERED);
 
@@ -205,11 +208,13 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('month')
-      .addGroupBy('status')
       .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
-    this.convertCountToNumber(result);
+    result.map((n) => {
+      n.completed = Number(n.completed);
+      n.pending = Number(n.pending);
+    });
 
     return result;
   }
@@ -221,11 +226,18 @@ export class ReportService {
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
       .select(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
+      // .addSelect(
+      //   `CASE WHEN orders.payment_type = ${PaymentType.CASH_ON_DELIVERY} THEN 'Cash on Delivery' ELSE 'Online Payment' END`,
+      //   'payment_type',
+      // )
       .addSelect(
-        `CASE WHEN orders.payment_type = ${PaymentType.CASH_ON_DELIVERY} THEN 'Cash on Delivery' ELSE 'Online Payment' END`,
-        'payment_type',
+        `SUM(CASE WHEN orders.payment_status = ${PaymentType.CASH_ON_DELIVERY} THEN 1 ELSE 0 END)`,
+        'cash_on_delivery',
       )
-      .addSelect('COUNT(*)', 'count')
+      .addSelect(
+        `SUM(CASE WHEN orders.payment_status = ${PaymentType.ONLINE_PAYMENT} THEN 1 ELSE 0 END)`,
+        'online_payment',
+      )
       .where('orders.deleted_at IS NULL');
 
     if (formattedStartDate && formattedEndDate) {
@@ -239,11 +251,13 @@ export class ReportService {
 
     const result = await queryBuilder
       .groupBy('month')
-      .addGroupBy('payment_type')
       .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
-    this.convertCountToNumber(result);
+    result.map((n) => {
+      n.cash_on_delivery = Number(n.cash_on_delivery);
+      n.online_payment = Number(n.online_payment);
+    });
 
     return result;
   }
