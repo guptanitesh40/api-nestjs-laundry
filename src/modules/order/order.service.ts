@@ -1163,11 +1163,14 @@ export class OrderService {
       .addSelect('SUM(order.kasar_amount) as kasar_amount')
       .getRawOne();
 
-    totalPendingAmount.total_pending_due_amount = Number(
-      totalPendingAmount.total_pending_due_amount.toFixed(2),
-    );
+    totalPendingAmount.total_pending_due_amount =
+      totalPendingAmount.total_pending_due_amount
+        ? Number(totalPendingAmount.total_pending_due_amount.toFixed(2))
+        : 0;
 
-    totalPendingAmount.total = Number(totalPendingAmount.total.toFixed(2));
+    totalPendingAmount.total = totalPendingAmount.total
+      ? Number(totalPendingAmount.total.toFixed(2))
+      : 0;
 
     return {
       statusCode: 200,
