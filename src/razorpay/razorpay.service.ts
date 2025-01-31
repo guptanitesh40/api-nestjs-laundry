@@ -22,7 +22,11 @@ export class RazorpayService {
     });
   }
 
-  async createOrder(amount: number, currency: string, user_id: number) {
+  async createOrder(
+    amount: number,
+    currency: string,
+    user_id: number,
+  ): Promise<Response> {
     const options = {
       amount: amount * 100,
       currency: currency,
@@ -41,9 +45,13 @@ export class RazorpayService {
 
     await this.razorpayRepository.save(razorpay);
     return {
-      razorpay_order_id: razorpay.razorpay_order_id,
-      razorpay_key_id: process.env.RAZORPAY_KEY_ID,
-      razorpay_secret: process.env.RAZORPAY_SECRET,
+      statusCode: 200,
+      message: 'transaction details',
+      data: {
+        razorpay_order_id: razorpay.razorpay_order_id,
+        razorpay_key_id: process.env.RAZORPAY_KEY_ID,
+        razorpay_secret: process.env.RAZORPAY_SECRET,
+      },
     };
   }
 
