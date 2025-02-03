@@ -1,10 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
-import { Category } from 'src/entities/category.entity';
 import { Price } from 'src/entities/price.entity';
-import { Product } from 'src/entities/product.entity';
-import { Service } from 'src/entities/service.entity';
 import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { InvoiceService } from '../invoice/invoice.service';
@@ -15,12 +12,6 @@ export class PriceService {
   constructor(
     @InjectRepository(Price)
     private priceRepository: Repository<Price>,
-    @InjectRepository(Category)
-    private categoryRepository: Repository<Category>,
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
-    @InjectRepository(Service)
-    private serviceRepository: Repository<Service>,
     @Inject(forwardRef(() => InvoiceService))
     private invoiceService: InvoiceService,
     private dataSource: DataSource,

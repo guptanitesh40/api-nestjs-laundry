@@ -11,11 +11,8 @@ import * as fs from 'fs';
 import { Response } from 'src/dto/response.dto';
 import { UserAddress } from 'src/entities/address.entity';
 import { Branch } from 'src/entities/branch.entity';
-import { Category } from 'src/entities/category.entity';
 import { OrderItem } from 'src/entities/order-item.entity';
 import { Order } from 'src/entities/order.entity';
-import { Product } from 'src/entities/product.entity';
-import { Service } from 'src/entities/service.entity';
 import { CustomerOrderStatuseLabel } from 'src/enum/customer_order_status_label.enum';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
@@ -64,16 +61,6 @@ export class OrderService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
-    @InjectRepository(UserAddress)
-    private readonly addressRepository: Repository<UserAddress>,
-    @InjectRepository(Category)
-    private categoryRepository: Repository<Category>,
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
-    @InjectRepository(Service)
-    private serviceRepository: Repository<Service>,
-    @InjectRepository(OrderItem)
-    private orderItemRepository: Repository<OrderItem>,
     private readonly couponService: CouponService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
@@ -112,7 +99,7 @@ export class OrderService {
 
       const address_details = `${address.building_number}, ${address.area}, ${address.city}, ${address.state}, ${address.country} - ${address.pincode}`;
 
-      const addess_type = address.address_type;
+      const addess_type = address?.address_type;
 
       const settingKeys = [
         'estimate_pickup_normal_hour',

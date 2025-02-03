@@ -1,13 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserAddress } from 'src/entities/address.entity';
-import { Category } from 'src/entities/category.entity';
-import { Coupon } from 'src/entities/coupon.entity';
-import { OrderItem } from 'src/entities/order-item.entity';
 import { Order } from 'src/entities/order.entity';
-import { Product } from 'src/entities/product.entity';
-import { Service } from 'src/entities/service.entity';
-import { User } from 'src/entities/user.entity';
 import { RazorpayModule } from 'src/razorpay/razorpay.module';
 import { CartModule } from '../cart/cart.module';
 import { CouponModule } from '../coupon/coupon.module';
@@ -23,16 +16,7 @@ import { OrderService } from './order.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Order,
-      OrderItem,
-      UserAddress,
-      Category,
-      Product,
-      Service,
-      Coupon,
-      User,
-    ]),
+    TypeOrmModule.forFeature([Order]),
     forwardRef(() => UsersModule),
     forwardRef(() => CouponModule),
     forwardRef(() => InvoiceModule),

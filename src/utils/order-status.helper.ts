@@ -179,13 +179,13 @@ export const getCustomerOrderStatusLabel = (
 
 export const getWorkshopOrdersStatusLabel = (orderStatus: number): string => {
   switch (orderStatus) {
-    case 4:
+    case 6:
       return WorkshopOrderStatus.ORDER_RECEIVED;
 
-    case 5:
+    case 7:
       return WorkshopOrderStatus.IN_PROGRESS;
 
-    case 6:
+    case 8:
       return WorkshopOrderStatus.COMPLETED;
   }
 };
