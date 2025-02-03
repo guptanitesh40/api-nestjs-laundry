@@ -145,11 +145,7 @@ export class ReportService {
       .addSelect('COUNT(*)', 'count')
       .where('orders.deleted_at IS NULL')
       .andWhere('orders.order_status NOT IN (:...completedStatuses)', {
-        completedStatuses: [
-          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
-          OrderStatus.DELIVERED,
-          OrderStatus.CANCELLED,
-        ],
+        completedStatuses: [OrderStatus.DELIVERED, OrderStatus.CANCELLED],
       });
 
     if (formattedStartDate && formattedEndDate) {
@@ -222,11 +218,11 @@ export class ReportService {
       .createQueryBuilder('orders')
       .select(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
       .addSelect(
-        `SUM(CASE WHEN orders.payment_status = ${PaymentType.CASH_ON_DELIVERY} THEN 1 ELSE 0 END)`,
+        `SUM(CASE WHEN orders.payment_type = ${PaymentType.CASH_ON_DELIVERY} THEN 1 ELSE 0 END)`,
         'cash_on_delivery',
       )
       .addSelect(
-        `SUM(CASE WHEN orders.payment_status = ${PaymentType.ONLINE_PAYMENT} THEN 1 ELSE 0 END)`,
+        `SUM(CASE WHEN orders.payment_type = ${PaymentType.ONLINE_PAYMENT} THEN 1 ELSE 0 END)`,
         'online_payment',
       )
       .where('orders.deleted_at IS NULL');
