@@ -134,7 +134,7 @@ export class UserService {
 
     return {
       statusCode: 200,
-      message: 'User Loggedin succssfully',
+      message: 'User Loggedin successfully',
       data: { user, deviceUser },
     };
   }
@@ -167,7 +167,7 @@ export class UserService {
     delete user.password;
     return {
       statusCode: 200,
-      message: 'password change succssfully',
+      message: 'password change successfully',
       data: { user },
     };
   }
@@ -793,7 +793,7 @@ export class UserService {
 
     return {
       statusCode: 200,
-      message: 'OTP Sent Successfully',
+      message: 'OTP Sent successfully',
       data: null,
     };
   }
