@@ -18,6 +18,7 @@ export class NotificationService {
     );
     this.twilioFrom = process.env.TWILIO_PHONE_NUMBER;
   }
+
   async sendOrderNotification(order: any): Promise<void> {
     if (!order) {
       throw new NotFoundException(`Order with ID ${order.order_id} not found.`);
@@ -48,6 +49,7 @@ export class NotificationService {
 
     try {
       const response = await admin.messaging().send(message);
+
       return { success: true, response };
     } catch (error) {
       console.error('Error sending notification:', error);

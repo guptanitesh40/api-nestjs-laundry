@@ -218,7 +218,7 @@ export const getOrderStatusList = (currentStatus: number): any[] => {
       description: 'Items ready for delivery.',
     },
     {
-      order_status: [10],
+      order_status: [10, 11],
       status: 'Delivered',
       description: 'Order delivered.',
     },

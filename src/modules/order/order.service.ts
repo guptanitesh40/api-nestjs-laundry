@@ -1168,6 +1168,14 @@ export class OrderService {
         ? Number(totalPendingAmount.total_pending_due_amount.toFixed(2))
         : 0;
 
+    totalPendingAmount.paid_amount = totalPendingAmount.paid_amount
+      ? Number(totalPendingAmount.paid_amount.toFixed(2))
+      : 0;
+
+    totalPendingAmount.kasar_amount = totalPendingAmount.kasar_amount
+      ? Number(totalPendingAmount.kasar_amount.toFixed(2))
+      : 0;
+
     totalPendingAmount.total = totalPendingAmount.total
       ? Number(totalPendingAmount.total.toFixed(2))
       : 0;
