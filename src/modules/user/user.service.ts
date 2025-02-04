@@ -712,7 +712,7 @@ export class UserService {
   async getAllDeliveryBoys(): Promise<Response> {
     const deliveryBoys = await this.userRepository.find({
       where: {
-        role_id: Role.DELIVERY_BOY,
+        role_id: Role.DELIVERY_BOY_AND_PICKUP_BOY,
         deleted_at: null,
       },
     });

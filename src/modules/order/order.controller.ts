@@ -40,7 +40,7 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get('orders/assigned')
-  @Roles(Role.DELIVERY_BOY)
+  @Roles(Role.DELIVERY_BOY_AND_PICKUP_BOY)
   async getAssignedOrders(
     @Request() req,
     @Query() paginationQuery: PaginationQueryDto,
@@ -214,7 +214,7 @@ export class OrderController {
   }
 
   @Patch('order/:order_id/complete-delivery')
-  @Roles(Role.DELIVERY_BOY)
+  @Roles(Role.DELIVERY_BOY_AND_PICKUP_BOY)
   @UseInterceptors(
     FilesInterceptor('images', 5, fileUpload(FilePath.NOTE_IMAGES)),
   )
@@ -237,7 +237,7 @@ export class OrderController {
   }
 
   @Patch('order/:order_id/complete-pickup')
-  @Roles(Role.DELIVERY_BOY)
+  @Roles(Role.DELIVERY_BOY_AND_PICKUP_BOY)
   @UseInterceptors(
     FilesInterceptor('images', 5, fileUpload(FilePath.NOTE_IMAGES)),
   )

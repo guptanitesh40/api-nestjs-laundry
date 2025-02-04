@@ -936,7 +936,7 @@ export class OrderService {
 
     const deliveryBoy = await this.userService.findOneByRole(
       delivery_boy_id,
-      Role.DELIVERY_BOY,
+      Role.DELIVERY_BOY_AND_PICKUP_BOY,
     );
 
     if (!deliveryBoy) {
@@ -1137,35 +1137,31 @@ export class OrderService {
       .andWhere('order.deleted_at IS NULL');
     const inProgressCount = await inProgressCountOrder.getCount();
 
-    const totalPendingAmount = await this.orderRepository
+    const orders = this.orderRepository
       .createQueryBuilder('order')
       .where('order.user_id=:user_id', { user_id: user_id })
       .andWhere('order.deleted_at IS NULL')
-      .select(
-        'SUM(order.total - order.paid_amount - order.kasar_amount - order.refund_amount)',
-        'total_pending_due_amount',
-      )
-      .addSelect('SUM(order.total) as total')
-      .addSelect('SUM(order.paid_amount) as paid_amount')
-      .addSelect('SUM(order.kasar_amount) as kasar_amount')
-      .getRawOne();
+      .andWhere('order.total > order.paid_amount + order.kasar_amount')
+      .andWhere('order.refund_status !=:refundStatus', {
+        refundStatus: RefundStatus.FULL,
+      })
+      .andWhere('order.order_status= :status', {
+        status: OrderStatus.DELIVERED,
+      })
+      .select([
+        'order.order_id as order_id',
+        'SUM(order.total - order.paid_amount - order.kasar_amount - order.refund_amount) as total_pending_due_amount',
+      ])
+      .groupBy('order.order_id');
+    const orderData = await orders.getRawMany();
 
-    totalPendingAmount.total_pending_due_amount =
-      totalPendingAmount.total_pending_due_amount
-        ? Number(totalPendingAmount.total_pending_due_amount.toFixed(2))
-        : 0;
+    const order_ids = [];
+    let total_pending_due_amount = 0;
 
-    totalPendingAmount.paid_amount = totalPendingAmount.paid_amount
-      ? Number(totalPendingAmount.paid_amount.toFixed(2))
-      : 0;
-
-    totalPendingAmount.kasar_amount = totalPendingAmount.kasar_amount
-      ? Number(totalPendingAmount.kasar_amount.toFixed(2))
-      : 0;
-
-    totalPendingAmount.total = totalPendingAmount.total
-      ? Number(totalPendingAmount.total.toFixed(2))
-      : 0;
+    orderData.map((order) => {
+      order_ids.push(order.order_id);
+      total_pending_due_amount += order.total_pending_due_amount;
+    });
 
     return {
       statusCode: 200,
@@ -1176,7 +1172,8 @@ export class OrderService {
         page_number: pageNumber,
         count: total,
         inProgressCount,
-        totalPendingAmount,
+        order_ids,
+        total_pending_due_amount,
       },
     };
   }
@@ -1197,7 +1194,7 @@ export class OrderService {
       .andWhere('order.order_status= :status', {
         status: OrderStatus.DELIVERED,
       })
-      .andWhere('order.total > order.paid_amount')
+      .andWhere('order.total > order.paid_amount + order.kasar_amount')
       .andWhere('order.refund_status !=:refundStatus ', {
         refundStatus: RefundStatus.FULL,
       })
@@ -1229,7 +1226,7 @@ export class OrderService {
       .createQueryBuilder('order')
       .where('order.user_id=:user_id', { user_id: user_id })
       .andWhere('order.deleted_at IS NULL')
-      .andWhere('order.total > order.paid_amount')
+      .andWhere('order.total > order.paid_amount + order.kasar_amount')
       .andWhere('order.refund_status !=:refundStatus ', {
         refundStatus: RefundStatus.FULL,
       })
@@ -1486,7 +1483,7 @@ export class OrderService {
 
     const pickupBoy = await this.userService.findOneByRole(
       pickup_boy_id,
-      Role.DELIVERY_BOY,
+      Role.DELIVERY_BOY_AND_PICKUP_BOY,
     );
 
     if (!pickupBoy) {
