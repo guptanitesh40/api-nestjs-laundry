@@ -163,7 +163,7 @@ export class InvoiceService {
         ? new Date(orderData.estimated_pickup_time).toLocaleString()
         : 'N/A',
       deliveryTime: orderData.estimated_delivery_time
-        ? new Date(orderData.estimated_delivery_time).toLocaleString()
+        ? new Date(new Date().setHours(19, 0, 0, 0)).toLocaleString()
         : 'N/A',
 
       customerAddress: orderData.address_details || 'N/A',
