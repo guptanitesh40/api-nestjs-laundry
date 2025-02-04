@@ -299,7 +299,7 @@ export class OrderService {
 
       await this.notificationService.sendOrderNotification(orderDetail);
 
-      const deviceToken = await this.userService.getDeviceToken(user.user_id);
+      const deviceToken = await this.userService?.getDeviceToken(user.user_id);
 
       if (deviceToken) {
         await this.notificationService.sendPushNotification(
