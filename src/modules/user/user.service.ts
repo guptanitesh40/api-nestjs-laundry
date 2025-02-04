@@ -920,11 +920,11 @@ export class UserService {
     };
   }
 
-  async getDeviceToken(user_id: number): Promise<any> {
+  async getDeviceToken(user_id: number): Promise<string | null> {
     const token = await this.deviceUserRepository.findOne({
       where: { user_id: user_id },
     });
 
-    return token.device_token;
+    return token ? token.device_token : null;
   }
 }
