@@ -165,6 +165,9 @@ export class InvoiceService {
       deliveryTime: orderData.estimated_delivery_time
         ? new Date(orderData.estimated_delivery_time).toLocaleString()
         : 'N/A',
+
+      customerAddress: orderData.address_details || 'N/A',
+
       items,
       itemsTotal,
       subTotal: subTotal,
