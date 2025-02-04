@@ -36,7 +36,7 @@ export class NullTransformInterceptor implements NestInterceptor {
             : nullKeys.includes(key)
               ? null
               : '';
-        } else if (data[key] instanceof Date) {
+        } else if (data[key] instanceof Date && !isNaN(data[key].getTime())) {
           transformed[key] = data[key].toISOString();
         } else if (typeof data[key] === 'object') {
           transformed[key] = this.transform(data[key]);

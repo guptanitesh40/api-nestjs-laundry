@@ -299,7 +299,7 @@ export class OrderService {
 
       await this.notificationService.sendOrderNotification(orderDetail);
 
-      const deviceToken = await this.userService?.getDeviceToken(user.user_id);
+      const deviceToken = await this.userService?.getDeviceToken(user?.user_id);
 
       if (deviceToken) {
         await this.notificationService.sendPushNotification(
@@ -1144,9 +1144,6 @@ export class OrderService {
       .andWhere('order.total > order.paid_amount + order.kasar_amount')
       .andWhere('order.refund_status !=:refundStatus', {
         refundStatus: RefundStatus.FULL,
-      })
-      .andWhere('order.order_status= :status', {
-        status: OrderStatus.DELIVERED,
       })
       .select([
         'order.order_id as order_id',
