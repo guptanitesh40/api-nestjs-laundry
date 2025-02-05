@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { Order } from 'src/entities/order.entity';
 import admin from 'src/firebase.config';
+import { getCustomerOrderStatusLabel } from 'src/utils/order-status.helper';
 import Twilio from 'twilio';
 
 @Injectable()
@@ -39,6 +40,26 @@ export class NotificationService {
 
   private prepareMessage(order: Order): string {
     return `Dear ${order.user.first_name} ${order.user.last_name}, Your booking has been confirmed with Booking No: SCONLINE/${order.order_id}, on Dated ${order.created_at.toISOString()}, Total No of clothes ${order.items}, Total Amount: ${order.total}. Please, check your bill on this link: www.sikkacleaners.in/sikka-billing/customer-login.`;
+  }
+
+  async sendOrderStatusNotification(order: any): Promise<any> {
+    if (!order) {
+      throw new NotFoundException(`Order with Id ${order.order_id} not found.`);
+    }
+
+    const orderStatus = getCustomerOrderStatusLabel(order.order_status);
+
+    const message = `Dear ${order.user?.first_name} ${order.user?.last_name}, we are delighted to inform you that your order #${order.order_id} is now ${orderStatus}. Thank you for choosing us!`;
+
+    const encodedMessage = encodeURIComponent(message);
+
+    const finalUrl = `${this.apiUrl}?token=${process.env.VISION360_WHATSAPP_API_TOKEN}&phone=91${order.user?.mobile_number}&message=${encodedMessage}`;
+
+    const response = await firstValueFrom(this.httpService.post(finalUrl, {}));
+
+    if (response.status !== 200) {
+      throw new Error('Failed to send WhatsApp notification');
+    }
   }
 
   async sendPushNotification(deviceToken: string, title: string, body: string) {
