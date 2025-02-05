@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import { writeFileSync } from 'fs';
 import path, { join } from 'path';
 import puppeteer, { Browser } from 'puppeteer';
+import { OrderStatus } from 'src/enum/order-status.eum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import numberToWords from 'src/utils/numberToWords';
 import {
@@ -97,6 +98,12 @@ export class InvoiceService {
   private async populateTemplate(html: any, order_id: number): Promise<any> {
     const order = await this.orderService.getOrderDetail(order_id);
     const orderData = order.data;
+
+    if (orderData.order_status !== OrderStatus.DELIVERED) {
+      throw new BadRequestException(
+        `This order is not delivered yet. You cannot download the invoice.`,
+      );
+    }
 
     const branchName = orderData.branch?.branch_name;
 

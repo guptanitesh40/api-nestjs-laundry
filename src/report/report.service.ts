@@ -145,7 +145,11 @@ export class ReportService {
       .addSelect('COUNT(*)', 'count')
       .where('orders.deleted_at IS NULL')
       .andWhere('orders.order_status NOT IN (:...completedStatuses)', {
-        completedStatuses: [OrderStatus.DELIVERED, OrderStatus.CANCELLED],
+        completedStatuses: [
+          OrderStatus.DELIVERED,
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
       });
 
     if (formattedStartDate && formattedEndDate) {
@@ -183,8 +187,11 @@ export class ReportService {
         'pending',
       )
       .where('orders.deleted_at IS NULL')
-      .andWhere('orders.order_status !=:cancelOrder', {
-        cancelOrder: OrderStatus.CANCELLED,
+      .andWhere('orders.order_status NOT IN (:...cancelOrder)', {
+        cancelOrder: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
       })
       .setParameter('deliveredStatus', OrderStatus.DELIVERED);
 

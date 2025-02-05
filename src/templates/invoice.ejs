@@ -161,9 +161,10 @@
                 <p style="font-weight: bold;">Booking No: <%= invoice.invoiceNumber %></p>
                 <p>Customer Name: <%= invoice.customer.name %></p>
                 <p>Customer Contact: <%= invoice.customer.contact %></p>
+                <p>Customer Address: <%= invoice.customerAddress %></p>
             </div>
             <div class="detail-2">
-                <p>Collection Date & Time:<br> <%= invoice.collectionTime %></p>
+                <p>Collection Date & Time:<br><%= invoice.collectionTime %></p>
                 <p>Delivery Date & Time:<br><%= invoice.deliveryTime %></p>
             </div>
         </div>
@@ -214,8 +215,10 @@
                 <div class="totals">
                     <p><span>Shipping Charges:</span><span><%= invoice.shippingCharges.toFixed(2) %></span></p>
                     <p><span>Delivery Charges:</span><span><%= invoice.expressDeliveryCharges.toFixed(2) %></span></p>
-                    <p><span>Kasar Amount:</span><span><%= invoice.adjustmentCharges.toFixed(2) %></span></p>
-                    <p><span>Gst:</span><span><%= invoice.Gst.toFixed(2) %></span></p>
+                    <% if (invoice.adjustmentCharges > 0) { %>
+                        <p><span>Kasar Amount:</span><span><%= invoice.adjustmentCharges.toFixed(2) %></span></p>
+                      <% } %>
+                                          <p><span>Gst:</span><span><%= invoice.Gst.toFixed(2) %></span></p>
                     <p><span>Discount:</span><span><%= invoice.discount.toFixed(2) %></span></p>
                     <p><span>Sub Total:</span><span><%= invoice.
                     subTotal.toFixed(2) %></span></p>
