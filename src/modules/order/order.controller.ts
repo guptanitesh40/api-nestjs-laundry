@@ -77,6 +77,19 @@ export class OrderController {
     return this.orderService.clearCustomerDue(clearDueAmount, user.user_id);
   }
 
+  @Post('orders/cancel-by-customer')
+  @Roles(Role.CUSTOMER)
+  async cancelOrderByCustomer(
+    @Body() cancelOrderDto,
+    @Request() req,
+  ): Promise<Response> {
+    const user = req.user;
+    return this.orderService.cancelOrderByCustomer(
+      cancelOrderDto,
+      user.user_id,
+    );
+  }
+
   @Post('orders/cancel')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async cancelOrder(@Body() cancelOrderDto, @Request() req): Promise<Response> {

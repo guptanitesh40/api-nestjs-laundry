@@ -878,7 +878,7 @@ export class OrderService {
         }
         break;
 
-      case OrderStatus.CANCELLED:
+      case OrderStatus.CANCELLED_BY_ADMIN:
         if (order.order_status === OrderStatus.DELIVERED) {
           throw new BadRequestException(
             'Cannot cancel an order that has been delivered.',
@@ -1127,10 +1127,13 @@ export class OrderService {
       .createQueryBuilder('order')
       .where('order.user_id=:user_id', { user_id: user_id })
       .andWhere(
-        'order.order_status != :excludedDelivered AND order.order_status != :excludedCancelled',
+        'order.order_status != :excludedDelivered AND order.order_status NOT IN (:...excludedCancelled)',
         {
           excludedDelivered: OrderStatus.DELIVERED,
-          excludedCancelled: OrderStatus.CANCELLED,
+          excludedCancelled: [
+            OrderStatus.CANCELLED_BY_ADMIN,
+            OrderStatus.CANCELLED_BY_CUSTOMER,
+          ],
         },
       )
 
@@ -1756,7 +1759,10 @@ export class OrderService {
       );
     }
 
-    if (order.order_status == OrderStatus.CANCELLED) {
+    if (
+      order.order_status === OrderStatus.CANCELLED_BY_ADMIN &&
+      order.order_status === OrderStatus.CANCELLED_BY_CUSTOMER
+    ) {
       throw new BadRequestException('Cannot refund a cancelled order');
     }
 
@@ -1912,7 +1918,46 @@ export class OrderService {
       );
     }
 
-    order.order_status = OrderStatus.CANCELLED;
+    order.order_status = OrderStatus.CANCELLED_BY_ADMIN;
+    await this.orderRepository.save(order);
+
+    const note: CreateNoteDto = {
+      user_id,
+      order_id: cancelOrderDto.order_id,
+      text_note: cancelOrderDto.text_note,
+    };
+
+    const notes = await this.notesService.create(note);
+
+    return {
+      statusCode: 200,
+      message: 'Order Cancelled Successfully',
+      data: {
+        order,
+        notes,
+      },
+    };
+  }
+
+  async cancelOrderByCustomer(
+    cancelOrderDto: CancelOrderDto,
+    user_id: number,
+  ): Promise<Response> {
+    const order = await this.orderRepository.findOne({
+      where: { order_id: cancelOrderDto.order_id },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order Not Found');
+    }
+
+    if (order.order_status === OrderStatus.DELIVERED) {
+      throw new NotFoundException(
+        'This order is not canceled; it has already been delivered.',
+      );
+    }
+
+    order.order_status = OrderStatus.CANCELLED_BY_CUSTOMER;
     await this.orderRepository.save(order);
 
     const note: CreateNoteDto = {
