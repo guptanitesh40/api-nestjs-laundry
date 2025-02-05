@@ -60,9 +60,15 @@ const orderStatusFlow = {
     next_step: null,
   },
   12: {
-    admin_label: 'Cancelled',
+    admin_label: 'Cancelled By Admin',
     description:
-      'The order has been cancelled either by the customer or due to a system error. No further actions are required, and the order will not proceed to delivery.',
+      'The order has been cancelled by the admin, either upon the customer’s request or due to an internal issue. No further actions are required, and the order will not proceed to delivery.',
+    next_step: null,
+  },
+  13: {
+    admin_label: 'Cancelled By Customer',
+    description:
+      'The order has been cancelled by the customer. No further actions are required, and the order will not proceed to delivery.',
     next_step: null,
   },
 };
@@ -170,7 +176,10 @@ export const getCustomerOrderStatusLabel = (
       return CustomerOrderStatus.DELIVERED;
 
     case 12:
-      return CustomerOrderStatus.ORDER_CANCELLED;
+      return CustomerOrderStatus.ORDER_CANCELLED_BY_ADMIN;
+
+    case 13:
+      return CustomerOrderStatus.ORDER_CANCELLED_BY_CUSTOMER;
 
     default:
       return '';
