@@ -176,10 +176,10 @@ export const getCustomerOrderStatusLabel = (
       return CustomerOrderStatus.DELIVERED;
 
     case 12:
-      return CustomerOrderStatus.ORDER_CANCELLED_BY_ADMIN;
+      return CustomerOrderStatus.ORDER_CANCELLED;
 
     case 13:
-      return CustomerOrderStatus.ORDER_CANCELLED_BY_CUSTOMER;
+      return CustomerOrderStatus.ORDER_CANCELLED;
 
     default:
       return '';

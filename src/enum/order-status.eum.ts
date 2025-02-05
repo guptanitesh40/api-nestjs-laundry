@@ -20,8 +20,7 @@ export enum CustomerOrderStatus {
   IN_PROCESS = 'In Process',
   READY_FOR_DELIVERY = 'Ready For Delivery',
   DELIVERED = 'Delivered',
-  ORDER_CANCELLED_BY_ADMIN = 'Order Cancelled By Admin',
-  ORDER_CANCELLED_BY_CUSTOMER = 'Order Cancelled By Customer',
+  ORDER_CANCELLED = 'Cancelled',
 }
 
 export enum WorkshopOrderStatus {
