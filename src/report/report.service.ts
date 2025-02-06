@@ -6,6 +6,7 @@ import { RazorpayTransactions } from 'src/entities/razorpay.entity';
 import { User } from 'src/entities/user.entity';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
+import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import { Repository } from 'typeorm';
 
@@ -272,6 +273,15 @@ export class ReportService {
         'pending_amount',
       )
       .where('orders.deleted_at IS NULL')
+      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.refund_status != :refundStatus', {
+        refundStatus: RefundStatus.FULL,
+      })
       .andWhere('orders.payment_status IN (:...statuses)', {
         statuses: [
           PaymentStatus.PAYMENT_PENDING,
@@ -510,7 +520,16 @@ export class ReportService {
       .addSelect('SUM(orders.total) AS total_sales')
       .addSelect('SUM(orders.paid_amount) AS total_collection')
       .addSelect('SUM(orders.total) - SUM(orders.paid_amount) AS unpaid_amount')
-      .where('orders.deleted_at IS NULL');
+      .where('orders.deleted_at IS NULL')
+      .andWhere('orders.order_status NOT IN (:...orderStatus)', {
+        orderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.refund_status != refundStatus', {
+        refundStatus: RefundStatus.FULL,
+      });
 
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
@@ -591,6 +610,15 @@ export class ReportService {
       .addSelect(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
       .where('orders.deleted_at IS NULL')
       .andWhere('orders.branch_id IS NOT NULL')
+      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.refund_status != :refundStatus', {
+        refundStatus: RefundStatus.FULL,
+      })
       .groupBy('orders.branch_id')
       .addGroupBy('branch.branch_name')
       .addGroupBy('month')
