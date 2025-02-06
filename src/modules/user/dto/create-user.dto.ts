@@ -6,7 +6,6 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
-  MinLength,
 } from 'class-validator';
 import { User } from 'src/entities/user.entity';
 import { Gender } from 'src/enum/gender.enum';
@@ -29,8 +28,6 @@ export class CreateUserDto {
   @IsUnique({ tablename: User.name, column: 'mobile_number' })
   mobile_number: number;
 
-  @IsNotEmpty()
-  @MinLength(6)
   password: string;
 
   @IsNotEmpty()

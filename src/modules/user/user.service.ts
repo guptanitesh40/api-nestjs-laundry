@@ -195,6 +195,8 @@ export class UserService {
     admin_id: number,
     createUserDto: CreateUserDto,
   ): Promise<Response> {
+    createUserDto.password = crypto.randomBytes(4).toString('hex');
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
 
@@ -254,6 +256,20 @@ export class UserService {
 
     if (branchMappings.length > 0) {
       await this.userBranchMappingRepository.save(branchMappings);
+    }
+
+    const countryCode = '+91';
+    const formattedMobileNumber = `${countryCode}${String(createUserDto.mobile_number).replace(/^0/, '')}`;
+
+    try {
+      await twilioClient.messages.create({
+        body: `Dear ${createUserDto.first_name} ${createUserDto.last_name}, Your Password Is: ${createUserDto.password}. Thank you for choosing sikka cleaners! `,
+        from: TWILIO_PHONE_NUMBER,
+        to: formattedMobileNumber,
+      });
+    } catch (error) {
+      console.error('Twilio Error:', error.response?.data || error.message);
+      throw new BadRequestException('Failed to send password');
     }
 
     return {

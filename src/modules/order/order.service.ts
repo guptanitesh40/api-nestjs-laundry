@@ -796,8 +796,6 @@ export class OrderService {
 
     const data = (await this.getOrderDetail(order.order_id)).data;
 
-    await this.invoiceService.generateAndSaveInvoicePdf(order_id);
-
     const refundReceipt = await this.invoiceService.generateOrderLabels(data);
 
     return {
@@ -1147,6 +1145,12 @@ export class OrderService {
       .andWhere('order.total > order.paid_amount + order.kasar_amount')
       .andWhere('order.refund_status !=:refundStatus', {
         refundStatus: RefundStatus.FULL,
+      })
+      .andWhere('order.order_status NOT IN(:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
       })
       .select([
         'order.order_id as order_id',
