@@ -796,8 +796,6 @@ export class OrderService {
 
     const data = (await this.getOrderDetail(order.order_id)).data;
 
-    await this.invoiceService.generateAndSaveInvoicePdf(order_id);
-
     const refundReceipt = await this.invoiceService.generateOrderLabels(data);
 
     return {
