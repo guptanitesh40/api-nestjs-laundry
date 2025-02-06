@@ -1148,6 +1148,12 @@ export class OrderService {
       .andWhere('order.refund_status !=:refundStatus', {
         refundStatus: RefundStatus.FULL,
       })
+      .andWhere('order.order_status NOT IN(:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
       .select([
         'order.order_id as order_id',
         'SUM(order.total - order.paid_amount - order.kasar_amount - order.refund_amount) as total_pending_due_amount',
