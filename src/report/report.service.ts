@@ -117,6 +117,15 @@ export class ReportService {
       .where('orders.deleted_at IS NULL')
       .andWhere('orders.order_status IN (:...statuses)', {
         statuses: [OrderStatus.DELIVERED],
+      })
+      .andWhere('orders.status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.order_status != :excludeRefundStatus', {
+        excludeRefundStatus: RefundStatus.FULL,
       });
 
     if (formattedStartDate && formattedEndDate) {
