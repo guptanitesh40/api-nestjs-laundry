@@ -62,7 +62,16 @@ export class ReportService {
       .addSelect(
         'SUM(orders.total - orders.paid_amount - orders.kasar_amount - orders.refund_amount) AS pending_amount',
       )
-      .where('orders.deleted_at IS NULL');
+      .where('orders.deleted_at IS NULL')
+      .andWhere('orders.order_status NOT IN (!...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('order.refund_status != :excludeRefundStatus', {
+        excludeRefundStatus: RefundStatus.FULL,
+      });
 
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
@@ -108,6 +117,15 @@ export class ReportService {
       .where('orders.deleted_at IS NULL')
       .andWhere('orders.order_status IN (:...statuses)', {
         statuses: [OrderStatus.DELIVERED],
+      })
+      .andWhere('orders.status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.order_status != :excludeRefundStatus', {
+        excludeRefundStatus: RefundStatus.FULL,
       });
 
     if (formattedStartDate && formattedEndDate) {
@@ -527,8 +545,8 @@ export class ReportService {
           OrderStatus.CANCELLED_BY_CUSTOMER,
         ],
       })
-      .andWhere('orders.refund_status != refundStatus', {
-        refundStatus: RefundStatus.FULL,
+      .andWhere('orders.refund_status != :excludeRefundStatus', {
+        excludeRefundStatus: RefundStatus.FULL,
       });
 
     if (formattedStartDate && formattedEndDate) {
