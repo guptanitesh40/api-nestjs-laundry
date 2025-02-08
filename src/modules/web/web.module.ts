@@ -10,6 +10,7 @@ import { BannerService } from '../banner/banner.service';
 import { CartService } from '../cart/cart.service';
 import { InvoiceModule } from '../invoice/invoice.module';
 import { ApiService } from '../mobileapi/api.service';
+import { OrderModule } from '../order/order.module';
 import { PriceService } from '../price/price.service';
 import { ServicesService } from '../services/services.service';
 import { SettingModule } from '../settings/setting.module';
@@ -20,6 +21,7 @@ import { WebController } from './web.controller';
     TypeOrmModule.forFeature([Cart, Price, Service, Banner, Category, Product]),
     forwardRef(() => InvoiceModule),
     SettingModule,
+    OrderModule,
   ],
   controllers: [WebController],
   providers: [

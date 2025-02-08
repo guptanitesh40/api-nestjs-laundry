@@ -14,8 +14,9 @@ export class MobileApiController {
   constructor(private readonly apiService: ApiService) {}
 
   @Get('/home')
-  async findAll(): Promise<Response> {
-    return await this.apiService.findAll();
+  async findAll(@Request() req): Promise<Response> {
+    const user = req.user;
+    return await this.apiService.findAll(user.user_id);
   }
 
   @Get('products')

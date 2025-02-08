@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { Order } from 'src/entities/order.entity';
-import admin from 'src/firebase.config';
+import { customerApp, driverApp } from 'src/firebase.config';
 import { getCustomerOrderStatusLabel } from 'src/utils/order-status.helper';
 import Twilio from 'twilio';
 
@@ -69,7 +69,27 @@ export class NotificationService {
     };
 
     try {
-      const response = await admin.messaging().send(message);
+      const response = await customerApp.messaging().send(message);
+
+      return { success: true, response };
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      return { success: false, error };
+    }
+  }
+
+  async sendPushNotificationDriver(
+    deviceToken: string,
+    title: string,
+    body: string,
+  ) {
+    const message = {
+      notification: { title, body },
+      token: deviceToken,
+    };
+
+    try {
+      const response = await driverApp.messaging().send(message);
 
       return { success: true, response };
     } catch (error) {

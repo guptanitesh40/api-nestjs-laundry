@@ -920,41 +920,6 @@ export class OrderService {
     };
   }
 
-  async assignDeliveryBoy(
-    order_id: number,
-    delivery_boy_id: number,
-  ): Promise<Response> {
-    const order = await this.orderRepository.findOne({
-      where: { order_id: order_id },
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${order_id} not found`);
-    }
-
-    const deliveryBoy = await this.userService.findOneByRole(
-      delivery_boy_id,
-      Role.DELIVERY_BOY_AND_PICKUP_BOY,
-    );
-
-    if (!deliveryBoy) {
-      throw new NotFoundException(
-        `Delivery Boy with id ${delivery_boy_id} not found`,
-      );
-    }
-
-    order.delivery_boy_id = deliveryBoy.user_id;
-    order.order_status =
-      OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY;
-
-    await this.orderRepository.save(order);
-
-    return {
-      statusCode: 200,
-      message: 'Delivery boy assigned successfully',
-    };
-  }
-
   async getOrderDetail(order_id: number): Promise<Response> {
     const orderQuery = this.orderRepository
       .createQueryBuilder('order')
@@ -1179,6 +1144,40 @@ export class OrderService {
         order_ids,
         total_pending_due_amount,
       },
+    };
+  }
+
+  async pendingDueAmount(user_id: number): Promise<Response> {
+    const orders = this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.user_id=:user_id', { user_id: user_id })
+      .andWhere('order.deleted_at IS NULL')
+      .andWhere('order.total > order.paid_amount + order.kasar_amount')
+      .andWhere('order.refund_status !=:refundStatus ', {
+        refundStatus: RefundStatus.FULL,
+      })
+      .andWhere('order.order_status= :status', {
+        status: OrderStatus.DELIVERED,
+      })
+      .select([
+        'order.order_id as order_id',
+        'SUM(order.total - order.paid_amount - order.kasar_amount - order.refund_amount) as total_pending_due_amount',
+      ])
+      .groupBy('order.order_id');
+
+    const orderData = await orders.getRawMany();
+
+    const order_ids = [];
+    let totalPendingAmount = 0;
+    orderData.map((order) => {
+      order_ids.push(order.order_id);
+      totalPendingAmount += order.total_pending_due_amount;
+    });
+
+    return {
+      statusCode: 200,
+      message: 'Pending Due amount',
+      data: totalPendingAmount,
     };
   }
 
@@ -1472,6 +1471,53 @@ export class OrderService {
     };
   }
 
+  async assignDeliveryBoy(
+    order_id: number,
+    delivery_boy_id: number,
+  ): Promise<Response> {
+    const order = await this.orderRepository.findOne({
+      where: { order_id: order_id },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${order_id} not found`);
+    }
+
+    const deliveryBoy = await this.userService.findOneByRole(
+      delivery_boy_id,
+      Role.DELIVERY_BOY_AND_PICKUP_BOY,
+    );
+
+    if (!deliveryBoy) {
+      throw new NotFoundException(
+        `Delivery Boy with id ${delivery_boy_id} not found`,
+      );
+    }
+
+    order.delivery_boy_id = deliveryBoy.user_id;
+    order.order_status =
+      OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY;
+
+    await this.orderRepository.save(order);
+
+    const deviceToken = await this.userService?.getDeviceToken(
+      deliveryBoy.user_id,
+    );
+
+    if (deviceToken) {
+      await this.notificationService.sendPushNotificationDriver(
+        deviceToken,
+        'New Delivery Assigned',
+        `Order #${order_id} has been assinged to you for delivery`,
+      );
+    }
+
+    return {
+      statusCode: 200,
+      message: 'Delivery boy assigned successfully',
+    };
+  }
+
   async assignPickupBoy(
     order_id: number,
     pickup_boy_id: number,
@@ -1501,6 +1547,18 @@ export class OrderService {
     order.order_status = OrderStatus.ASSIGNED_PICKUP_BOY;
 
     await this.orderRepository.save(order);
+
+    const deviceToken = await this.userService.getDeviceToken(
+      pickupBoy.user_id,
+    );
+
+    if (deviceToken) {
+      await this.notificationService.sendPushNotificationDriver(
+        deviceToken,
+        'New Pickup Assigned',
+        `Order #${order.order_id} has been assigned to you for pickup`,
+      );
+    }
 
     return {
       statusCode: 200,
