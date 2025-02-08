@@ -14,7 +14,7 @@ const serviceAccount = {
   universe_domain: process.env.UNIVERSE_DOMAIN,
 };
 
-const order = admin.initializeApp(
+const customerApp = admin.initializeApp(
   {
     credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
   },
@@ -35,11 +35,11 @@ const serviceAccount2 = {
   universe_domain: process.env.UNIVERSE_DOMAIN2,
 };
 
-const driver = admin.initializeApp(
+const driverApp = admin.initializeApp(
   {
     credential: admin.credential.cert(serviceAccount2 as admin.ServiceAccount),
   },
   'driverApp',
 );
 
-export { driver, order };
+export { customerApp, driverApp };
