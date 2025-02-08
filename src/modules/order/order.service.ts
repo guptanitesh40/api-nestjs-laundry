@@ -1147,6 +1147,40 @@ export class OrderService {
     };
   }
 
+  async pendingDueAmount(user_id: number): Promise<Response> {
+    const orders = this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.user_id=:user_id', { user_id: user_id })
+      .andWhere('order.deleted_at IS NULL')
+      .andWhere('order.total > order.paid_amount + order.kasar_amount')
+      .andWhere('order.refund_status !=:refundStatus ', {
+        refundStatus: RefundStatus.FULL,
+      })
+      .andWhere('order.order_status= :status', {
+        status: OrderStatus.DELIVERED,
+      })
+      .select([
+        'order.order_id as order_id',
+        'SUM(order.total - order.paid_amount - order.kasar_amount - order.refund_amount) as total_pending_due_amount',
+      ])
+      .groupBy('order.order_id');
+
+    const orderData = await orders.getRawMany();
+
+    const order_ids = [];
+    let totalPendingAmount = 0;
+    orderData.map((order) => {
+      order_ids.push(order.order_id);
+      totalPendingAmount += order.total_pending_due_amount;
+    });
+
+    return {
+      statusCode: 200,
+      message: 'Pending Due amount',
+      data: totalPendingAmount,
+    };
+  }
+
   async getOrderInvoiceList(
     user_id: number,
     paginationQueryDto: PaginationQueryDto,
