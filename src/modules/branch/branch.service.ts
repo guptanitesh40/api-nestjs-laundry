@@ -25,6 +25,21 @@ export class BranchService {
     };
   }
 
+  async getBranchList(): Promise<Response> {
+    const queryBuilder = this.branchRepository
+      .createQueryBuilder('branch')
+      .andWhere('branch.deleted_at IS NULL')
+      .select(['branch.branch_id', 'branch.branch_name']);
+
+    const branches = await queryBuilder.getRawMany();
+
+    return {
+      statusCode: 200,
+      message: ' ',
+      data: branches,
+    };
+  }
+
   async findAll(branchFilterDto: BranchFilterDto): Promise<Response> {
     const {
       per_page,
