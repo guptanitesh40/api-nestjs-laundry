@@ -7,6 +7,7 @@ import { Price } from 'src/entities/price.entity';
 import { Product } from 'src/entities/product.entity';
 import { Service } from 'src/entities/service.entity';
 import { BannerService } from '../banner/banner.service';
+import { BranchModule } from '../branch/branch.module';
 import { CartService } from '../cart/cart.service';
 import { InvoiceModule } from '../invoice/invoice.module';
 import { ApiService } from '../mobileapi/api.service';
@@ -22,6 +23,7 @@ import { WebController } from './web.controller';
     forwardRef(() => InvoiceModule),
     SettingModule,
     OrderModule,
+    BranchModule,
   ],
   controllers: [WebController],
   providers: [

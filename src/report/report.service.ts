@@ -212,7 +212,7 @@ export class ReportService {
           OrderStatus.CANCELLED_BY_CUSTOMER,
         ],
       })
-      .andWhere('orders.refund_status != excludeRefundStatus', {
+      .andWhere('orders.refund_status != :excludeRefundStatus', {
         excludeRefundStatus: RefundStatus.FULL,
       })
       .setParameter('deliveredStatus', OrderStatus.DELIVERED);
