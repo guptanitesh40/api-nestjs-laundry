@@ -604,6 +604,10 @@ export class UserService {
 
     if (roles) {
       userQuery.andWhere('user.role IN (:...roles)', { roles: roles });
+    } else {
+      userQuery.andWhere('user.role_id != :excludeRoleIds', {
+        excludeRoleIds: Role.CUSTOMER,
+      });
     }
 
     if (genders) {

@@ -38,6 +38,12 @@ export class BranchController {
     return await this.branchService.getBranchesByCompanyIds(company_ids);
   }
 
+  @Get('list')
+  @Roles(Role.CUSTOMER)
+  async getBranchList(): Promise<Response> {
+    return this.branchService.getBranchList();
+  }
+
   @Get()
   async findAll(@Query() branchFilterDto: BranchFilterDto) {
     return this.branchService.findAll(branchFilterDto);
