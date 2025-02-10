@@ -35,7 +35,7 @@ export class BranchService {
 
     return {
       statusCode: 200,
-      message: ' ',
+      message: 'Branches retrived successfully',
       data: branches,
     };
   }
