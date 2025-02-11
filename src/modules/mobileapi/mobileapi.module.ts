@@ -1,35 +1,22 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Banner } from 'src/entities/banner.entity';
-import { Category } from 'src/entities/category.entity';
-import { Order } from 'src/entities/order.entity';
-import { Price } from 'src/entities/price.entity';
-import { Product } from 'src/entities/product.entity';
-import { Service } from 'src/entities/service.entity';
-import { BannerService } from '../banner/banner.service';
+import { BannerModule } from '../banner/banner.module';
 import { InvoiceModule } from '../invoice/invoice.module';
 import { OrderModule } from '../order/order.module';
-import { PriceService } from '../price/price.service';
-import { ServicesService } from '../services/services.service';
+import { PriceModule } from '../price/price.module';
+import { ServicesModule } from '../services/services.module';
 import { ApiService } from './api.service';
 import { MobileApiController } from './mobileapi.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Service,
-      Banner,
-      Price,
-      Category,
-      Service,
-      Product,
-      Order,
-    ]),
     forwardRef(() => InvoiceModule),
     OrderModule,
+    BannerModule,
+    ServicesModule,
+    PriceModule,
   ],
   controllers: [MobileApiController],
-  providers: [ApiService, BannerService, ServicesService, PriceService],
+  providers: [ApiService],
   exports: [ApiService],
 })
 export class MobileApiModule {}
