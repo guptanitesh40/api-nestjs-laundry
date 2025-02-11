@@ -19,6 +19,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { FilePath } from 'src/constants/FilePath';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
+import { AssignTo } from 'src/enum/assign_to.enum';
 import { CustomerOrderStatuseLabel } from 'src/enum/customer_order_status_label.enum';
 import { Role } from 'src/enum/role.enum';
 import { fileUpload } from 'src/multer/image-upload';
@@ -43,12 +44,14 @@ export class OrderController {
   @Roles(Role.DELIVERY_BOY_AND_PICKUP_BOY)
   async getAssignedOrders(
     @Request() req,
+    @Query('assignTo') assignTo: AssignTo,
     @Query() paginationQuery: PaginationQueryDto,
-  ): Promise<Response> {
+  ): Promise<any> {
     const user = req.user;
 
     return await this.orderService.getAssignedOrders(
       user.user_id,
+      assignTo,
       paginationQuery.search,
     );
   }
