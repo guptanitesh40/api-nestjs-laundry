@@ -20,6 +20,7 @@ import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import {
+  appendBaseUrlToArrayImages,
   appendBaseUrlToImagesOrPdf,
   appendBaseUrlToNestedImages,
 } from 'src/utils/image-path.helper';
@@ -680,6 +681,8 @@ export class OrderService {
       : null;
 
     const order = appendBaseUrlToNestedImages(orders);
+
+    appendBaseUrlToArrayImages(orders.notes);
 
     return {
       statusCode: 200,
