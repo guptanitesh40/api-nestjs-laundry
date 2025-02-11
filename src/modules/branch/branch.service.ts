@@ -31,7 +31,7 @@ export class BranchService {
       .andWhere('branch.deleted_at IS NULL')
       .select(['branch.branch_id', 'branch.branch_name']);
 
-    const branches = await queryBuilder.getRawMany();
+    const branches = await queryBuilder.getMany();
 
     return {
       statusCode: 200,

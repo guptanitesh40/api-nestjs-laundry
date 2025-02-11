@@ -13,6 +13,7 @@ import { UserAddress } from 'src/entities/address.entity';
 import { Branch } from 'src/entities/branch.entity';
 import { OrderItem } from 'src/entities/order-item.entity';
 import { Order } from 'src/entities/order.entity';
+import { AssignTo } from 'src/enum/assign_to.enum';
 import { CustomerOrderStatuseLabel } from 'src/enum/customer_order_status_label.enum';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
@@ -1356,18 +1357,16 @@ export class OrderService {
   }
 
   async getAssignedOrders(
-    delivery_boy_id: number,
+    assign_id: number,
+    assignTo: AssignTo,
     search?: string,
-  ): Promise<Response> {
+  ): Promise<any> {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'items')
       .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.address', 'address')
       .where(
-        '(order.pickup_boy_id = :delivery_boy_id OR order.delivery_boy_id = :delivery_boy_id)',
-        { delivery_boy_id },
-      )
-      .andWhere(
         '(order.order_status != :excludedPickupStatus AND order.order_status != :excludedDeliveryStatus)',
         {
           excludedPickupStatus: OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
@@ -1382,30 +1381,41 @@ export class OrderService {
         ],
       })
       .select([
-        'order.order_id As order_id',
-        'order.delivery_boy_id As delivery_boy_id',
-        'order.pickup_boy_id As pickup_boy_id',
-        'order.order_status As order_status',
-        'user.user_id As user_id',
-        'user.first_name As first_name',
-        'user.last_name As last_name',
-        'user.mobile_number As mobile_number',
-        'order.address_details As address',
-        'COUNT(items.item_id) As total_item',
-        'order.estimated_pickup_time As estimated_pickup_time_hour',
+        'order.order_id',
+        'order.delivery_boy_id',
+        'order.pickup_boy_id',
+        'order.order_status',
+        'user.user_id',
+        'user.first_name',
+        'user.last_name',
+        'user.mobile_number',
+        'order.address_details',
+        'COUNT(items.item_id) AS total_item',
+        'order.estimated_pickup_time AS estimated_pickup_time_hour',
+        'address',
       ])
-      .groupBy('order.order_id,user.user_id');
+      .groupBy('order.order_id, user.user_id');
+
+    if (assignTo === AssignTo.DELIVERY) {
+      queryBuilder.andWhere('order.delivery_boy_id = :deliveryBoyId', {
+        deliveryBoyId: assign_id,
+      });
+    }
+
+    if (assignTo === AssignTo.PICKUP) {
+      queryBuilder.andWhere('order.pickup_boy_id = :pickupBoyId', {
+        pickupBoyId: assign_id,
+      });
+    }
 
     if (search) {
       queryBuilder.andWhere(
         '(user.first_name LIKE :search OR user.last_name LIKE :search OR user.mobile_number LIKE :search OR order.address_details LIKE :search OR user.email LIKE :search)',
-        {
-          search: `%${search}%`,
-        },
+        { search: `%${search}%` },
       );
     }
 
-    const ordersWithAssignedDeliveryBoys = await queryBuilder.getRawMany();
+    const ordersWithAssignedDeliveryBoys = await queryBuilder.getMany();
 
     return {
       statusCode: 200,
