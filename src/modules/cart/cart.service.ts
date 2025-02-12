@@ -142,10 +142,18 @@ export class CartService {
   async findAllCarts(user_id: number): Promise<Response> {
     const carts = (await this.getAllCarts(user_id)).data;
 
+    const shippingCharge = (
+      await this.settingService.findAll(['shipping_charge'])
+    ).data;
+
+    const shippingCharges = Number(shippingCharge.shipping_charge);
+
+    const total = carts.subTotal + shippingCharges;
+
     return {
       statusCode: 200,
       message: 'Cart retrieved successfully',
-      data: { carts },
+      data: { carts, shippingCharges, total },
     };
   }
 

@@ -152,8 +152,11 @@ export class OrderController {
 
   @Get('admin/orders')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
-  async findAll(@Query() orderFilterDto: OrderFilterDto): Promise<Response> {
-    return this.orderService.findAll(orderFilterDto);
+  async findAll(
+    @Query() orderFilterDto: OrderFilterDto,
+    @Query('list') list: string,
+  ): Promise<Response> {
+    return this.orderService.findAll(orderFilterDto, list);
   }
 
   @Get('admin/order/:order_id')
