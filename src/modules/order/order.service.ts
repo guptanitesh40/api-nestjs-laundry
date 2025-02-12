@@ -347,7 +347,10 @@ export class OrderService {
     };
   }
 
-  async findAll(orderFilterDto: OrderFilterDto): Promise<Response> {
+  async findAll(
+    orderFilterDto: OrderFilterDto,
+    list: string,
+  ): Promise<Response> {
     const {
       per_page,
       page_number,
@@ -420,6 +423,31 @@ export class OrderService {
           'user.mobile_number LIKE :search)',
         { search: `%${search}%` },
       );
+    }
+
+    if (list === 'order_list') {
+      queryBuilder.andWhere('order.order_status IN (:...orderStatus)', {
+        orderStatus: [
+          OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+          OrderStatus.ASSIGNED_PICKUP_BOY,
+          OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+          OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
+          OrderStatus.ORDER_COMPLETED_AND_RECEIVED_AT_BRANCH,
+          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+          OrderStatus.DELIVERED,
+        ],
+      });
+    }
+
+    if (list === 'booking_list') {
+      queryBuilder.andWhere('order.order_status IN (:...orderStatus)', {
+        orderStatus: [
+          OrderStatus.WORKSHOP_ASSIGNED,
+          OrderStatus.WORKSHOP_RECEIVED_ITEMS,
+          OrderStatus.WORKSHOP_WORK_IN_PROGRESS,
+          OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
+        ],
+      });
     }
 
     if (order_statuses) {
