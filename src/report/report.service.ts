@@ -169,6 +169,9 @@ export class ReportService {
           OrderStatus.CANCELLED_BY_ADMIN,
           OrderStatus.CANCELLED_BY_CUSTOMER,
         ],
+      })
+      .andWhere('orders.refund_status != :refundStatus', {
+        refundStatus: RefundStatus.FULL,
       });
 
     if (formattedStartDate && formattedEndDate) {
