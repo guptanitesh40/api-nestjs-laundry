@@ -110,8 +110,12 @@ export class OrderController {
 
   @Post('orders')
   @Roles(Role.CUSTOMER)
-  async create(@Body() createOrderDto: CreateOrderDto): Promise<Response> {
-    return this.orderService.create(createOrderDto);
+  async create(
+    @Body() createOrderDto: CreateOrderDto,
+    @Request() req,
+  ): Promise<Response> {
+    const user = req.user;
+    return this.orderService.create(createOrderDto, user?.user_id);
   }
 
   @Get('admin/orders/:order_id')

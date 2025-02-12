@@ -78,7 +78,10 @@ export class OrderService {
     private dataSource: DataSource,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto): Promise<Response> {
+  async create(
+    createOrderDto: CreateOrderDto,
+    user_id?: number,
+  ): Promise<Response> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -212,6 +215,7 @@ export class OrderService {
       const order = this.orderRepository.create({
         ...createOrderDto,
         sub_total: calculatedSubTotal,
+        user_id: user_id | createOrderDto.user_id,
         gst: gst_amount,
         total,
         coupon_code,

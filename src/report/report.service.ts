@@ -424,14 +424,17 @@ export class ReportService {
       .createQueryBuilder('user')
       .leftJoin('user.orders', 'orders')
       .select("DATE_FORMAT(user.created_at, '%b-%Y') AS month")
-      .addSelect('COUNT(*) AS not_active_count')
+      .addSelect('COUNT(DISTINCT user.user_id) AS not_active_count')
       .where('user.role_id = :customerRoleId', {
         customerRoleId: Role.CUSTOMER,
       })
       .andWhere('user.deleted_at IS NULL')
-      .andWhere('orders.deleted_at IS NULL')
       .andWhere(
-        `user.user_id NOT IN (SELECT DISTINCT orders.user_id FROM orders WHERE orders.created_at >= :twoMonthsAgo)`,
+        `user.user_id NOT IN (
+          SELECT DISTINCT orders.user_id FROM orders 
+          WHERE orders.created_at >= :twoMonthsAgo
+          AND orders.deleted_at IS NULL
+        )`,
         { twoMonthsAgo: formattedTwoMonthsAgo },
       );
 
