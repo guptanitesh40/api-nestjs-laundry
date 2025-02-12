@@ -147,13 +147,13 @@ export class CartService {
     ).data;
 
     const shippingCharges = Number(shippingCharge.shipping_charge);
-
+    const subTotal = carts.subTotal;
     const total = carts.subTotal + shippingCharges;
 
     return {
       statusCode: 200,
       message: 'Cart retrieved successfully',
-      data: { carts, shippingCharges, total },
+      data: { carts, shippingCharges, subTotal, total },
     };
   }
 
