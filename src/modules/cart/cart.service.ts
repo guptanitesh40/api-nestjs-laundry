@@ -125,7 +125,7 @@ export class CartService {
         { image: cart.service_image },
       ])[0].image;
 
-      subTotal += cart.price;
+      subTotal += cart.price * cart.quantity;
 
       return cart;
     });
@@ -141,23 +141,11 @@ export class CartService {
 
   async findAllCarts(user_id: number): Promise<Response> {
     const carts = (await this.getAllCarts(user_id)).data;
-    const settingkeys = ['shipping_charge'];
-
-    const shippingCharge = (await this.settingService.findAll(settingkeys))
-      .data;
-
-    const shippingCharges = Number(shippingCharge.shipping_charge);
-
-    const subTotal = carts.reduce((total, cart) => {
-      return total + cart.price * cart.quantity;
-    }, 0);
-
-    const total = subTotal + shippingCharges;
 
     return {
       statusCode: 200,
       message: 'Cart retrieved successfully',
-      data: { carts, shippingCharges, subTotal, total },
+      data: { carts },
     };
   }
 
