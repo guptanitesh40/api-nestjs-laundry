@@ -422,17 +422,17 @@ export class ReportService {
 
     let queryBuilder = this.userRespository
       .createQueryBuilder('user')
-      .leftJoin('user.orders', 'orders')
       .select("DATE_FORMAT(user.created_at, '%b-%Y') AS month")
-      .addSelect('COUNT(DISTINCT user.user_id) AS not_active_count')
+      .addSelect('COUNT(user.user_id) AS not_active_count')
       .where('user.role_id = :customerRoleId', {
         customerRoleId: Role.CUSTOMER,
       })
       .andWhere('user.deleted_at IS NULL')
       .andWhere(
         `user.user_id NOT IN (
-          SELECT DISTINCT orders.user_id FROM orders 
-          WHERE orders.created_at >= :twoMonthsAgo
+          SELECT DISTINCT orders.user_id 
+          FROM orders 
+          WHERE orders.created_at >= :twoMonthsAgo 
           AND orders.deleted_at IS NULL
         )`,
         { twoMonthsAgo: formattedTwoMonthsAgo },
@@ -450,7 +450,7 @@ export class ReportService {
       .orderBy('MIN(user.created_at)', 'ASC')
       .getRawMany();
 
-    result.map((c) => {
+    result.forEach((c) => {
       c.not_active_count = Number(c.not_active_count);
     });
 
