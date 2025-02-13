@@ -39,7 +39,16 @@ export class NotificationService {
   }
 
   private prepareMessage(order: Order): string {
-    return `Dear ${order.user.first_name} ${order.user.last_name}, Your booking has been confirmed with Booking No: SCONLINE/${order.order_id}, on Dated ${order.created_at.toISOString()}, Total No of clothes ${order.items}, Total Amount: ${order.total}. Please, check your bill on this link: www.sikkacleaners.in/sikka-billing/customer-login.`;
+    const formattedDate = new Date(order.created_at).toLocaleDateString(
+      'en-GB',
+      {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      },
+    );
+
+    return `Dear ${order.user.first_name} ${order.user.last_name}, your booking has been confirmed with Booking No: SCONLINE/${order.order_id} on ${formattedDate}. Total clothes: ${order.items.length}, Total Amount: ₹${order.total}. Please check your bill here: www.sikkacleaners.in/sikka-billing/customer-login.`;
   }
 
   async sendOrderStatusNotification(order: any): Promise<any> {

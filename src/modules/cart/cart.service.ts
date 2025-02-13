@@ -115,6 +115,53 @@ export class CartService {
       ])
       .getRawMany();
 
+    const carts = cartsQuery.map((cart) => {
+      cart.product_image = appendBaseUrlToImagesOrPdf([
+        { image: cart.product_image },
+      ])[0].image;
+      cart.service_image = appendBaseUrlToImagesOrPdf([
+        { image: cart.service_image },
+      ])[0].image;
+
+      return cart;
+    });
+
+    return {
+      statusCode: 200,
+      message: 'Cart retrieved successfully',
+      data: { carts },
+    };
+  }
+
+  async findAllCarts(user_id: number): Promise<Response> {
+    const cartsQuery = await this.cartRepository
+      .createQueryBuilder('cart')
+      .innerJoin('cart.category', 'category')
+      .innerJoin('cart.product', 'product')
+      .innerJoin('cart.service', 'service')
+      .innerJoinAndSelect(
+        Price,
+        'price',
+        'cart.category_id = price.category_id AND cart.product_id = price.product_id AND cart.service_id = price.service_id AND price.deleted_at IS NULL',
+      )
+      .where('user_id = :user_id', { user_id })
+      .select([
+        'cart.cart_id as cart_id',
+        'cart.quantity as quantity',
+        'cart.description as description',
+        'cart.product_id as product_id',
+        'product.name as product_name',
+        'product.image as product_image',
+        'cart.category_id as category_id',
+        'category.name as category_name',
+        'cart.service_id as service_id',
+        'service.name as service_name',
+        'service.image as service_image',
+        'price.price_id as price_id',
+        'price.price as price',
+      ])
+      .getRawMany();
+
     let subTotal = 0;
 
     const carts = cartsQuery.map((cart) => {
@@ -129,31 +176,19 @@ export class CartService {
 
       return cart;
     });
-
-    const branches = (await this.branchService.getBranchList()).data;
-
-    return {
-      statusCode: 200,
-      message: 'Cart retrieved successfully',
-      data: { carts, branches, subTotal },
-    };
-  }
-
-  async findAllCarts(user_id: number): Promise<Response> {
-    const carts = (await this.getAllCarts(user_id)).data;
-
     const shippingCharge = (
       await this.settingService.findAll(['shipping_charge'])
     ).data;
 
     const shippingCharges = Number(shippingCharge.shipping_charge);
-    const subTotal = carts.subTotal;
-    const total = carts.subTotal + shippingCharges;
+
+    const branches = (await this.branchService.getBranchList()).data;
+    const total = subTotal + shippingCharges;
 
     return {
       statusCode: 200,
       message: 'Cart retrieved successfully',
-      data: { carts, shippingCharges, subTotal, total },
+      data: { carts, branches, subTotal, shippingCharges, total },
     };
   }
 
