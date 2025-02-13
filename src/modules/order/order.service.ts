@@ -96,7 +96,9 @@ export class OrderService {
         );
       }
 
-      const user = await this.userService.findUserById(createOrderDto.user_id);
+      const user = await this.userService.findUserById(
+        createOrderDto.user_id | user_id,
+      );
 
       await queryRunner.manager.findOne(Branch, {
         where: { branch_id: createOrderDto.branch_id, deleted_at: null },
@@ -1400,6 +1402,7 @@ export class OrderService {
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'items')
       .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('user.carts', 'cart')
       .leftJoinAndSelect('order.address', 'address')
       .where(
         '(order.order_status != :excludedPickupStatus AND order.order_status != :excludedDeliveryStatus)',
@@ -1424,12 +1427,13 @@ export class OrderService {
         'user.first_name',
         'user.last_name',
         'user.mobile_number',
+        'cart',
         'order.address_details',
         'COUNT(items.item_id) AS total_item',
         'order.estimated_pickup_time AS estimated_pickup_time_hour',
         'address',
       ])
-      .groupBy('order.order_id, user.user_id');
+      .groupBy('order.order_id, user.user_id,cart.cart_id');
 
     if (assignTo === AssignTo.DELIVERY) {
       queryBuilder.andWhere('order.delivery_boy_id = :deliveryBoyId', {
