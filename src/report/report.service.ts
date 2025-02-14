@@ -427,6 +427,9 @@ export class ReportService {
       .where('user.role_id = :customerRoleId', {
         customerRoleId: Role.CUSTOMER,
       })
+      .andWhere('user.created_at <= :twoMonthsAgo', {
+        twoMonthsAgo: formattedTwoMonthsAgo,
+      })
       .andWhere('user.deleted_at IS NULL')
       .andWhere(
         `user.user_id NOT IN (

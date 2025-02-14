@@ -121,10 +121,10 @@ export class BannerService {
     updateBannerDto: UpdateBannerDto,
     imagePath?: string,
   ): Promise<Response> {
-    const banner = await this.BannerRepository.findOne({
+    const update_banner = await this.BannerRepository.findOne({
       where: { banner_id: id, deleted_at: null },
     });
-    if (!banner) {
+    if (!update_banner) {
       return {
         statusCode: 404,
         message: 'banner not found',
@@ -141,9 +141,7 @@ export class BannerService {
 
     await this.BannerRepository.update(id, updateData);
 
-    const update_banner = await this.BannerRepository.findOne({
-      where: { banner_id: id, deleted_at: null },
-    });
+    Object.assign(update_banner, updateData);
 
     const Banner = appendBaseUrlToImagesOrPdf([update_banner])[0];
 
