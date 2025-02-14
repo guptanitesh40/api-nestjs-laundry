@@ -356,6 +356,7 @@ export class OrderService {
   async findAll(
     orderFilterDto: OrderFilterDto,
     list: string,
+    orderList: string,
   ): Promise<Response> {
     const {
       per_page,
@@ -432,17 +433,21 @@ export class OrderService {
     }
 
     if (list === 'order_list') {
-      queryBuilder.andWhere('order.order_status IN (:...orderStatus)', {
-        orderStatus: [
-          OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
-          OrderStatus.ASSIGNED_PICKUP_BOY,
-          OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
-          OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
-          OrderStatus.ORDER_COMPLETED_AND_RECEIVED_AT_BRANCH,
-          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
-          OrderStatus.DELIVERED,
-        ],
-      });
+      if (orderList === 'pickup_order') {
+        queryBuilder.andWhere('order.order_status IN (:...orderStatus)', {
+          orderStatus: [
+            OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+            OrderStatus.ASSIGNED_PICKUP_BOY,
+            OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+          ],
+        });
+      }
+
+      if (orderList === 'delivered_order') {
+        queryBuilder.andWhere('order.order_status IN (:...orderStatus)', {
+          orderStatus: [OrderStatus.DELIVERED],
+        });
+      }
     }
 
     if (list === 'booking_list') {
@@ -453,6 +458,7 @@ export class OrderService {
           OrderStatus.WORKSHOP_RECEIVED_ITEMS,
           OrderStatus.WORKSHOP_WORK_IN_PROGRESS,
           OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
+          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
         ],
       });
     }
