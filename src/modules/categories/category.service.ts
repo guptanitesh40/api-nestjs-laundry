@@ -97,11 +97,11 @@ export class CategoryService {
     id: number,
     updateCategoryDto: UpdateCategoryDto,
   ): Promise<Response> {
-    const category = await this.categoryRepository.findOne({
+    const update_category = await this.categoryRepository.findOne({
       where: { category_id: id, deleted_at: null },
     });
 
-    if (!category) {
+    if (!update_category) {
       return {
         statusCode: 404,
         message: 'category not found',
@@ -110,9 +110,7 @@ export class CategoryService {
     }
     await this.categoryRepository.update(id, updateCategoryDto);
 
-    const update_category = await this.categoryRepository.findOne({
-      where: { category_id: id, deleted_at: null },
-    });
+    Object.assign(update_category, updateCategoryDto);
 
     return {
       statusCode: 200,

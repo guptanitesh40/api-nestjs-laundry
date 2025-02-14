@@ -113,10 +113,10 @@ export class ServicesService {
     updateServicetDto: UpdateServiceDto,
     imagePath?: string,
   ): Promise<Response> {
-    const service = await this.serviceRepository.findOne({
+    const update_service = await this.serviceRepository.findOne({
       where: { service_id: id, deleted_at: null },
     });
-    if (!service) {
+    if (!update_service) {
       return {
         statusCode: 404,
         message: 'Service not found',
@@ -131,9 +131,7 @@ export class ServicesService {
     }
     await this.serviceRepository.update(id, updatedata);
 
-    const update_service = await this.serviceRepository.findOne({
-      where: { service_id: id, deleted_at: null },
-    });
+    Object.assign(update_service, updatedata);
 
     const services = appendBaseUrlToImagesOrPdf([update_service])[0];
 

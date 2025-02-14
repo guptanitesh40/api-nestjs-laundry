@@ -56,19 +56,17 @@ export class PriceContentService {
     id: number,
     updatePriceContentDto: UpdatePriceContentDto,
   ): Promise<Response> {
-    const priceContent = await this.priceContentRepository.findOne({
+    const price_content = await this.priceContentRepository.findOne({
       where: { price_content_id: id, deleted_at: null },
     });
 
-    if (!priceContent) {
+    if (!price_content) {
       throw new NotFoundException(`price content not found`);
     }
 
     await this.priceContentRepository.update(id, updatePriceContentDto);
 
-    const price_content = await this.priceContentRepository.findOne({
-      where: { price_content_id: id, deleted_at: null },
-    });
+    Object.assign(price_content, updatePriceContentDto);
 
     return {
       statusCode: 200,

@@ -195,6 +195,8 @@ export class CouponService {
 
     await this.couponRepository.update(coupon_id, updateCouponDto);
 
+    Object.assign(coupon, updateCouponDto);
+
     return {
       statusCode: 200,
       message: 'coupon updated successfully',

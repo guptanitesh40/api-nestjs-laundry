@@ -448,6 +448,7 @@ export class OrderService {
     if (list === 'booking_list') {
       queryBuilder.andWhere('order.order_status IN (:...orderStatus)', {
         orderStatus: [
+          OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
           OrderStatus.WORKSHOP_ASSIGNED,
           OrderStatus.WORKSHOP_RECEIVED_ITEMS,
           OrderStatus.WORKSHOP_WORK_IN_PROGRESS,

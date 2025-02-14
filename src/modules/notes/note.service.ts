@@ -69,10 +69,10 @@ export class NotesService {
     updateNoteDto: UpdateNoteDto,
     imagePath?: string[],
   ): Promise<Response> {
-    const note = await this.notesRepository.findOne({
+    const update_note = await this.notesRepository.findOne({
       where: { note_id, deleted_at: null },
     });
-    if (!note) {
+    if (!update_note) {
       return {
         statusCode: 404,
         message: 'note not found',
@@ -87,9 +87,8 @@ export class NotesService {
     }
 
     await this.notesRepository.update(note_id, updatedata);
-    const update_note = await this.notesRepository.findOne({
-      where: { note_id, deleted_at: null },
-    });
+
+    Object.assign(update_note, updatedata);
 
     const Note = appendBaseUrlToArrayImages([update_note])[0];
 

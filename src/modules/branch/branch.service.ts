@@ -169,10 +169,10 @@ export class BranchService {
     id: number,
     updateBranchDto: UpdateBranchDto,
   ): Promise<Response> {
-    const branch = await this.branchRepository.findOne({
+    const updatedBranch = await this.branchRepository.findOne({
       where: { branch_id: id, deleted_at: null },
     });
-    if (!branch) {
+    if (!updatedBranch) {
       return {
         statusCode: 404,
         message: 'Branch not found',
@@ -181,9 +181,8 @@ export class BranchService {
     }
 
     await this.branchRepository.update(id, updateBranchDto);
-    const updatedBranch = await this.branchRepository.findOne({
-      where: { branch_id: id },
-    });
+
+    Object.assign(updatedBranch, updateBranchDto);
 
     return {
       statusCode: 200,
