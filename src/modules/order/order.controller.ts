@@ -159,8 +159,9 @@ export class OrderController {
   async findAll(
     @Query() orderFilterDto: OrderFilterDto,
     @Query('list') list: string,
+    @Query('orderList') orderList: string,
   ): Promise<Response> {
-    return this.orderService.findAll(orderFilterDto, list);
+    return this.orderService.findAll(orderFilterDto, list, orderList);
   }
 
   @Get('admin/order/:order_id')
