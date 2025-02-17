@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -33,6 +34,7 @@ config();
     ]),
     UsersModule,
     OrderModule,
+    HttpModule,
   ],
   providers: [AuthService, UserService, JwtStrategy],
   controllers: [AuthController],

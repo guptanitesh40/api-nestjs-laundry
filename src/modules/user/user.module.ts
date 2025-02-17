@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DeviceUser } from 'src/entities/device-user.entity';
@@ -24,6 +25,7 @@ import { UserService } from './user.service';
       UserBranchMapping,
       Order,
     ]),
+    HttpModule,
     forwardRef(() => OrderModule),
   ],
   providers: [UserService],

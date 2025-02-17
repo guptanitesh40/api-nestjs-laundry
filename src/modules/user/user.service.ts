@@ -1,3 +1,4 @@
+import { HttpService } from '@nestjs/axios';
 import {
   BadRequestException,
   forwardRef,
@@ -8,6 +9,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { firstValueFrom } from 'rxjs';
 import { Response } from 'src/dto/response.dto';
 import { DeviceUser } from 'src/entities/device-user.entity';
 import { LoginHistory } from 'src/entities/login-history.entity';
@@ -52,6 +54,7 @@ export class UserService {
     private userBranchMappingRepository: Repository<UserBranchMapping>,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
+    private readonly httpService: HttpService,
   ) {}
 
   async signup(signUpDto: SignupDto): Promise<User> {
@@ -766,17 +769,21 @@ export class UserService {
     });
     await this.otpRepository.save(otpEntry);
 
-    const countryCode = '+91';
-    const formattedMobileNumber = `${countryCode}${String(mobile_number).replace(/^0/, '')}`;
+    const formattedMobileNumber = `91${String(mobile_number).replace(/^0+/, '')}`;
+    const apiKey = process.env.VISION360_API_KEY;
+    const senderId = process.env.VISION360_SENDER_ID;
+
+    const message = `Your OTP for ${type} is: ${otp}`;
+    const url = `https://otpsms.vision360solutions.in/api/otp.php?authkey=${apiKey}&mobile=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&otp=${otp}`;
 
     try {
-      await twilioClient.messages.create({
-        body: `Your OTP for ${type} is: ${otp}`,
-        from: TWILIO_PHONE_NUMBER,
-        to: formattedMobileNumber,
-      });
+      const response = await firstValueFrom(this.httpService.get(url));
+
+      if (response.status !== 200 || response.data.type !== 'success') {
+        throw new Error('Failed to send OTP');
+      }
     } catch (error) {
-      console.error('Twilio Error:', error.response?.data || error.message);
+      console.error('Vision360 Error:', error.response?.data || error.message);
       throw new BadRequestException('Failed to send OTP via SMS');
     }
 
@@ -809,12 +816,12 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    await this.generateOtp(mobile_number, OtpType.FORGOT_PASSWORD);
+    const otp = await this.generateOtp(mobile_number, OtpType.FORGOT_PASSWORD);
 
     return {
       statusCode: 200,
       message: 'OTP Sent successfully',
-      data: null,
+      data: otp,
     };
   }
 
@@ -864,7 +871,7 @@ export class UserService {
   }
 
   async logout(user_id: number): Promise<Response> {
-    const deviceuser = await this.deviceUserRepository.findOne({
+    const deviceuser: any = await this.deviceUserRepository.findOne({
       where: { user_id: user_id },
     });
 
@@ -875,10 +882,16 @@ export class UserService {
     deviceuser.deleted_at = new Date();
 
     await this.deviceUserRepository.save(deviceuser);
+
+    deviceuser.device_id = String(deviceuser.device_id);
+    deviceuser.device_type = String(deviceuser.device_type);
+
     return {
       statusCode: 200,
       message: 'logout successfully',
-      data: deviceuser,
+      data: {
+        deviceuser,
+      },
     };
   }
 
