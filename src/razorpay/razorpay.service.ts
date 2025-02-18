@@ -187,6 +187,7 @@ export class RazorpayService {
       amount: paymentDetails.amount,
       currency: paymentDetails.currency,
       razorpay_order_id: data.id,
+      razorpay_payment_link_id: response.id,
       status: response.status,
       user_id: paymentDetails.user_id,
     });
