@@ -20,6 +20,9 @@ export class RazorpayTransactions extends BaseEntity {
   currency: string;
 
   @Column({ nullable: true })
+  razorpay_payment_link_id?: string;
+
+  @Column({ nullable: true })
   status: string;
 
   @Column({ nullable: true })
