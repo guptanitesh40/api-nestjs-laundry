@@ -7,6 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import axios from 'axios';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { firstValueFrom } from 'rxjs';
@@ -25,19 +26,12 @@ import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
 import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { getOrderStatusDetails } from 'src/utils/order-status.helper';
-import twilio from 'twilio';
 import { In, MoreThan, Repository } from 'typeorm';
 import { UserFilterDto } from '../dto/users-filter.dto';
 import { OrderService } from '../order/order.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN,
-);
-const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
 @Injectable()
 export class UserService {
@@ -261,18 +255,28 @@ export class UserService {
       await this.userBranchMappingRepository.save(branchMappings);
     }
 
-    const countryCode = '+91';
-    const formattedMobileNumber = `${countryCode}${String(createUserDto.mobile_number).replace(/^0/, '')}`;
+    const formattedMobileNumber = `91${String(createUserDto.mobile_number).replace(/^0+/, '')}`;
+
+    const message = `Dear ${createUserDto.first_name} ${createUserDto.last_name}, Your Password Is: ${createUserDto.password}. Thank you for choosing Sikka Cleaners!`;
+
+    const smsUrl =
+      `https://otpsms.vision360solutions.in/api/sendhttp.php?` +
+      `authkey=${process.env.VISION360_API_KEY}` +
+      `&sender=${process.env.VISION360_SENDER_ID}` +
+      `&message=${encodeURIComponent(message)}` +
+      `&mobiles=${formattedMobileNumber}`;
 
     try {
-      await twilioClient.messages.create({
-        body: `Dear ${createUserDto.first_name} ${createUserDto.last_name}, Your Password Is: ${createUserDto.password}. Thank you for choosing sikka cleaners! `,
-        from: TWILIO_PHONE_NUMBER,
-        to: formattedMobileNumber,
-      });
+      const response = await axios.get(smsUrl);
+
+      if (response.status !== 200 || response.data.type !== 'success') {
+        throw new Error('Failed to send OTP');
+      }
     } catch (error) {
-      console.error('Twilio Error:', error.response?.data || error.message);
-      throw new BadRequestException('Failed to send password');
+      console.error(
+        'SMS Sending Failed:',
+        error.response?.data || error.message,
+      );
     }
 
     return {

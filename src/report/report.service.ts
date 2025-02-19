@@ -682,38 +682,41 @@ export class ReportService {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       this.convertDateParameters(startDate, endDate);
 
-    let queryBuilder = this.razorpayRepository
-      .createQueryBuilder('razorpay')
-      .select("DATE_FORMAT(razorpay.created_at, '%b-%Y') AS month")
-      .addSelect('SUM(razorpay.amount) AS total_amount')
-      .addSelect(
-        "COUNT(CASE WHEN razorpay.status = 'created' THEN 1 END) AS created_count",
-      )
-      .addSelect(
-        "COUNT(CASE WHEN razorpay.status = 'paid' THEN 1 END) AS paid_count",
-      )
-      .addSelect(
-        "COUNT(CASE WHEN razorpay.status = 'attempted' THEN 1 END) AS attempted_count",
-      )
-      .where('razorpay.deleted_at IS NULL');
+    let queryBuilder = this.orderRepository
+      .createQueryBuilder('orders')
+      .select('SUM(orders.total)', 'total_amount')
+      .addSelect('SUM(orders.paid_amount)', 'total_transaction_amount')
+      .addSelect(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
+      .where('orders.deleted_at IS NULL')
+      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.refund_status != :refundStatus', {
+        refundStatus: RefundStatus.FULL,
+      });
 
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
-        'razorpay.created_at BETWEEN :startDate AND :endDate',
+        'orders.created_at BETWEEN :startDate AND :endDate',
         { startDate: formattedStartDate, endDate: formattedEndDate },
       );
+    } else {
+      queryBuilder.andWhere('orders.created_at >= NOW() - INTERVAL 6 MONTH');
     }
 
     const result = await queryBuilder
       .groupBy('month')
-      .orderBy('MIN(razorpay.created_at)', 'ASC')
+      .orderBy('MIN(orders.created_at)', 'ASC')
       .getRawMany();
 
     result.map((num) => {
-      num.total_amount = Number(num.total_amount);
-      num.created_count = Number(num.created_count);
-      num.paid_count = Number(num.paid_count);
-      num.attempted_count = Number(num.attempted_count);
+      num.total_amount = Number(num.total_amount.toFixed(2));
+      num.total_transaction_amount = Number(
+        num.total_transaction_amount.toFixed(2),
+      );
     });
 
     return result;
