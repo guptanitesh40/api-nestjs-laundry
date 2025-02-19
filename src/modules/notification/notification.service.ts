@@ -4,21 +4,12 @@ import { firstValueFrom } from 'rxjs';
 import { Order } from 'src/entities/order.entity';
 import { customerApp, driverApp } from 'src/firebase.config';
 import { getCustomerOrderStatusLabel } from 'src/utils/order-status.helper';
-import Twilio from 'twilio';
 
 @Injectable()
 export class NotificationService {
   private readonly apiUrl = 'https://wts.vision360solutions.co.in/api/sendText';
-  private readonly twilioClient: Twilio.Twilio;
-  private readonly twilioFrom: string;
 
-  constructor(private readonly httpService: HttpService) {
-    this.twilioClient = Twilio(
-      process.env.TWILIO_ACCOUNT_SID,
-      process.env.TWILIO_AUTH_TOKEN,
-    );
-    this.twilioFrom = process.env.TWILIO_PHONE_NUMBER;
-  }
+  constructor(private readonly httpService: HttpService) {}
 
   async sendOrderNotification(order: any): Promise<void> {
     if (!order) {
