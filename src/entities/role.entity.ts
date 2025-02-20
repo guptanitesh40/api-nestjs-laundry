@@ -11,7 +11,7 @@ export class Role {
   name: string;
 
   @Column({ nullable: true })
-  flag: string;
+  flag: boolean;
 
   @OneToMany(() => User, (user) => user.role, {
     onDelete: 'NO ACTION',

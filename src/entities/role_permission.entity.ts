@@ -1,9 +1,10 @@
+// create migration in below entity
 import {
-    Column,
-    Entity,
-    JoinColumn,
-    ManyToOne,
-    PrimaryGeneratedColumn,
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Modules } from './modules.entity';
@@ -29,14 +30,14 @@ export class RolePermission extends BaseEntity {
   module_id: number;
 
   @Column({ nullable: true })
-  create?: string;
+  create?: boolean;
 
   @Column({ nullable: true })
-  update?: string;
+  update?: boolean;
 
   @Column({ nullable: true })
-  read?: string;
+  read?: boolean;
 
   @Column({ nullable: true })
-  delete?: string;
+  delete?: boolean;
 }
