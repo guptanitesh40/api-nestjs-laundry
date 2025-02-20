@@ -1156,11 +1156,8 @@ export class OrderService {
       .andWhere('order.refund_status !=:refundStatus', {
         refundStatus: RefundStatus.FULL,
       })
-      .andWhere('order.order_status NOT IN(:...excludeOrderStatus)', {
-        excludeOrderStatus: [
-          OrderStatus.CANCELLED_BY_ADMIN,
-          OrderStatus.CANCELLED_BY_CUSTOMER,
-        ],
+      .andWhere('order.order_status= :status', {
+        status: OrderStatus.DELIVERED,
       })
       .select([
         'order.order_id as order_id',

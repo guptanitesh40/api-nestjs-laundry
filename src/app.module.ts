@@ -18,6 +18,7 @@ import { CouponModule } from './modules/coupon/coupon.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
 import { MobileApiModule } from './modules/mobileapi/mobileapi.module';
+import { ModulesModule } from './modules/module/module.module';
 import { NotesModule } from './modules/notes/note.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { OrderModule } from './modules/order/order.module';
@@ -65,6 +66,7 @@ import { ReportModule } from './report/report.module';
     ContactUsModule,
     PriceContentModule,
     RazorpayModule,
+    ModulesModule,
   ],
   controllers: [AppController],
   providers: [
