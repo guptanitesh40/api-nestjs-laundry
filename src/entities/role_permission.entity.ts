@@ -1,4 +1,3 @@
-// create migration in below entity
 import {
   Column,
   Entity,
