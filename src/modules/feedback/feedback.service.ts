@@ -145,7 +145,13 @@ export class FeedbackService {
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 
     if (sort_by) {
-      sortColumn = sort_by;
+      sortColumn =
+        sort_by === 'first_name' ||
+        sort_by === 'last_name' ||
+        sort_by === 'email' ||
+        sort_by === 'mobile_number'
+          ? `user.${sort_by}`
+          : `feedbacks.${sort_by}`;
     }
     if (order) {
       sortOrder = order;

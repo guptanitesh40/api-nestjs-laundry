@@ -137,7 +137,13 @@ export class RazorpayService {
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 
     if (sort_by) {
-      sortColumn = sort_by;
+      sortColumn =
+        sort_by === 'first_name' ||
+        sort_by === 'last_name' ||
+        sort_by === 'email' ||
+        sort_by === 'mobile_number'
+          ? `user.${sort_by}`
+          : `razorpay.${sort_by}`;
     }
     if (order) {
       sortOrder = order;
