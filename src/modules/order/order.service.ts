@@ -1246,7 +1246,10 @@ export class OrderService {
       .andWhere('order.deleted_at IS NULL')
       .select([
         'order.order_id',
+        'order.created_at',
         'order.total',
+        'order.kasar_amount',
+        'order.estimated_delivery_time',
         'order.paid_amount',
         'order.payment_status',
         'order.transaction_id',
@@ -1265,6 +1268,12 @@ export class OrderService {
       const file = fs.existsSync(order_invoice.fileName);
 
       order.order_invoice = file ? order_invoice : '';
+
+      order.remaining_amount =
+        order.total -
+        (order.paid_amount || 0) -
+        (order.kasar_amount || 0) -
+        (order.refund_amount || 0);
     });
 
     const orders = this.orderRepository
