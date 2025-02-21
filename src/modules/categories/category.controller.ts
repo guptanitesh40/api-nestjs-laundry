@@ -11,7 +11,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { AdminPermission } from 'src/decorator/admin-permission.decorator';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
@@ -24,6 +23,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 @Controller()
 @UseGuards(RolesGuard)
 @UseGuards(AuthGuard('jwt'))
+@Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
@@ -34,7 +34,6 @@ export class CategoryController {
   }
 
   @Get('admin/categories')
-  @AdminPermission(5, { read: true })
   async findAll(
     @Query() paginationQueryDto: PaginationQueryDto,
   ): Promise<Response> {
@@ -42,13 +41,11 @@ export class CategoryController {
   }
 
   @Get('admin/categories/:id')
-  @AdminPermission(5, { read: true })
   async findOne(@Param('id') id: number): Promise<Response> {
     return await this.categoryService.findOne(id);
   }
 
   @Post('admin/categories')
-  @AdminPermission(5, { create: true })
   async create(
     @Body() createCategoryDto: CreateCategoryDto,
   ): Promise<Response> {
@@ -56,7 +53,6 @@ export class CategoryController {
   }
 
   @Put('admin/categories/:id')
-  @AdminPermission(5, { update: true })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -65,7 +61,6 @@ export class CategoryController {
   }
 
   @Delete('admin/categories/:id')
-  @AdminPermission(5, { delete: true })
   async delete(@Param('id', ParseIntPipe) id: number) {
     return await this.categoryService.delete(id);
   }

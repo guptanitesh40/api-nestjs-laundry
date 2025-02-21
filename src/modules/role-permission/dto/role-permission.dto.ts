@@ -1,6 +1,7 @@
-import { IsBoolean, IsNumber } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsBoolean, IsNumber, ValidateNested } from 'class-validator';
 
-export class RolePermissionDto {
+export class RolePermissionItemDto {
   @IsNumber()
   role_id: number;
 
@@ -18,4 +19,11 @@ export class RolePermissionDto {
 
   @IsBoolean()
   delete?: boolean;
+}
+
+export class RolePermissionDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RolePermissionItemDto)
+  rolePermission: RolePermissionItemDto[];
 }

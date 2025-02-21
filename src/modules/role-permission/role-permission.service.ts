@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Repository } from 'typeorm';
 import { RolePermission } from '../../entities/role_permission.entity';
-import { RolePermissionDto } from './dto/role-permission.dto';
+import { RolePermissionItemDto } from './dto/role-permission.dto';
 
 @Injectable()
 export class RolePermissionService {
@@ -13,15 +13,17 @@ export class RolePermissionService {
   ) {}
 
   async assignPermission(
-    createCategoryDto: RolePermissionDto,
+    rolePermissions: RolePermissionItemDto[],
   ): Promise<Response> {
-    const category = this.rolePermissionRepository.create(createCategoryDto);
-    const result = await this.rolePermissionRepository.save(category);
+    const createdPermissions =
+      this.rolePermissionRepository.create(rolePermissions);
+    const savedPermissions =
+      await this.rolePermissionRepository.save(createdPermissions);
 
     return {
       statusCode: 201,
-      message: 'category added successfully',
-      data: { result },
+      message: 'Permissions assigned successfully',
+      data: savedPermissions,
     };
   }
 

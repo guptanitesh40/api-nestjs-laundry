@@ -1,11 +1,9 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
-  Param,
   Post,
-  Query,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -26,16 +24,14 @@ export class RolePermissionController {
   async assignPermission(
     @Body() rolePermissionDto: RolePermissionDto,
   ): Promise<Response> {
-    return this.rolePermissionService.assignPermission(rolePermissionDto);
+    return this.rolePermissionService.assignPermission(
+      rolePermissionDto.rolePermission,
+    );
   }
 
   @Get('list')
-  async getPermissions(@Query('role_id') role_id: number) {
+  async getPermissions(@Request() req) {
+    const role_id = req.user.role_id;
     return this.rolePermissionService.getPermissions(role_id);
-  }
-
-  @Delete(':id')
-  async revokePermission(@Param('id') id: number) {
-    return this.rolePermissionService.revokePermission(id);
   }
 }
