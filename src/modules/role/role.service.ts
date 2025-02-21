@@ -11,13 +11,21 @@ export class RoleService {
     private roleRepository: Repository<Role>,
   ) {}
 
-  async getRolesWithFlagTrue(): Promise<Response> {
-    const role = await this.roleRepository.find({ where: { flag: true } });
+  async getRoles(flag?: string): Promise<Response> {
+    let findRole = {};
+
+    if (flag === 'true') {
+      findRole = { flag: true };
+    } else if (flag === 'false') {
+      findRole = { flag: false };
+    }
+
+    const roles = await this.roleRepository.find({ where: findRole });
 
     return {
       statusCode: 200,
-      message: 'roles retrived successfully',
-      data: role,
+      message: 'Roles retrieved successfully',
+      data: roles,
     };
   }
 }
