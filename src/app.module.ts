@@ -25,6 +25,7 @@ import { OrderModule } from './modules/order/order.module';
 import { PriceContentModule } from './modules/price-content/price-content.module';
 import { PriceModule } from './modules/price/price.module';
 import { ProductModule } from './modules/products/product.module';
+import { RolePermissionModule } from './modules/role-permission/role-permission.module';
 import { RoleModule } from './modules/role/role.module';
 import { ServicesModule } from './modules/services/services.module';
 import { SettingModule } from './modules/settings/setting.module';
@@ -69,6 +70,7 @@ import { ReportModule } from './report/report.module';
     RazorpayModule,
     ModulesModule,
     RoleModule,
+    RolePermissionModule,
   ],
   controllers: [AppController],
   providers: [
