@@ -29,6 +29,11 @@ export class RolePermissionController {
     );
   }
 
+  @Get()
+  async getAll(): Promise<Response> {
+    return this.rolePermissionService.getAll();
+  }
+
   @Get('list')
   async getPermissions(@Request() req) {
     const role_id = req.user.role_id;

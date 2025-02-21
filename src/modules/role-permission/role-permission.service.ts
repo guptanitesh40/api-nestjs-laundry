@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
-import { Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { RolePermission } from '../../entities/role_permission.entity';
 import { RolePermissionItemDto } from './dto/role-permission.dto';
 
@@ -10,20 +10,54 @@ export class RolePermissionService {
   constructor(
     @InjectRepository(RolePermission)
     private rolePermissionRepository: Repository<RolePermission>,
+    private dataSource: DataSource,
   ) {}
 
   async assignPermission(
     rolePermissions: RolePermissionItemDto[],
   ): Promise<Response> {
-    const createdPermissions =
-      this.rolePermissionRepository.create(rolePermissions);
-    const savedPermissions =
-      await this.rolePermissionRepository.save(createdPermissions);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.update(
+        RolePermission,
+        { deleted_at: IsNull() },
+        { deleted_at: new Date() },
+      );
+
+      const createdPermissions = queryRunner.manager.create(
+        RolePermission,
+        rolePermissions,
+      );
+      const savedPermissions =
+        await queryRunner.manager.save(createdPermissions);
+
+      await queryRunner.commitTransaction();
+
+      return {
+        statusCode: 201,
+        message: 'Permissions assigned successfully',
+        data: savedPermissions,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getAll(): Promise<Response> {
+    const role = await this.rolePermissionRepository.find({
+      where: { deleted_at: null },
+    });
 
     return {
-      statusCode: 201,
-      message: 'Permissions assigned successfully',
-      data: savedPermissions,
+      statusCode: 200,
+      message: 'roles permission retrived successfully',
+      data: role,
     };
   }
 
@@ -39,22 +73,6 @@ export class RolePermissionService {
       statusCode: 200,
       message: 'role permission retrived successfully',
       data: permission,
-    };
-  }
-
-  async revokePermission(id: number): Promise<Response> {
-    const permision = await this.rolePermissionRepository.findOne({
-      where: { role_permission_id: id, deleted_at: null },
-    });
-
-    permision.deleted_at = new Date();
-
-    await this.rolePermissionRepository.save(permision);
-
-    return {
-      statusCode: 200,
-      message: 'Permission deleted successfully',
-      data: permision,
     };
   }
 }
