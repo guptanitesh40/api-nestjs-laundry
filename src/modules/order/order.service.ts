@@ -1267,7 +1267,9 @@ export class OrderService {
 
       const file = fs.existsSync(order_invoice.fileName);
 
-      order.order_invoice = file ? order_invoice : '';
+      order.order_invoice = file
+        ? order_invoice
+        : { fileUrl: '', fileName: '' };
 
       order.remaining_amount =
         order.total -
