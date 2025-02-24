@@ -461,6 +461,10 @@ export class OrderService {
           OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
         ],
       });
+    } else {
+      queryBuilder.andWhere('order.order_status != :orderStatus', {
+        orderStatus: OrderStatus.DELIVERED,
+      });
     }
 
     if (order_statuses) {
@@ -1419,6 +1423,7 @@ export class OrderService {
       .leftJoinAndSelect('order.user', 'user')
       .leftJoinAndSelect('user.carts', 'cart')
       .leftJoinAndSelect('order.address', 'address')
+      .innerJoinAndSelect('order.branch', 'branch')
       .where(
         '(order.order_status != :excludedPickupStatus AND order.order_status != :excludedDeliveryStatus)',
         {
@@ -1447,6 +1452,9 @@ export class OrderService {
         'COUNT(items.item_id) AS total_item',
         'order.estimated_pickup_time AS estimated_pickup_time_hour',
         'address',
+        'branch.branch_id',
+        'branch.branch_name',
+        'branch.branch_address',
       ])
       .groupBy('order.order_id, user.user_id,cart.cart_id');
 
@@ -1744,7 +1752,7 @@ export class OrderService {
       .innerJoinAndSelect('order.user', 'user')
       .leftJoinAndSelect('order.branch', 'branch')
       .innerJoinAndSelect('order.workshop', 'workshop')
-      .innerJoinAndSelect('workshop.workshopManagerMappings', 'mapping')
+      .leftJoinAndSelect('workshop.workshopManagerMappings', 'mapping')
       .leftJoinAndSelect('mapping.user', 'manager_user')
       .select([
         'order',
@@ -1786,7 +1794,7 @@ export class OrderService {
       queryBuilder.andWhere(
         'order.order_status BETWEEN :minStatus AND :maxStatus',
         {
-          minStatus: OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+          minStatus: OrderStatus.WORKSHOP_ASSIGNED,
           maxStatus: OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
         },
       );
@@ -1862,6 +1870,8 @@ export class OrderService {
       order.workshop_status_name = getWorkshopOrdersStatusLabel(
         order.order_status,
       );
+
+      order.order_status_details = getOrderStatusDetails(order);
     });
 
     return {

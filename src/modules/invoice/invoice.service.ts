@@ -105,6 +105,16 @@ export class InvoiceService {
       );
     }
 
+    const logoPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/logo/logo.png',
+    );
+    const logoBase64 = fs.readFileSync(logoPath, 'base64');
+    const logoUrl = `data:image/png;base64,${logoBase64}`;
+
     const branchName = orderData.branch?.branch_name;
 
     const branchMobileNumber = orderData.branch?.branch_phone_number;
@@ -189,14 +199,13 @@ export class InvoiceService {
       branchName,
       branchMobileNumber,
       totalInWords: numberToWords(totalAmount),
+      logoUrl,
     };
 
     return ejs.render(html, { invoice: invoiceData });
   }
 
   async generateRefundReceipt(order: any): Promise<any> {
-    const base_url = process.env.BASE_URL;
-
     if (!order) {
       throw new NotFoundException(`Order with id ${order.order_id} not found`);
     }
@@ -211,6 +220,16 @@ export class InvoiceService {
     } = order;
     const user = order.user;
 
+    const logoPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/logo/logo.png',
+    );
+    const logoBase64 = fs.readFileSync(logoPath, 'base64');
+    const logoUrl = `data:image/png;base64,${logoBase64}`;
+
     const orderItems = order.items.map((item) => ({
       category: item.category ? item.category.name : 'N/A',
       product: item.product ? item.product.name : 'N/A',
@@ -221,7 +240,7 @@ export class InvoiceService {
     }));
 
     const refundData = {
-      logoUrl: `${base_url}/images/logo/logo2.png`,
+      logoUrl,
       order_id: order.order_id,
       user: {
         name: `${user.first_name} ${user.last_name}`,
@@ -282,13 +301,20 @@ export class InvoiceService {
   }
 
   async generateOrderLabels(order: any): Promise<any> {
-    const baseUrl = process.env.BASE_URL;
-
     if (!order) {
       throw new NotFoundException(`Order with ID ${order.order_id} not found`);
     }
 
-    const logoUrl = `${baseUrl}/images/logo/logo2.png`;
+    const logoPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/logo/logo.png',
+    );
+    const logoBase64 = fs.readFileSync(logoPath, 'base64');
+    const logoUrl = `data:image/png;base64,${logoBase64}`;
+
     const customerName = `${order.user.first_name} ${order.user.last_name}`;
     const date = new Date(order.created_at).toLocaleDateString();
     const items = order.items.map((item) => ({
@@ -357,12 +383,19 @@ export class InvoiceService {
       'src/templates/price-list-template.ejs',
     );
 
-    const data = {
-      logoUrl: `${base_url}/images/logo/logo.png`,
-      prices,
-    };
+    const logoPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/logo/logo.png',
+    );
+    const logoBase64 = fs.readFileSync(logoPath, 'base64');
+    const logoUrl = `data:image/png;base64,${logoBase64}`;
 
-    const browser: Browser = await puppeteer.launch({
+    const data = { logoUrl, prices };
+
+    const browser = await puppeteer.launch({
       headless: true,
       args: [
         '--no-sandbox',
@@ -372,15 +405,15 @@ export class InvoiceService {
     });
 
     const htmlContent = await ejs.renderFile(templatePath, data);
-
     const page = await browser.newPage();
-    await page.setContent(htmlContent);
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    await page.waitForSelector('img');
+
     const pdfBuffer = await page.pdf({ format: 'A4' });
     await browser.close();
 
     const fileName = 'priceList.pdf';
     const filePath = join(process.cwd(), 'pdf', fileName);
-
     writeFileSync(filePath, pdfBuffer);
 
     const fileUrl = `${base_url}/pdf/${fileName}`;
