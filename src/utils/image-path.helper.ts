@@ -56,6 +56,11 @@ export function appendBaseUrlToBannerAndPdf(name: string) {
   return `${baseUrl}/${name}`;
 }
 
+export function appendWebIp(name: string) {
+  const webIp = process.env.WEBSITE_IP || '';
+  return `${webIp}${name}`;
+}
+
 export function appendBaseUrlToNestedImages(order: any): any {
   const baseUrl = process.env.BASE_URL || '';
 

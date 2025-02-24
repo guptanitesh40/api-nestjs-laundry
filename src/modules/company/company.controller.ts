@@ -15,9 +15,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FilePath } from 'src/constants/FilePath';
-import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
-import { Role } from 'src/enum/role.enum';
 import { fileFieldsInterceptor } from 'src/utils/file-upload.helper';
 import { RolesGuard } from '../auth/guard/role.guard';
 import { CompanyFilterDto } from '../dto/company-filter.dto';
@@ -28,7 +26,6 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 @Controller('companies')
 @UseGuards(RolesGuard)
 @UseGuards(AuthGuard('jwt'))
-@Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 

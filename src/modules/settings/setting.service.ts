@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Setting } from 'src/entities/setting.entity';
-import { appendBaseUrlToBannerAndPdf } from 'src/utils/image-path.helper';
+import {
+  appendBaseUrlToBannerAndPdf,
+  appendWebIp,
+} from 'src/utils/image-path.helper';
 import { DataSource, In, IsNull, Repository } from 'typeorm';
 import { ArraySettingDto, UpdateSettingDto } from './dto/update-settings.dto';
 
@@ -120,6 +123,17 @@ export class SettingService {
         result[element.setting_key] = appendBaseUrlToBannerAndPdf(
           element.setting_value,
         );
+      }
+
+      const webIpKeys = [
+        'terms-condition',
+        'privacy-policy',
+        'refund-policy',
+        'faq',
+      ];
+
+      if (webIpKeys.includes(element.setting_key)) {
+        result[element.setting_key] = appendWebIp(element.setting_value);
       }
     });
 

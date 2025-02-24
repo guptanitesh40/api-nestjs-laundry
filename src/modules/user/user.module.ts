@@ -9,6 +9,7 @@ import { Role } from 'src/entities/role.entity';
 import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
 import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
+import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
 import { OrderModule } from '../order/order.module';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
@@ -23,6 +24,7 @@ import { UserService } from './user.service';
       Otp,
       UserCompanyMapping,
       UserBranchMapping,
+      WorkshopManagerMapping,
       Order,
     ]),
     HttpModule,

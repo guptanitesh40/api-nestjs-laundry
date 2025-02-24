@@ -31,7 +31,6 @@ import { ServicesService } from './services.service';
 @Controller()
 @UseGuards(RolesGuard)
 @UseGuards(AuthGuard('jwt'))
-@Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
 @Controller('services')
 export class ServicesController {
   constructor(

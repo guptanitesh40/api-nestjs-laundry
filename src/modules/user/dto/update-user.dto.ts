@@ -55,4 +55,9 @@ export class UpdateUserDto {
   @IsOptional()
   @IsNumber({}, { each: true })
   branch_ids?: number[];
+
+  @IsArray()
+  @IsOptional()
+  @IsNumber({}, { each: true })
+  workshop_ids?: number[];
 }

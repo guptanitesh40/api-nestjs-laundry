@@ -19,6 +19,7 @@ import { Otp } from 'src/entities/otp.entity';
 import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
 import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
+import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
 import { OtpType } from 'src/enum/otp.enum';
 import { PaymentStatus } from 'src/enum/payment.enum';
 import { Role } from 'src/enum/role.enum';
@@ -46,6 +47,8 @@ export class UserService {
     private userCompanyMappingRepository: Repository<UserCompanyMapping>,
     @InjectRepository(UserBranchMapping)
     private userBranchMappingRepository: Repository<UserBranchMapping>,
+    @InjectRepository(WorkshopManagerMapping)
+    private workshopManagerMappingRepository: Repository<WorkshopManagerMapping>,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
     private readonly httpService: HttpService,
@@ -220,6 +223,9 @@ export class UserService {
     const companyIds = [];
     const branchIds = [];
 
+    const workshopMappings = [];
+    const workshopIds = [];
+
     if (createUserDto.role_id === Role.SUB_ADMIN && createUserDto.company_ids) {
       for (const companyId of createUserDto.company_ids) {
         companyMappings.push(
@@ -247,12 +253,31 @@ export class UserService {
       }
     }
 
+    if (
+      createUserDto.role_id === Role.WORKSHOP_MANAGER &&
+      createUserDto.workshop_ids
+    ) {
+      for (const workshopId of createUserDto.workshop_ids) {
+        workshopMappings.push(
+          this.workshopManagerMappingRepository.create({
+            user_id: result.user_id,
+            workshop_id: workshopId,
+          }),
+        );
+        workshopIds.push(workshopId);
+      }
+    }
+
     if (companyMappings.length > 0) {
       await this.userCompanyMappingRepository.save(companyMappings);
     }
 
     if (branchMappings.length > 0) {
       await this.userBranchMappingRepository.save(branchMappings);
+    }
+
+    if (workshopMappings.length > 0) {
+      await this.workshopManagerMappingRepository.save(workshopMappings);
     }
 
     const formattedMobileNumber = `91${String(createUserDto.mobile_number).replace(/^0+/, '')}`;
@@ -286,6 +311,7 @@ export class UserService {
         result,
         company_ids: companyIds,
         branch_ids: branchIds,
+        workshop_ids: workshopIds,
       },
     };
   }
@@ -310,7 +336,8 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    const { branch_ids, company_ids, ...userUpdateData } = updateUserDto;
+    const { branch_ids, company_ids, workshop_ids, ...userUpdateData } =
+      updateUserDto;
 
     if (imagePath) {
       userUpdateData.image = imagePath;
@@ -334,6 +361,7 @@ export class UserService {
 
     let companyMappings = [];
     let branchMappings = [];
+    let workshopMappings = [];
 
     if (updateUserDto.role_id === Role.SUB_ADMIN) {
       if (company_ids) {
@@ -373,6 +401,25 @@ export class UserService {
       }
     }
 
+    if (updateUserDto.role_id === Role.WORKSHOP_MANAGER) {
+      if (workshop_ids) {
+        await this.workshopManagerMappingRepository.delete({ user_id });
+        workshopMappings = await this.workshopManagerMappingRepository.save(
+          workshop_ids.map((workshopId) =>
+            this.workshopManagerMappingRepository.create({
+              user_id,
+              workshop_id: workshopId,
+            }),
+          ),
+        );
+      } else {
+        workshopMappings = await this.workshopManagerMappingRepository.find({
+          where: { user_id },
+          select: ['workshop_id'],
+        });
+      }
+    }
+
     const updatedUser = await this.userRepository.findOne({
       where: { user_id },
     });
@@ -385,6 +432,8 @@ export class UserService {
         result: userWithImageUrl,
         company_ids: companyMappings.map((mapping) => mapping.company_id) || [],
         branch_ids: branchMappings.map((mapping) => mapping.branch_id) || [],
+        workshop_ids:
+          workshopMappings.map((mapping) => mapping.workshop_id) || [],
       },
     };
   }
@@ -441,9 +490,21 @@ export class UserService {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.orders', 'orders')
       .leftJoinAndSelect('orders.items', 'items')
+      .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
+      .leftJoinAndSelect('companyMapping.company', 'company')
+      .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
+      .leftJoinAndSelect('branchMapping.branch', 'branch')
+      .leftJoinAndSelect('user.workshopManagerMappings', 'workshopMapping')
+      .leftJoinAndSelect('workshopMapping.workshop', 'workshop')
       .where('user.user_id = :user_id', { user_id })
       .andWhere('user.deleted_at IS NULL')
       .andWhere('orders.deleted_at IS NULL')
+      .andWhere('companyMapping.deleted_at IS NULL')
+      .andWhere('company.deleted_at IS NULL')
+      .andWhere('branchMapping.deleted_at IS NULL')
+      .andWhere('branch.deleted_at IS NULL')
+      .andWhere('workshopMapping.deleted_at IS NULL')
+      .andWhere('workshop.deleted_at IS NUll')
       .select([
         'user.user_id',
         'user.first_name',
@@ -464,6 +525,9 @@ export class UserService {
         'orders.paid_amount',
         'orders.kasar_amount',
         'items.item_id',
+        'companyMapping.company_id',
+        'branchMapping.branch_id',
+        'workshopMapping.workshop_id',
       ]);
 
     const user: any = await userQuery.getOne();
@@ -484,11 +548,20 @@ export class UserService {
       pending_due_amount += orderDueAmount;
     }
 
+    const mappedUser = {
+      ...user,
+      branches: user.userBranchMappings.map((branch) => branch.branch_id),
+      companies: user.UserCompanyMappings.map((company) => company.company_id),
+      workshops: user.workshopManagerMappings.map(
+        (workshop) => workshop.workshop_id,
+      ),
+    };
+
     return {
       statusCode: 200,
       message: 'User found',
       data: {
-        user,
+        user: mappedUser,
         total_pending_amount: pending_due_amount,
       },
     };
@@ -572,9 +645,13 @@ export class UserService {
       .leftJoinAndSelect('user.orders', 'orders')
       .leftJoinAndSelect('orders.items', 'items')
       .leftJoinAndSelect('branchMapping.branch', 'branch')
+      .leftJoinAndSelect('user.workshopManagerMappings', 'workshopMapping')
+      .leftJoinAndSelect('workshopMapping.workshop', 'workshop')
       .where('user.deleted_at IS NULL')
       .andWhere('companyMapping.deleted_at IS NULL')
       .andWhere('company.deleted_at IS NULL')
+      .andWhere('workshopMapping.deleted_at IS NULL')
+      .andWhere('workshop.deleted_at IS NULL')
       .andWhere('branchMapping.deleted_at IS NULL')
       .andWhere('branch.deleted_at IS NULL')
       .andWhere('orders.deleted_at IS NULL')
@@ -582,6 +659,7 @@ export class UserService {
         'user',
         'companyMapping.company_id',
         'branchMapping.branch_id',
+        'workshopMapping.workshop_id',
         'branch.branch_id',
         'branch.branch_name',
         'company.company_id',
@@ -662,14 +740,20 @@ export class UserService {
       relations: ['branch'],
     });
 
+    const workshopMappings = await this.workshopManagerMappingRepository.find({
+      where: { user_id: In(userIds) },
+      select: ['user_id', 'workshop_id'],
+      relations: ['workshop'],
+    });
+
     const userCompanyMap: any = new Map<number, number[]>();
     const userBranchMap: any = new Map<number, number[]>();
+    const workshopMap: any = new Map<number, number[]>();
 
     companyMappings.forEach((mapping) => {
       if (!userCompanyMap.has(mapping.user_id)) {
         userCompanyMap.set(mapping.user_id, []);
       }
-      userCompanyMap.get(mapping.user_id)?.push(mapping.company?.company_name);
       userCompanyMap.get(mapping.user_id)?.push(mapping.company_id);
     });
 
@@ -677,8 +761,14 @@ export class UserService {
       if (!userBranchMap.has(mapping.user_id)) {
         userBranchMap.set(mapping.user_id, []);
       }
-      userBranchMap.get(mapping.user_id)?.push(mapping.branch?.branch_name);
       userBranchMap.get(mapping.user_id)?.push(mapping.branch_id);
+    });
+
+    workshopMappings.forEach((mapping) => {
+      if (!workshopMap.has(mapping.user_id)) {
+        workshopMap.set(mapping.user_id, []);
+      }
+      workshopMap.get(mapping.user_id)?.push(mapping.workshop_id);
     });
 
     const usersWithMappings = await Promise.all(
@@ -695,6 +785,7 @@ export class UserService {
           ...user,
           companies: userCompanyMap.get(user.user_id) || [],
           branches: userBranchMap.get(user.user_id) || [],
+          workshops: workshopMap.get(user.user_id) || [],
           total_due_amount: pending_due_amount,
         };
       }),
