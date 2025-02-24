@@ -1,3 +1,4 @@
+import { IsOptional } from 'class-validator';
 import {
   Column,
   Entity,
@@ -39,8 +40,9 @@ export class Branch extends BaseEntity {
   @Column({ type: 'int' })
   company_id: number;
 
-  @Column({ type: 'int' })
-  branch_manager_id: number;
+  @Column({ type: 'int', nullable: true })
+  @IsOptional()
+  branch_manager_id?: number;
 
   @ManyToOne(() => User, (user) => user.branches)
   @JoinColumn({ name: 'branch_manager_id' })

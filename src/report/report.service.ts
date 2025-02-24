@@ -508,7 +508,7 @@ export class ReportService {
       .createQueryBuilder('user')
       .leftJoin('user.loginHistories', 'loginHistories')
       .select("DATE_FORMAT(loginHistories.created_at, '%b-%Y')", 'month')
-      .addSelect('COUNT(loginHistories.user_id)', 'login_count')
+      .addSelect('COUNT(DISTINCT loginHistories.user_id)', 'login_count')
       .where('user.role_id =:roleId', { roleId: Role.CUSTOMER })
       .andWhere('user.deleted_at IS NULL')
       .andWhere('loginHistories.user_id IS NOT NULL');

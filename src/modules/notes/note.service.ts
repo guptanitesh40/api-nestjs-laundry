@@ -34,6 +34,7 @@ export class NotesService {
   async findAll(): Promise<Response> {
     const note = await this.notesRepository.find({
       where: { deleted_at: null },
+      order: { created_at: 'DESC' },
     });
     const Note = appendBaseUrlToArrayImages(note);
 

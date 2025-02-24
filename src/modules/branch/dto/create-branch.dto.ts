@@ -1,4 +1,4 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateBranchDto {
   @IsString()
@@ -8,6 +8,7 @@ export class CreateBranchDto {
   branch_address: string;
 
   @IsNumber()
+  @IsOptional()
   branch_manager_id: number;
 
   @IsString()
