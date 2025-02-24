@@ -373,7 +373,6 @@ export class InvoiceService {
 
   async generatePriceListPDF(): Promise<any> {
     const base_url = process.env.BASE_URL;
-    console.log('BASE URL:', base_url);
 
     const prices = await this.priceService.getAll();
     const templatePath = path.join(

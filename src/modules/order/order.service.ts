@@ -398,9 +398,6 @@ export class OrderService {
         'deliveryBoy.last_name',
       ])
       .where('order.deleted_at IS NULL')
-      // .orWhere('order.order_status != :orderStatus', {
-      //   orderStatus: OrderStatus.DELIVERED,
-      // })
       .select([
         'order',
         'user.first_name',
