@@ -461,7 +461,7 @@ export class OrderService {
           OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
         ],
       });
-    } else {
+    } else if (!list) {
       queryBuilder.andWhere('order.order_status != :orderStatus', {
         orderStatus: OrderStatus.DELIVERED,
       });

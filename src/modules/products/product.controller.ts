@@ -30,7 +30,6 @@ import { ProductService } from './product.service';
 
 @Controller()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
 export class ProductController {
   constructor(
     private readonly productService: ProductService,

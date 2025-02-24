@@ -1,5 +1,7 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'src/dto/response.dto';
+import { RolesGuard } from '../auth/guard/role.guard';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { ContactUsService } from './contact-us.service';
 import { CreateContactUsDto } from './dto/create-contact-us.dto';
@@ -16,6 +18,8 @@ export class ContactUsController {
   }
 
   @Get()
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   async getAll(
     @Query() paginationQueryDto: PaginationQueryDto,
   ): Promise<Response> {

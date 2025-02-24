@@ -9,6 +9,7 @@ import { Otp } from 'src/entities/otp.entity';
 import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
 import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
+import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
 import { UserService } from 'src/modules/user/user.service';
 import { OrderModule } from '../order/order.module';
 import { UsersModule } from '../user/user.module';
@@ -31,6 +32,7 @@ config();
       Otp,
       UserCompanyMapping,
       UserBranchMapping,
+      WorkshopManagerMapping,
     ]),
     UsersModule,
     OrderModule,
