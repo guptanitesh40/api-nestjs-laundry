@@ -14,6 +14,7 @@ import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { SendOtpDto } from './dto/send-otp.dto';
 import { SignupDto } from './dto/signup.dto';
 import { RolesGuard } from './guard/role.guard';
 
@@ -34,10 +35,10 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  // @Post('forgot-password')
-  // async sendOtp(@Body() sendOtpDto: SendOtpDto): Promise<Response> {
-  //   return this.userService.sendOtpForgotPassword(sendOtpDto.mobile_number);
-  // }
+  @Post('forgot-password')
+  async sendOtp(@Body() sendOtpDto: SendOtpDto): Promise<Response> {
+    return this.userService.sendOtpForgotPassword(sendOtpDto.mobile_number);
+  }
 
   @Post('reset-password')
   async resetPassword(
