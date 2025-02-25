@@ -856,6 +856,7 @@ export class UserService {
 
   async generateOtp(mobile_number: number, type: OtpType): Promise<number> {
     const otp = Math.floor(100000 + Math.random() * 900000);
+
     const otpEntry = this.otpRepository.create({
       mobile_number,
       otp,
@@ -865,24 +866,28 @@ export class UserService {
     await this.otpRepository.save(otpEntry);
 
     const formattedMobileNumber = `91${String(mobile_number).replace(/^0+/, '')}`;
+
     const apiKey = process.env.VISION360_API_KEY;
     const senderId = process.env.VISION360_SENDER_ID;
+    const dltTemplateId = process.env.VISION360_DLT_TEMPLATE_ID;
+    const baseUrl = process.env.VISION360_BASE_URL;
 
-    const message = `Your OTP for ${type} is: ${otp}`;
-    const url = `https://otpsms.vision360solutions.in/api/otp.php?authkey=${apiKey}&mobile=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&otp=${otp}`;
+    const message = `Your verification code for Sikka Cleaners is ${otp}. This code is valid for a limited time. Do not share it with anyone.`;
+
+    const url = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${dltTemplateId}`;
 
     try {
       const response = await firstValueFrom(this.httpService.get(url));
 
-      if (response.status !== 200 || response.data.type !== 'success') {
+      if (!response.data || response.status !== 200) {
         throw new Error('Failed to send OTP');
       }
+
+      return otp;
     } catch (error) {
       console.error('Vision360 Error:', error.response?.data || error.message);
       throw new BadRequestException('Failed to send OTP via SMS');
     }
-
-    return otp;
   }
 
   async validateOtp(mobile_number: number, otp: number): Promise<boolean> {

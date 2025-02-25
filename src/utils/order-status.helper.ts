@@ -146,7 +146,7 @@ export const getCustomerOrderStatusLabel = (
       if (!branchId || !pickupBoyId)
         return CustomerOrderStatus.WAITING_FOR_PICKUP;
     case 2:
-      if (!workshopId) return CustomerOrderStatus.PICKUP_COMPLETE;
+      if (!workshopId) return CustomerOrderStatus.WAITING_FOR_PICKUP;
 
     case 3:
       return CustomerOrderStatus.PICKUP_COMPLETE;

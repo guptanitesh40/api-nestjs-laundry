@@ -11,9 +11,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { FilePath } from 'src/constants/FilePath';
-import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
-import { Role } from 'src/enum/role.enum';
 import { fileUpload } from 'src/multer/image-upload';
 import { RolesGuard } from '../auth/guard/role.guard';
 import { ArraySettingDto, UpdateSettingDto } from './dto/update-settings.dto';
@@ -24,9 +22,6 @@ export class SettingController {
   constructor(private readonly settingService: SettingService) {}
 
   @Put('admin/settings')
-  @UseGuards(RolesGuard)
-  @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async update(@Body() arraySettingDto: ArraySettingDto): Promise<Response> {
     return await this.settingService.update(arraySettingDto);
   }
@@ -34,7 +29,6 @@ export class SettingController {
   @Put('admin/settings/image')
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   @UseInterceptors(
     FileFieldsInterceptor(
       [{ name: 'home_banner_image', maxCount: 1 }],
@@ -57,7 +51,6 @@ export class SettingController {
   @Get('admin/settings')
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async findAll(@Query('keys') keys?: string[]): Promise<Response> {
     return await this.settingService.findAll(keys);
   }

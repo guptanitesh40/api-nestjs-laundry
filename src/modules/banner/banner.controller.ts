@@ -30,7 +30,6 @@ import { UpdateBannerDto } from './dto/update-banner.dto';
 @Controller()
 @UseGuards(RolesGuard)
 @UseGuards(AuthGuard('jwt'))
-@Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
 export class BannerController {
   constructor(private readonly bannerService: BannerService) {}
 

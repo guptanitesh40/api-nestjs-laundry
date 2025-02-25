@@ -34,6 +34,7 @@ export class InvoiceService {
   async generateAndSaveInvoicePdf(order_id: number): Promise<any> {
     const order_invoice = getPdfUrl(order_id, getOrderInvoiceFileFileName());
     const file = fs.existsSync(order_invoice.fileName);
+
     if (file) {
       return { url: order_invoice.fileUrl };
     }
@@ -300,7 +301,9 @@ export class InvoiceService {
     }
   }
 
-  async generateOrderLabels(order: any): Promise<any> {
+  async generateOrderLabels(order_id: number): Promise<any> {
+    const order = (await this.orderService.getOrderDetail(order_id)).data;
+
     if (!order) {
       throw new NotFoundException(`Order with ID ${order.order_id} not found`);
     }
@@ -317,10 +320,12 @@ export class InvoiceService {
 
     const customerName = `${order.user.first_name} ${order.user.last_name}`;
     const date = new Date(order.created_at).toLocaleDateString();
-    const items = order.items.map((item) => ({
-      serviceName: item.service?.name || 'Unknown Service',
-      remarks: item.description || 'No remarks provided',
-    }));
+    const items = order.items.flatMap((item) =>
+      Array.from({ length: item.quantity || 1 }, () => ({
+        serviceName: item.service?.name || 'Unknown Service',
+        remarks: item.description || 'No remarks provided',
+      })),
+    );
 
     const data = {
       logoUrl,

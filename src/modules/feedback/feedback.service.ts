@@ -34,17 +34,27 @@ export class FeedbackService {
     };
   }
 
-  async getFeedBacksByStatus(status: IsPublish): Promise<Response> {
-    const feedbacks = await this.feedbackRepository.find({
-      where: {
-        is_publish: status,
-      },
-    });
+  async getApprovedFeedBacks(status: IsPublish): Promise<Response> {
+    const feedbacks = this.feedbackRepository
+      .createQueryBuilder('feedbacks')
+      .leftJoinAndSelect('feedbacks.order', 'order')
+      .leftJoinAndSelect('order.user', 'user')
+      .where('feedbacks.deleted_at IS NULL')
+      .andWhere('feedbacks.is_publish = :status', { status })
+      .select([
+        'feedbacks',
+        'order.user_id',
+        'user.first_name',
+        'user.last_name',
+      ])
+      .groupBy('feedbacks.feedback_id');
+
+    const feedback = await feedbacks.getMany();
 
     return {
       statusCode: 200,
-      message: 'Feedbacks retrived successfully',
-      data: feedbacks,
+      message: 'Feedbacks retrieved successfully',
+      data: feedback,
     };
   }
 
