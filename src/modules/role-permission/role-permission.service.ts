@@ -62,7 +62,7 @@ export class RolePermissionService {
   }
 
   async getPermissions(role_id: number): Promise<Response> {
-    const permission = await this.rolePermissionRepository.findOne({
+    const permission = await this.rolePermissionRepository.find({
       where: {
         role_id: role_id,
         deleted_at: null,

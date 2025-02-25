@@ -302,9 +302,6 @@ export class OrderService {
         },
       };
 
-      const itemsLabel =
-        await this.invoiceService.generateOrderLabels(orderDetail);
-
       await this.notificationService.sendOrderNotification(orderDetail);
 
       const deviceToken = await this.userService?.getDeviceToken(user?.user_id);
@@ -318,6 +315,9 @@ export class OrderService {
       }
 
       await queryRunner.commitTransaction();
+      const itemsLabel = await this.invoiceService.generateOrderLabels(
+        orderDetail.order_id,
+      );
 
       return {
         statusCode: 200,

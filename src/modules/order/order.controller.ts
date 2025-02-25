@@ -101,7 +101,6 @@ export class OrderController {
   }
 
   @Get('admin/orders/workshop')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async getAllWorkshopOrders(
     @Query() orderFilterDto: OrderFilterDto,
   ): Promise<Response> {
@@ -119,7 +118,6 @@ export class OrderController {
   }
 
   @Get('admin/orders/:order_id')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async getOrderDetails(
     @Param('order_id') order_id: number,
   ): Promise<Response> {
@@ -144,7 +142,6 @@ export class OrderController {
   }
 
   @Post('admin/orders')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async createorder(
     @Request() req,
     @Body() createOrderDto: CreateOrderDto,
@@ -155,7 +152,6 @@ export class OrderController {
   }
 
   @Get('admin/orders')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async findAll(
     @Query() orderFilterDto: OrderFilterDto,
     @Query('list') list: string,
@@ -165,7 +161,6 @@ export class OrderController {
   }
 
   @Get('admin/order/:order_id')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async findOne(
     @Param('order_id', ParseIntPipe) order_id: number,
   ): Promise<Response> {
@@ -173,7 +168,6 @@ export class OrderController {
   }
 
   @Put('admin/orders/:id')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async updateOrder(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateOrderDto: UpdateOrderDto,
