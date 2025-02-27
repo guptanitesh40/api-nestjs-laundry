@@ -19,6 +19,7 @@ import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
+import { customerApp, driverApp } from 'src/firebase.config';
 import {
   appendBaseUrlToArrayImages,
   appendBaseUrlToImagesOrPdf,
@@ -125,7 +126,7 @@ export class OrderService {
       const gst_amount = (createOrderDto.sub_total * gst_percentage) / 100;
       const total =
         createOrderDto.sub_total +
-        createOrderDto.shipping_charges +
+        (createOrderDto.normal_delivery_charges || 0) +
         (createOrderDto.express_delivery_charges || 0);
       const paid_amount = createOrderDto.paid_amount || 0;
       let kasar_amount = 0;
@@ -216,6 +217,7 @@ export class OrderService {
 
       const order = this.orderRepository.create({
         ...createOrderDto,
+        normal_delivery_charges: createOrderDto.normal_delivery_charges || 0,
         sub_total: calculatedSubTotal,
         user_id: user_id | createOrderDto.user_id,
         gst: gst_amount,
@@ -308,6 +310,7 @@ export class OrderService {
 
       if (deviceToken) {
         await this.notificationService.sendPushNotification(
+          customerApp,
           deviceToken,
           'New Order Created',
           `Your order #${order.order_id} has been placed successfully!`,
@@ -790,7 +793,7 @@ export class OrderService {
     const gst_amount = (sub_total * gst_percentage) / 100;
     const total =
       sub_total +
-      (updateOrderDto.shipping_charges || 0) +
+      (updateOrderDto.normal_delivery_charges || 0) +
       (updateOrderDto.express_delivery_charges || 0);
     order.sub_total = sub_total;
     order.gst = gst_amount;
@@ -1577,7 +1580,8 @@ export class OrderService {
     );
 
     if (deviceToken) {
-      await this.notificationService.sendPushNotificationDriver(
+      await this.notificationService.sendPushNotification(
+        driverApp,
         deviceToken,
         'New Delivery Assigned',
         `Order #${order_id} has been assinged to you for delivery`,
@@ -1625,7 +1629,8 @@ export class OrderService {
     );
 
     if (deviceToken) {
-      await this.notificationService.sendPushNotificationDriver(
+      await this.notificationService.sendPushNotification(
+        driverApp,
         deviceToken,
         'New Pickup Assigned',
         `Order #${order.order_id} has been assigned to you for pickup`,
@@ -1795,7 +1800,7 @@ export class OrderService {
         'order.order_status BETWEEN :minStatus AND :maxStatus',
         {
           minStatus: OrderStatus.WORKSHOP_ASSIGNED,
-          maxStatus: OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
+          maxStatus: OrderStatus.WORKSHOP_WORK_IN_PROGRESS,
         },
       );
     }
@@ -2085,6 +2090,17 @@ export class OrderService {
 
     if (!order) {
       throw new NotFoundException('Order Not Found');
+    }
+
+    const orders = [
+      OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING,
+      OrderStatus.ASSIGNED_PICKUP_BOY,
+    ];
+
+    if (!orders.includes(order.order_status)) {
+      throw new NotFoundException(
+        'This Order is not Cancellend; it has already been picked up',
+      );
     }
 
     if (order.order_status === OrderStatus.DELIVERED) {

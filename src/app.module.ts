@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
@@ -71,6 +72,7 @@ import { ReportModule } from './report/report.module';
     ModulesModule,
     RoleModule,
     RolePermissionModule,
+    HttpModule,
   ],
   controllers: [AppController],
   providers: [
