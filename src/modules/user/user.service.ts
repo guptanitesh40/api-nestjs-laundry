@@ -282,19 +282,21 @@ export class UserService {
 
     const formattedMobileNumber = `91${String(createUserDto.mobile_number).replace(/^0+/, '')}`;
 
-    const message = `Dear ${createUserDto.first_name} ${createUserDto.last_name}, Your Password Is: ${createUserDto.password}. Thank you for choosing Sikka Cleaners!`;
+    const full_name = `${createUserDto.first_name} ${createUserDto.last_name}`;
 
-    const smsUrl =
-      `https://otpsms.vision360solutions.in/api/sendhttp.php?` +
-      `authkey=${process.env.VISION360_API_KEY}` +
-      `&sender=${process.env.VISION360_SENDER_ID}` +
-      `&message=${encodeURIComponent(message)}` +
-      `&mobiles=${formattedMobileNumber}`;
+    const message = `Dear ${full_name}, Welcome to Sikka Cleaners! Your account has been successfully created , Your Password Is: ${createUserDto.password}. For security reasons, please do not share your password with anyone.`;
+
+    const baseUrl = process.env.VISION360_BASE_URL;
+    const apiKey = process.env.VISION360_API_KEY;
+    const senderId = process.env.VISION360_SENDER_ID;
+    const dltTemplateId = process.env.VISION360_DLT_TEMPLATE_ID;
+
+    const smsUrl = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${dltTemplateId}`;
 
     try {
       const response = await axios.get(smsUrl);
 
-      if (response.status !== 200 || response.data.type !== 'success') {
+      if (response.status !== 200) {
         throw new Error('Failed to send OTP');
       }
     } catch (error) {
@@ -527,7 +529,10 @@ export class UserService {
         'items.item_id',
         'companyMapping.company_id',
         'branchMapping.branch_id',
+        'branch.branch_name',
+        'company.company_name',
         'workshopMapping.workshop_id',
+        'workshop.workshop_name',
       ]);
 
     const user: any = await userQuery.getOne();
@@ -550,9 +555,20 @@ export class UserService {
 
     const mappedUser = {
       ...user,
-      branches: user.userBranchMappings.map((branch) => branch.branch_id),
-      companies: user.UserCompanyMappings.map((company) => company.company_id),
+      branches: user.userBranchMappings.map(
+        (branch) => branch.branch.branch_name,
+      ),
+      branch_ids: user.userBranchMappings.map((branch) => branch.branch_id),
+      companies: user.UserCompanyMappings.map(
+        (company) => company.company.company_name,
+      ),
+      company_ids: user.UserCompanyMappings.map(
+        (company) => company.company_id,
+      ),
       workshops: user.workshopManagerMappings.map(
+        (workshop) => workshop.workshop.workshop_name,
+      ),
+      workshop_ids: user.workshopManagerMappings.map(
         (workshop) => workshop.workshop_id,
       ),
     };
@@ -754,21 +770,21 @@ export class UserService {
       if (!userCompanyMap.has(mapping.user_id)) {
         userCompanyMap.set(mapping.user_id, []);
       }
-      userCompanyMap.get(mapping.user_id)?.push(mapping.company_id);
+      userCompanyMap.get(mapping.user_id)?.push(mapping.company.company_name);
     });
 
     branchMappings.forEach((mapping) => {
       if (!userBranchMap.has(mapping.user_id)) {
         userBranchMap.set(mapping.user_id, []);
       }
-      userBranchMap.get(mapping.user_id)?.push(mapping.branch_id);
+      userBranchMap.get(mapping.user_id)?.push(mapping.branch.branch_name);
     });
 
     workshopMappings.forEach((mapping) => {
       if (!workshopMap.has(mapping.user_id)) {
         workshopMap.set(mapping.user_id, []);
       }
-      workshopMap.get(mapping.user_id)?.push(mapping.workshop_id);
+      workshopMap.get(mapping.user_id)?.push(mapping.workshop.workshop_name);
     });
 
     const usersWithMappings = await Promise.all(
@@ -877,9 +893,9 @@ export class UserService {
     const url = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${dltTemplateId}`;
 
     try {
-      const response = await firstValueFrom(this.httpService.get(url));
+      const response = await firstValueFrom(this.httpService.post(url, {}));
 
-      if (!response.data || response.status !== 200) {
+      if (response.status !== 200) {
         throw new Error('Failed to send OTP');
       }
 

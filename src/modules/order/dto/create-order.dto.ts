@@ -33,7 +33,8 @@ export class CreateOrderDto {
   sub_total: number;
 
   @IsNumber()
-  shipping_charges: number;
+  @IsOptional()
+  normal_delivery_charges?: number;
 
   @IsOptional()
   @IsString()

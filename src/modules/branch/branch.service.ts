@@ -119,11 +119,11 @@ export class BranchService {
   async findOne(id: number): Promise<Response> {
     const result = await this.branchRepository
       .createQueryBuilder('branch')
-      .where('branch.branch_id = :id', { id })
-      .andWhere('branch.deleted_at IS NULL')
       .leftJoinAndSelect('branch.branchManager', 'user')
       .leftJoinAndSelect('branch.company', 'company')
-      .where('branch.deleted_at IS NULL')
+      .where('branch.branch_id = :id', { id: id })
+      .andWhere('branch.deleted_at IS NULL')
+      .andWhere('branch.deleted_at IS NULL')
       .select([
         'branch',
         'company.company_name',

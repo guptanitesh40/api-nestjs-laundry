@@ -1,8 +1,8 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import admin from 'firebase-admin';
 import { firstValueFrom } from 'rxjs';
 import { Order } from 'src/entities/order.entity';
-import { customerApp, driverApp } from 'src/firebase.config';
 import { getCustomerOrderStatusLabel } from 'src/utils/order-status.helper';
 
 @Injectable()
@@ -62,23 +62,8 @@ export class NotificationService {
     }
   }
 
-  async sendPushNotification(deviceToken: string, title: string, body: string) {
-    const message = {
-      notification: { title, body },
-      token: deviceToken,
-    };
-
-    try {
-      const response = await customerApp.messaging().send(message);
-
-      return { success: true, response };
-    } catch (error) {
-      console.error('Error sending notification:', error);
-      return { success: false, error };
-    }
-  }
-
-  async sendPushNotificationDriver(
+  async sendPushNotification(
+    app: admin.app.App,
     deviceToken: string,
     title: string,
     body: string,
@@ -89,8 +74,7 @@ export class NotificationService {
     };
 
     try {
-      const response = await driverApp.messaging().send(message);
-
+      const response = await app.messaging().send(message);
       return { success: true, response };
     } catch (error) {
       console.error('Error sending notification:', error);

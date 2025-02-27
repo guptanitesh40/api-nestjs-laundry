@@ -43,8 +43,8 @@ export class Order extends BaseEntity {
   @Column({ type: 'float', nullable: true })
   coupon_discount?: number;
 
-  @Column({ type: 'float' })
-  shipping_charges: number;
+  @Column({ type: 'float', nullable: true })
+  normal_delivery_charges: number;
 
   @Column({ type: 'float' })
   total: number;
