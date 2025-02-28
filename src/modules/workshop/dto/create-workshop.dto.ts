@@ -1,4 +1,4 @@
-import { IsArray, IsDecimal, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsOptional, IsString } from 'class-validator';
 
 export class CreateWorkshopDto {
   @IsOptional()
@@ -11,9 +11,9 @@ export class CreateWorkshopDto {
   @IsOptional()
   address: string;
 
-  @IsDecimal()
+  @IsString()
   @IsOptional()
-  mobile_number: number;
+  mobile_number: string;
 
   @IsArray()
   @IsOptional()
