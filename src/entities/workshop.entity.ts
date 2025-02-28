@@ -17,8 +17,8 @@ export class Workshop extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   address: string;
 
-  @Column({ type: 'decimal', nullable: true })
-  mobile_number: number;
+  @Column({ type: 'varchar', nullable: true, length: 20 })
+  mobile_number: string;
 
   @OneToMany(
     () => WorkshopManagerMapping,
