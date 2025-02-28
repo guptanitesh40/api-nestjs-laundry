@@ -72,7 +72,6 @@ export class NotificationService {
       notification: { title, body },
       token: deviceToken,
     };
-
     try {
       const response = await app.messaging().send(message);
       return { success: true, response };

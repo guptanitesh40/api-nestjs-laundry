@@ -553,8 +553,10 @@ export class UserService {
       pending_due_amount += orderDueAmount;
     }
 
+    const userImageWithUrl = appendBaseUrlToImagesOrPdf([user])[0];
+
     const mappedUser = {
-      ...user,
+      ...userImageWithUrl,
       branches: user.userBranchMappings.map(
         (branch) => branch.branch.branch_name,
       ),
@@ -767,24 +769,26 @@ export class UserService {
     const workshopMap: any = new Map<number, number[]>();
 
     companyMappings.forEach((mapping) => {
-      if (!userCompanyMap.has(mapping.user_id)) {
-        userCompanyMap.set(mapping.user_id, []);
+      if (!userCompanyMap.has(mapping?.user_id)) {
+        userCompanyMap.set(mapping?.user_id, []);
       }
-      userCompanyMap.get(mapping.user_id)?.push(mapping.company.company_name);
+      userCompanyMap
+        .get(mapping?.user_id)
+        ?.push(mapping?.company?.company_name);
     });
 
     branchMappings.forEach((mapping) => {
-      if (!userBranchMap.has(mapping.user_id)) {
-        userBranchMap.set(mapping.user_id, []);
+      if (!userBranchMap.has(mapping?.user_id)) {
+        userBranchMap.set(mapping?.user_id, []);
       }
-      userBranchMap.get(mapping.user_id)?.push(mapping.branch.branch_name);
+      userBranchMap.get(mapping?.user_id)?.push(mapping?.branch?.branch_name);
     });
 
     workshopMappings.forEach((mapping) => {
-      if (!workshopMap.has(mapping.user_id)) {
-        workshopMap.set(mapping.user_id, []);
+      if (!workshopMap.has(mapping?.user_id)) {
+        workshopMap.set(mapping?.user_id, []);
       }
-      workshopMap.get(mapping.user_id)?.push(mapping.workshop.workshop_name);
+      workshopMap.get(mapping?.user_id)?.push(mapping?.workshop?.workshop_name);
     });
 
     const usersWithMappings = await Promise.all(

@@ -115,6 +115,8 @@ export class CartService {
       ])
       .getRawMany();
 
+    let cart_count = 0;
+
     const carts = cartsQuery.map((cart) => {
       cart.product_image = appendBaseUrlToImagesOrPdf([
         { image: cart.product_image },
@@ -123,13 +125,17 @@ export class CartService {
         { image: cart.service_image },
       ])[0].image;
 
+      if (cart.cart_id) {
+        cart_count += 1;
+      }
+
       return cart;
     });
 
     return {
       statusCode: 200,
       message: 'Cart retrieved successfully',
-      data: { carts },
+      data: { carts, cart_count },
     };
   }
 
@@ -176,11 +182,12 @@ export class CartService {
 
       return cart;
     });
+
     const shippingCharge = (
-      await this.settingService.findAll(['shipping_charge'])
+      await this.settingService.findAll(['normal_delivery_charges'])
     ).data;
 
-    const shippingCharges = Number(shippingCharge.shipping_charge);
+    const shippingCharges = Number(shippingCharge.normal_delivery_charges);
 
     const branches = (await this.branchService.getBranchList()).data;
     const total = subTotal + shippingCharges;

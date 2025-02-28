@@ -46,7 +46,9 @@ export class FeedbackService {
         'order.user_id',
         'user.first_name',
         'user.last_name',
+        'user.gender',
       ])
+      .orderBy('feedbacks.updated_at', 'DESC')
       .groupBy('feedbacks.feedback_id');
 
     const feedback = await feedbacks.getMany();

@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { BannerModule } from '../banner/banner.module';
 import { BranchModule } from '../branch/branch.module';
+import { CartModule } from '../cart/cart.module';
 import { InvoiceModule } from '../invoice/invoice.module';
 import { ApiService } from '../mobileapi/api.service';
 import { OrderModule } from '../order/order.module';
@@ -18,6 +19,7 @@ import { WebController } from './web.controller';
     ServicesModule,
     BannerModule,
     PriceModule,
+    CartModule,
   ],
   controllers: [WebController],
   providers: [ApiService],
