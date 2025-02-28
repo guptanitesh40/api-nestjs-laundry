@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice <%= invoice.invoiceNumber %></title>
+    <title>Invoice <%= invoice.invoiceNumber %>
+    </title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Atma:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -18,37 +20,58 @@
             border: 2px solid black;
             padding-bottom: 10px;
         }
+
         .container {
             display: flex;
             align-items: center;
             border-bottom: 2px solid black;
         }
-        h1, h2, h3 {
+
+        h1,
+        h2,
+        h3 {
             text-align: center;
             color: #161F5F;
             margin: 5px 0;
         }
-        h1 { font-size: 20px; }
-        h2 { font-size: 18px; }
-        h3 { font-size: 16px; }
+
+        h1 {
+            font-size: 20px;
+        }
+
+        h2 {
+            font-size: 18px;
+        }
+
+        h3 {
+            font-size: 16px;
+        }
+
         table {
             width: 100%;
             height: 30%;
             border-collapse: collapse;
             margin-top: 5px;
         }
-        table, th, td {
+
+        table,
+        th,
+        td {
             border: 1px solid #ccc;
         }
-        th, td {
+
+        th,
+        td {
             padding: 8px;
             text-align: center;
             font-size: 12px;
         }
+
         th {
             background-color: #f2f2f2;
             font-weight: bold;
         }
+
         .header-section {
             flex-basis: 80%;
             border-right: 2px solid black;
@@ -56,26 +79,32 @@
             justify-content: center;
             align-items: center;
         }
+
         .header-section img {
             display: inline-block;
             height: auto;
             width: 65px;
             padding: 0 10px;
         }
+
         .box2 {
             flex-basis: 20%;
         }
+
         .box11 {
             flex-grow: 1;
         }
+
         .box11 h2 {
             color: black;
             text-align: left;
             text-transform: uppercase;
         }
+
         .box11 .address {
             font-size: 14px;
         }
+
         .box11 .genuine-text {
             font-family: "Atma", serif;
             font-weight: 300;
@@ -83,6 +112,7 @@
             font-size: 14px;
             border-bottom: 2px solid black;
         }
+
         .customer-details {
             border-bottom: 2px solid black;
             display: flex;
@@ -91,56 +121,67 @@
             padding: 0 10px;
             font-size: 12px;
         }
-        
+
         .summ-container {
             display: flex;
             align-items: start;
             justify-content: space-between;
             padding: 0 10px;
         }
+
         .totals {
             margin-top: 10px;
         }
+
         .totals p {
             display: flex;
             justify-content: space-between;
-            margin: 0; 
+            margin: 0;
             font-size: 12px;
         }
+
         .totals span:first-child {
             text-align: left;
             width: 200%;
             font-weight: bold;
         }
+
         .totals span:last-child {
             text-align: right;
             width: 80%;
         }
+
         .total-row {
             font-weight: bold;
             background-color: #e7f3fe;
         }
+
         .note {
             font-style: italic;
             margin-top: 10px;
             text-align: center;
             font-size: 12px;
         }
+
         .footer {
             margin-top: 10px;
             text-align: center;
             font-size: 12px;
         }
+
         .footer span {
             margin-right: 50px;
         }
+
         .description p {
             font-size: 10px;
         }
     </style>
 </head>
+
 <body>
-    <div class="main-container" style="display:contents; justify-content: center; align-items: center; border: 1px solid black; margin: 2px;">
+    <div class="main-container"
+        style="display:contents; justify-content: center; align-items: center; border: 1px solid black; margin: 2px;">
         <div class="container">
             <div class="header-section">
                 <img src="<%= invoice.logoUrl %>" alt="Sikka Cleaners">
@@ -152,20 +193,32 @@
                     <p style="font-weight: bold; font-style: italic;">RECEIPT</p>
                 </div>
             </div>
-            <div class="box2"><p ><span style="font-weight: bold;">Branch.:</span><br> <%= invoice.branchName  %></p>
-                              <p ><span style="font-weight: bold;">Mo.:</span><br>+<%= invoice.branchMobileNumber  %></p>  
+            <div class="box2">
+                <p><span style="font-weight: bold;">Branch.:</span><br>
+                    <%= invoice.branchName %>
+                </p>
+                <p><span style="font-weight: bold;">Mo.:</span><br>+<%= invoice.branchMobileNumber %>
+                </p>
             </div>
         </div>
         <div class="customer-details">
             <div class="detail-1">
-                <p style="font-weight: bold;">Booking No: <%= invoice.invoiceNumber %></p>
-                <p>Customer Name: <%= invoice.customer.name %></p>
-                <p>Customer Contact: <%= invoice.customer.contact %></p>
-                <p>Customer Address: <%= invoice.customerAddress %></p>
+                <p style="font-weight: bold;">Booking No: <%= invoice.invoiceNumber %>
+                </p>
+                <p>Customer Name: <%= invoice.customer.name %>
+                </p>
+                <p>Customer Contact: <%= invoice.customer.contact %>
+                </p>
+                <p>Customer Address: <%= invoice.customerAddress %>
+                </p>
             </div>
             <div class="detail-2">
-                <p>Collection Date & Time:<br><%= invoice.collectionTime %></p>
-                <p>Delivery Date & Time:<br><%= invoice.deliveryTime %></p>
+                <p>Collection Date & Time:<br>
+                    <%= invoice.collectionTime %>
+                </p>
+                <p>Delivery Date & Time:<br>
+                    <%= invoice.deliveryTime %>
+                </p>
             </div>
         </div>
         <div style="display: flex; justify-content: center; align-items: center;">
@@ -180,27 +233,43 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% let totalQuantity = 0; %>
-                    <% let totalAmount = 0; %>
-                    <% invoice.items.forEach(item => { %>
-                        <tr>
-                            <td><%= item.quantity %></td>
-                            <td><%= item.product %> <%= item.category %></td>
-                            <td><%= item.service %> </td>
-                            <td><%= item.rate %></td>
-                            <td><%= item.amount %></td>
-                        </tr>
-                        <% totalQuantity += item.quantity; %>
-                        <% totalAmount += item.amount; %>
-                    <% }) %>
-                    <tr class="total-row">
-                        <td><%= totalQuantity %></td>
-                        <td colspan="3">Sub total</td>
-                        <td><%= invoice.itemsTotal.toFixed(2) %></td>
-                    </tr>
-                    <tr>
-                        <td colspan="4">In Words: <%= invoice.totalInWords %></td>
-                    </tr>
+                    <% let totalQuantity=0; %>
+                        <% let totalAmount=0; %>
+                            <% invoice.items.forEach(item=> { %>
+                                <tr>
+                                    <td>
+                                        <%= item.quantity %>
+                                    </td>
+                                    <td>
+                                        <%= item.product %>
+                                            <%= item.category %>
+                                    </td>
+                                    <td>
+                                        <%= item.service %>
+                                    </td>
+                                    <td>
+                                        <%= item.rate %>
+                                    </td>
+                                    <td>
+                                        <%= item.amount %>
+                                    </td>
+                                </tr>
+                                <% totalQuantity +=item.quantity; %>
+                                    <% totalAmount +=item.amount; %>
+                                        <% }) %>
+                                            <tr class="total-row">
+                                                <td>
+                                                    <%= totalQuantity %>
+                                                </td>
+                                                <td colspan="3">Sub total</td>
+                                                <td>
+                                                    <%= invoice.itemsTotal.toFixed(2) %>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="4">In Words: <%= invoice.totalInWords %>
+                                                </td>
+                                            </tr>
                 </tbody>
             </table>
         </div>
@@ -213,21 +282,52 @@
             </div>
             <div class="summary-section" style="width: 38%;">
                 <div class="totals">
-                    <p><span>Shipping Charges:</span><span><%= invoice.shippingCharges.toFixed(2) %></span></p>
-                    <p><span>Delivery Charges:</span><span><%= invoice.expressDeliveryCharges.toFixed(2) %></span></p>
-                    <% if (invoice.adjustmentCharges > 0) { %>
-                        <p><span>Kasar Amount:</span><span><%= invoice.adjustmentCharges.toFixed(2) %></span></p>
-                      <% } %>
-                                          <p><span>Gst:</span><span><%= invoice.Gst.toFixed(2) %></span></p>
-                    <p><span>Discount:</span><span><%= invoice.discount.toFixed(2) %></span></p>
-                    <p><span>Sub Total:</span><span><%= invoice.
-                    subTotal.toFixed(2) %></span></p>
-                    <p><span style="color: green;">Paid Amount:</span><span style="color: green;"><%= invoice.paidAmount.toFixed(2) %></span></p>
-                    <p><span style="color: red;">Previous Due Amount:</span><span style="color: red;"><%= invoice.pendingDueAmount.toFixed(2) %></span></p>
-                    <p><span>Total Due Amount:</span><span><%= invoice.totalAmount.toFixed(2) %></span></p>
+                    <% if (invoice.normalDeliveryCharges> 0) { %>
+                        <p><span>Normal Delivery Charges:</span><span>
+                                <%= invoice.normalDeliveryCharges.toFixed(2) %>
+                            </span></p>
+                        <% } %>
+
+                            <% if (invoice.expressDeliveryCharges> 0) { %>
+                                <p><span>Express Delivery Charges:</span><span>
+                                        <%= invoice.expressDeliveryCharges.toFixed(2) %>
+                                    </span></p>
+                                <% } %>
+
+
+                                    <% if (invoice.adjustmentCharges> 0) { %>
+                                        <p><span>Kasar Amount:</span><span>
+                                                <%= invoice.adjustmentCharges.toFixed(2) %>
+                                            </span></p>
+                                        <% } %>
+                                            <p><span>Gst:</span><span>
+                                                    <%= invoice.Gst.toFixed(2) %>
+                                                </span></p>
+
+                                            <% if (invoice.discount> 0) { %>
+                                                <p><span>Discount:</span><span>
+                                                        <%= invoice.discount.toFixed(2) %>
+                                                    </span></p>
+                                                <% } %>
+
+                                                    <p><span>Sub Total:</span><span>
+                                                            <%= invoice. subTotal.toFixed(2) %>
+                                                        </span></p>
+                                                    <p><span style="color: green;">Paid Amount:</span><span
+                                                            style="color: green;">
+                                                            <%= invoice.paidAmount.toFixed(2) %>
+                                                        </span></p>
+                                                    <p><span style="color: red;">Previous Due Amount:</span><span
+                                                            style="color: red;">
+                                                            <%= invoice.pendingDueAmount.toFixed(2) %>
+                                                        </span></p>
+                                                    <p><span>Total Due Amount:</span><span>
+                                                            <%= invoice.totalAmount.toFixed(2) %>
+                                                        </span></p>
                 </div>
             </div>
         </div>
     </div>
 </body>
+
 </html>

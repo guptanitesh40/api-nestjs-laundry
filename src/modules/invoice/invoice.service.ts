@@ -92,7 +92,7 @@ export class InvoiceService {
     const invoicePdf = getPdfUrl(order_id, getOrderInvoiceFileFileName());
     const filePath = join(process.cwd(), '', invoicePdf.fileName);
 
-    fs.writeFileSync(filePath, pdfBuffer);
+    fs.writeFileSync(filePath, new Uint8Array(pdfBuffer));
     return invoicePdf.fileUrl;
   }
 
@@ -138,7 +138,7 @@ export class InvoiceService {
         };
       }) || [];
 
-    const totalAmount = orderData.shipping_charges
+    const totalAmount = orderData.normal_delivery_charges
       ? parseFloat(orderData.total.toString())
       : 0;
 
@@ -146,8 +146,8 @@ export class InvoiceService {
       ? parseFloat(orderData.sub_total.toString())
       : 0;
 
-    const shippingCharges = orderData.shipping_charges
-      ? parseFloat(orderData.shipping_charges.toString())
+    const normalDeliveryCharges = orderData.normal_delivery_charges
+      ? parseFloat(orderData.normal_delivery_charges.toString())
       : 0;
     const expressDeliveryCharges = orderData.express_delivery_charges
       ? parseFloat(orderData.express_delivery_charges.toString())
@@ -190,7 +190,7 @@ export class InvoiceService {
       itemsTotal,
       subTotal: subTotal,
       Gst: gst,
-      shippingCharges,
+      normalDeliveryCharges,
       expressDeliveryCharges,
       discount,
       paidAmount,
@@ -289,7 +289,7 @@ export class InvoiceService {
       const refundReceipt = getPdfUrl(order.order_id, getRefundFileFileName());
       const filePath = join(process.cwd(), '', refundReceipt.fileName);
 
-      writeFileSync(filePath, pdfBuffer);
+      writeFileSync(filePath, new Uint8Array(pdfBuffer));
 
       const fileUrl = refundReceipt.fileUrl;
 

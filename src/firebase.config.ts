@@ -6,7 +6,7 @@ const customerApp = admin.initializeApp(
   {
     credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
   },
-  'orderApp',
+  'customerApp',
 );
 
 import serviceAccount2 from '../src/firebase/sikkacleaners-driver-app.json';

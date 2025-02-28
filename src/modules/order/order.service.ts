@@ -1197,6 +1197,47 @@ export class OrderService {
   }
 
   async pendingDueAmount(user_id: number): Promise<Response> {
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.user_id=:user_id', { user_id: user_id })
+      .andWhere('order.order_status= :status', {
+        status: OrderStatus.DELIVERED,
+      })
+      .andWhere('order.total > order.paid_amount + order.kasar_amount')
+      .andWhere('order.refund_status !=:refundStatus ', {
+        refundStatus: RefundStatus.FULL,
+      })
+      .andWhere('order.deleted_at IS NULL')
+      .select([
+        'order.order_id',
+        'order.created_at',
+        'order.total',
+        'order.kasar_amount',
+        'order.estimated_delivery_time',
+        'order.paid_amount',
+        'order.payment_status',
+        'order.transaction_id',
+      ]);
+
+    const result: any = await queryBuilder.getMany();
+
+    result.map((order) => {
+      const order_invoice = getPdfUrl(
+        order.order_id,
+        getOrderInvoiceFileFileName(),
+      );
+      const file = fs.existsSync(order_invoice.fileName);
+
+      order.order_invoice = file
+        ? order_invoice
+        : { fileUrl: '', fileName: '' };
+      order.remaining_amount =
+        order.total -
+        (order.paid_amount || 0) -
+        (order.kasar_amount || 0) -
+        (order.refund_amount || 0);
+    });
+
     const orders = this.orderRepository
       .createQueryBuilder('order')
       .where('order.user_id=:user_id', { user_id: user_id })
@@ -1225,14 +1266,18 @@ export class OrderService {
 
     return {
       statusCode: 200,
-      message: 'Pending Due amount',
-      data: totalPendingAmount,
+      message: 'orders invoice retrieved successfully',
+      data: {
+        result,
+        order_ids,
+        totalPendingAmount,
+      },
     };
   }
 
   async getOrderInvoiceList(
     user_id: number,
-    paginationQueryDto: PaginationQueryDto,
+    paginationQueryDto?: PaginationQueryDto,
   ): Promise<Response> {
     const { per_page, page_number } = paginationQueryDto;
     const pageNumber = page_number ?? 1;
@@ -1318,7 +1363,7 @@ export class OrderService {
         result,
         order_ids,
         totalPendingAmount,
-        limit: perPage,
+        limit: perPage || total,
         page_number: pageNumber,
         count: total,
       },

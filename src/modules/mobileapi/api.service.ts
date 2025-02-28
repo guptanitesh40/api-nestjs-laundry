@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Response } from 'src/dto/response.dto';
 import { BannerService } from '../banner/banner.service';
+import { CartService } from '../cart/cart.service';
 import { OrderService } from '../order/order.service';
 import { PriceService } from '../price/price.service';
 import { ServicesService } from '../services/services.service';
@@ -12,22 +13,37 @@ export class ApiService {
     private readonly bannerService: BannerService,
     private readonly priceService: PriceService,
     private readonly orderService: OrderService,
+    private readonly cartService: CartService,
   ) {}
 
   async findAll(user_id: number): Promise<Response> {
-    const [services, banners, pendingDueAmount] = await Promise.all([
-      this.serviceService.getAll(),
-      this.bannerService.getAll(),
+    const [service, banners, invoice, cart] = await Promise.all([
+      (await this.serviceService.getAll()).data,
+      (await this.bannerService.getAll()).data,
       (await this.orderService.pendingDueAmount(user_id)).data,
+      (await this.cartService.getAllCarts(user_id)).data,
     ]);
+
+    const services = service.services;
+    const banner = banners.banner;
+
+    const invoice_list = invoice.result;
+    const total_pending_due_amount = invoice.totalPendingAmount;
+
+    const cart_count = cart.cart_count;
+
+    const notification_count = 0;
 
     return {
       statusCode: 200,
       message: 'Services and banners retrieved successfully',
       data: {
         services: services,
-        banners: banners,
-        total_pending_due_amount: pendingDueAmount,
+        banner,
+        invoice_list,
+        total_pending_due_amount,
+        cart_count,
+        notification_count,
       },
     };
   }
