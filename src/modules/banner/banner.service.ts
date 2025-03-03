@@ -24,7 +24,7 @@ export class BannerService {
 
     return {
       statusCode: 200,
-      message: 'banner retrieved successfully',
+      message: 'Banner retrieved successfully',
       data: { banner: Banner },
     };
   }
@@ -42,7 +42,7 @@ export class BannerService {
     const Banner = appendBaseUrlToImagesOrPdf([result])[0];
     return {
       statusCode: 201,
-      message: 'banner added successfully',
+      message: 'Banner added successfully',
       data: { result: Banner },
     };
   }
@@ -127,7 +127,7 @@ export class BannerService {
     if (!update_banner) {
       return {
         statusCode: 404,
-        message: 'banner not found',
+        message: 'Banner not found',
         data: null,
       };
     }
@@ -147,7 +147,7 @@ export class BannerService {
 
     return {
       statusCode: 200,
-      message: 'banner updated successfully',
+      message: 'Banner updated successfully',
       data: { update_banner: Banner },
     };
   }
@@ -159,7 +159,7 @@ export class BannerService {
     if (!banner) {
       return {
         statusCode: 404,
-        message: 'banner not found',
+        message: 'Banner not found',
         data: null,
       };
     }

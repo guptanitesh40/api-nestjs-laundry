@@ -56,7 +56,7 @@ export class RolePermissionService {
 
     return {
       statusCode: 200,
-      message: 'roles permission retrived successfully',
+      message: 'Roles permission retrived successfully',
       data: role,
     };
   }
@@ -71,7 +71,7 @@ export class RolePermissionService {
 
     return {
       statusCode: 200,
-      message: 'role permission retrived successfully',
+      message: 'Role permission retrived successfully',
       data: permission,
     };
   }

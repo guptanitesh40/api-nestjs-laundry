@@ -49,7 +49,8 @@ export class FeedbackService {
         'user.gender',
       ])
       .orderBy('feedbacks.updated_at', 'DESC')
-      .groupBy('feedbacks.feedback_id');
+      .groupBy('feedbacks.feedback_id')
+      .take(15);
 
     const feedback = await feedbacks.getMany();
 
@@ -74,7 +75,7 @@ export class FeedbackService {
 
     return {
       statusCode: 200,
-      message: 'Feedbacks publish successfully',
+      message: 'Feedbacks published successfully',
     };
   }
 
@@ -192,7 +193,7 @@ export class FeedbackService {
 
     return {
       statusCode: 200,
-      message: 'Approved feedbacks fetch successfully',
+      message: 'Approved feedbacks retrived successfully',
       data: {
         feedbacks,
         feedbackRating,

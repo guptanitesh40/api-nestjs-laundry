@@ -139,7 +139,7 @@ export class SettingService {
 
     return {
       statusCode: 200,
-      message: 'settings retrieved successfully ',
+      message: 'Settings retrieved successfully ',
       data: result,
     };
   }

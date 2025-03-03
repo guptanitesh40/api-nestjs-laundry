@@ -88,7 +88,7 @@ export class CategoryService {
 
     return {
       statusCode: 201,
-      message: 'category added successfully',
+      message: 'Category added successfully',
       data: { result },
     };
   }
@@ -104,7 +104,7 @@ export class CategoryService {
     if (!update_category) {
       return {
         statusCode: 404,
-        message: 'category not found',
+        message: 'Category not found',
         data: null,
       };
     }

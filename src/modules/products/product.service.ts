@@ -87,7 +87,7 @@ export class ProductService {
     const products = appendBaseUrlToImagesOrPdf([product])[0];
     return {
       statusCode: 200,
-      message: 'product retrieved successfully',
+      message: 'Product retrieved successfully',
       data: { product: products },
     };
   }
@@ -106,7 +106,7 @@ export class ProductService {
 
     return {
       statusCode: 201,
-      message: 'product added successfully',
+      message: 'Product added successfully',
       data: { result: Product },
     };
   }
@@ -122,7 +122,7 @@ export class ProductService {
     if (!update_product) {
       return {
         statusCode: 404,
-        message: 'product not found',
+        message: 'Product not found',
         data: null,
       };
     }
@@ -143,7 +143,7 @@ export class ProductService {
 
     return {
       statusCode: 200,
-      message: 'product updated successfully',
+      message: 'Product updated successfully',
       data: { update_product: products },
     };
   }
