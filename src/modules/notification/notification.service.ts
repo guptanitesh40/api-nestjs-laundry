@@ -66,25 +66,6 @@ export class NotificationService {
     }
   }
 
-  // async sendPushNotification(
-  //   app: admin.app.App,
-  //   deviceToken: string,
-  //   title: string,
-  //   body: string,
-  // ) {
-  //   const message = {
-  //     notification: { title, body },
-  //     token: deviceToken,
-  //   };
-  //   try {
-  //     const response = await app.messaging().send(message);
-  //     return { success: true, response };
-  //   } catch (error) {
-  //     console.error('Error sending notification:', error);
-  //     return { success: false, error };
-  //   }
-  // }
-
   async sendPushNotification(
     app: admin.app.App,
     deviceToken: string,
