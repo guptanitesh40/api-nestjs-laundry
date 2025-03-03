@@ -15,6 +15,9 @@ export class CreateBranchDto {
   branch_phone_number: string;
 
   @IsString()
+  branch_mobile_number: string;
+
+  @IsString()
   branch_email: string;
 
   @IsString()

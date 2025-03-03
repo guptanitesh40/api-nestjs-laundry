@@ -4,12 +4,16 @@ import admin from 'firebase-admin';
 import { firstValueFrom } from 'rxjs';
 import { Order } from 'src/entities/order.entity';
 import { getCustomerOrderStatusLabel } from 'src/utils/order-status.helper';
+import { RedisQueueService } from '../../radis.config';
 
 @Injectable()
 export class NotificationService {
   private readonly apiUrl = 'https://wts.vision360solutions.co.in/api/sendText';
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly redisQueueService: RedisQueueService,
+  ) {}
 
   async sendOrderNotification(order: any): Promise<void> {
     if (!order) {
@@ -62,22 +66,40 @@ export class NotificationService {
     }
   }
 
+  // async sendPushNotification(
+  //   app: admin.app.App,
+  //   deviceToken: string,
+  //   title: string,
+  //   body: string,
+  // ) {
+  //   const message = {
+  //     notification: { title, body },
+  //     token: deviceToken,
+  //   };
+  //   try {
+  //     const response = await app.messaging().send(message);
+  //     return { success: true, response };
+  //   } catch (error) {
+  //     console.error('Error sending notification:', error);
+  //     return { success: false, error };
+  //   }
+  // }
+
   async sendPushNotification(
     app: admin.app.App,
     deviceToken: string,
     title: string,
     body: string,
   ) {
-    const message = {
-      notification: { title, body },
-      token: deviceToken,
-    };
     try {
-      const response = await app.messaging().send(message);
-      return { success: true, response };
+      await this.redisQueueService.addNotificationToQueue({
+        app,
+        deviceToken,
+        title,
+        body,
+      });
     } catch (error) {
-      console.error('Error sending notification:', error);
-      return { success: false, error };
+      console.error('Error adding notification to queue:', error);
     }
   }
 }

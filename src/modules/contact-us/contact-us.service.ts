@@ -47,7 +47,7 @@ export class ContactUsService {
         '(contact-us.full_name LIKE :search OR ' +
           'contact-us.email LIKE :search OR ' +
           'contact-us.mobile_number LIKE :search OR ' +
-          'contact-us.message LIKE :search',
+          'contact-us.message LIKE :search)',
         { search: `%${search}%` },
       );
     }
@@ -56,7 +56,7 @@ export class ContactUsService {
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 
     if (sort_by) {
-      sortColumn = sort_by;
+      sortColumn = `contact-us.${sort_by}`;
     }
     if (order) {
       sortOrder = order;

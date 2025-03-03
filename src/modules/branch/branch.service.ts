@@ -76,6 +76,8 @@ export class BranchService {
             OR branch.branch_address LIKE :search 
             OR user.first_name LIKE :search 
             OR user.last_name LIKE :search 
+            OR branch.branch_phone_number LIKE :search
+            OR branch.branch_mobile_number LIKE :search
             OR branch.branch_email LIKE :search 
             OR branch.branch_registration_number LIKE :search 
             OR company.company_name LIKE :search 
@@ -100,7 +102,10 @@ export class BranchService {
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 
     if (sort_by) {
-      sortColumn = sort_by;
+      sortColumn =
+        sort_by === 'first_name' || sort_by === 'last_name'
+          ? `user.${sort_by}`
+          : `branch.${sort_by}`;
     }
     if (order) {
       sortOrder = order;

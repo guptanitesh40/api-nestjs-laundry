@@ -939,6 +939,29 @@ export class OrderService {
     }
 
     order.order_status = status;
+    const deviceToken = await this.userService.getDeviceToken(order.user_id);
+    if (order.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
+      if (deviceToken) {
+        await this.notificationService.sendPushNotification(
+          customerApp,
+          deviceToken,
+          'Order Received at Branch',
+          `Great news! Your order #${order.order_id} has arrived at our branch and is being processed. We'll update you soon!`,
+        );
+      }
+    }
+
+    if (order.order_status === OrderStatus.DELIVERED) {
+      if (deviceToken) {
+        await this.notificationService.sendPushNotification(
+          customerApp,
+          deviceToken,
+          'Your Order Has Been Delivered!',
+          `Great news! Your order #${order.order_id} has been successfully delivered. Thank you for choosing Sikka Cleaners! We appreciate your trust in us.`,
+        );
+      }
+    }
+
     await this.orderRepository.save(order);
 
     await this.notificationService.sendOrderStatusNotification(order);
@@ -1583,6 +1606,19 @@ export class OrderService {
     order.workshop_id = workshop_id;
     order.order_status = OrderStatus.WORKSHOP_ASSIGNED;
 
+    const deviceTokenCustomer = await this.userService.getDeviceToken(
+      order.user_id,
+    );
+
+    if (deviceTokenCustomer) {
+      await this.notificationService.sendPushNotification(
+        customerApp,
+        deviceTokenCustomer,
+        'Your Order Has Been Assigned to a Workshop',
+        `Great news! Your order #${order.order_id} has been assigned to a workshop for processing. We'll keep you updated on its progress.`,
+      );
+    }
+
     await this.orderRepository.save(order);
 
     return {
@@ -1633,6 +1669,19 @@ export class OrderService {
       );
     }
 
+    const deviceTokenCustomer = await this.userService.getDeviceToken(
+      order.user_id,
+    );
+
+    if (deviceTokenCustomer) {
+      await this.notificationService.sendPushNotification(
+        customerApp,
+        deviceTokenCustomer,
+        'Your Order is Out for Delivery!',
+        `Good news! Your order #${order.order_id} has been assigned to a delivery partner and will be on its way to you soon. Stay tuned!`,
+      );
+    }
+
     return {
       statusCode: 200,
       message: 'Delivery boy assigned successfully',
@@ -1679,6 +1728,19 @@ export class OrderService {
         deviceToken,
         'New Pickup Assigned',
         `Order #${order.order_id} has been assigned to you for pickup`,
+      );
+    }
+
+    const deviceTokenCustomer = await this.userService.getDeviceToken(
+      order.user_id,
+    );
+
+    if (deviceTokenCustomer) {
+      await this.notificationService.sendPushNotification(
+        customerApp,
+        deviceTokenCustomer,
+        'Assigned PickupBoy',
+        `Your order #${order.order_id} has been assigned to a pickup boy. They will collect your order soon.`,
       );
     }
 
@@ -2106,6 +2168,19 @@ export class OrderService {
 
     order.order_status = OrderStatus.CANCELLED_BY_ADMIN;
     await this.orderRepository.save(order);
+
+    const deviceTokenCustomer = await this.userService.getDeviceToken(
+      order.user_id,
+    );
+
+    if (deviceTokenCustomer) {
+      await this.notificationService.sendPushNotification(
+        customerApp,
+        deviceTokenCustomer,
+        'Order Cancelled',
+        `We're sorry! Your order #${order.order_id} has been cancelled by the admin. Please contact support for further assistance.`,
+      );
+    }
 
     const note: CreateNoteDto = {
       user_id,
