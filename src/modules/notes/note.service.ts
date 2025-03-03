@@ -26,7 +26,7 @@ export class NotesService {
     const Note = appendBaseUrlToArrayImages([result])[0];
     return {
       statusCode: 201,
-      message: 'note added successfully',
+      message: 'Note added successfully',
       data: { result: Note },
     };
   }
@@ -40,7 +40,7 @@ export class NotesService {
 
     return {
       statusCode: 200,
-      message: 'notes retrived successfully',
+      message: 'Notes retrived successfully',
       data: { note: Note },
     };
   }
@@ -52,7 +52,7 @@ export class NotesService {
     if (!note) {
       return {
         statusCode: 404,
-        message: 'note not found',
+        message: 'Note not found',
         data: null,
       };
     }
@@ -76,7 +76,7 @@ export class NotesService {
     if (!update_note) {
       return {
         statusCode: 404,
-        message: 'note not found',
+        message: 'Note not found',
         data: null,
       };
     }
@@ -107,7 +107,7 @@ export class NotesService {
     if (!note) {
       return {
         statusCode: 404,
-        message: 'note not found',
+        message: 'Note not found',
         data: null,
       };
     }
@@ -118,7 +118,7 @@ export class NotesService {
 
     return {
       statusCode: 200,
-      message: 'note deleted successfully',
+      message: 'Note deleted successfully',
       data: { note: Note },
     };
   }

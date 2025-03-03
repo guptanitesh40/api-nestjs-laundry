@@ -23,7 +23,7 @@ export class PriceContentService {
 
     return {
       statusCode: 201,
-      message: 'price content added successfully',
+      message: 'Price content added successfully',
       data: result,
     };
   }
@@ -33,7 +33,7 @@ export class PriceContentService {
 
     return {
       statusCode: 200,
-      message: 'price content retrived successfully',
+      message: 'Price content retrived successfully',
       data: result,
     };
   }
@@ -47,7 +47,7 @@ export class PriceContentService {
     }
     return {
       statusCode: 200,
-      message: 'price content retrived ',
+      message: 'Price content retrived successfully',
       data: result,
     };
   }
@@ -70,7 +70,7 @@ export class PriceContentService {
 
     return {
       statusCode: 200,
-      message: 'price content updated successfully',
+      message: 'Price content updated successfully',
       data: price_content,
     };
   }
@@ -87,7 +87,7 @@ export class PriceContentService {
 
     return {
       statusCode: 200,
-      message: 'price content deleted successfully',
+      message: 'Price content deleted successfully',
       data: priceContent,
     };
   }

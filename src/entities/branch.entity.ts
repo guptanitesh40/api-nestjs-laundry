@@ -27,6 +27,9 @@ export class Branch extends BaseEntity {
   @Column({ type: 'varchar', length: 20 })
   branch_phone_number: string;
 
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  branch_mobile_number: string;
+
   @Column({ type: 'varchar', length: 255 })
   branch_email: string;
 

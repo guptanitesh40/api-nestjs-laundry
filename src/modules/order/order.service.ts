@@ -1183,7 +1183,7 @@ export class OrderService {
 
     return {
       statusCode: 200,
-      message: 'Orders retrieved',
+      message: 'Orders retrieved successfully',
       data: {
         result,
         limit: perPage,
@@ -1684,7 +1684,7 @@ export class OrderService {
 
     return {
       statusCode: 200,
-      message: 'pickupBoy assigned successfully',
+      message: 'PickupBoy assigned successfully',
     };
   }
 

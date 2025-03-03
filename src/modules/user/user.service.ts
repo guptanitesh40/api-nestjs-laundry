@@ -1008,7 +1008,7 @@ export class UserService {
 
     return {
       statusCode: 200,
-      message: 'logout successfully',
+      message: 'User logout successfully',
       data: deviceuser,
     };
   }
