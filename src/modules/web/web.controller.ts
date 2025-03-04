@@ -1,5 +1,6 @@
 import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
 import { Response } from 'src/dto/response.dto';
+import { BannerType } from 'src/enum/banner_type.enum';
 import { OptionalAuthGuard } from '../auth/guard/optional.guard';
 import { BannerService } from '../banner/banner.service';
 import { ApiService } from '../mobileapi/api.service';
@@ -15,7 +16,8 @@ export class WebController {
 
   @Get('banners')
   async getAllBanners(): Promise<Response> {
-    return await this.bannerService.getAll();
+    const banner_type = [BannerType.WEBSITE, BannerType.BOTH];
+    return await this.bannerService.getAll(banner_type);
   }
 
   @Get('products')

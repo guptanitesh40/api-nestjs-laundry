@@ -247,8 +247,8 @@ export class OrderController {
       (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
     );
     return this.orderService.deliveryComplete(
-      user.user_id,
       order_id,
+      user.user_id,
       deliveryOrderDto,
       imagePaths,
     );
@@ -271,8 +271,8 @@ export class OrderController {
     );
 
     return this.orderService.pickupComplete(
-      user.user_id,
       order_id,
+      user.user_id,
       deliveryOrderDto,
       imagePaths,
     );

@@ -19,6 +19,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FilePath } from 'src/constants/FilePath';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
+import { BannerType } from 'src/enum/banner_type.enum';
 import { Role } from 'src/enum/role.enum';
 import { fileUpload } from 'src/multer/image-upload';
 import { RolesGuard } from '../auth/guard/role.guard';
@@ -35,8 +36,10 @@ export class BannerController {
 
   @Get('banners')
   @Roles(Role.CUSTOMER)
-  async getAll(): Promise<Response> {
-    return await this.bannerService.getAll();
+  async getAll(
+    @Query('banner_type') banner_type?: BannerType[],
+  ): Promise<Response> {
+    return await this.bannerService.getAll(banner_type);
   }
 
   @Post('admin/banners')

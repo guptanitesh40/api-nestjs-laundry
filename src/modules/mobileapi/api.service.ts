@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Response } from 'src/dto/response.dto';
+import { BannerType } from 'src/enum/banner_type.enum';
 import { BannerService } from '../banner/banner.service';
 import { CartService } from '../cart/cart.service';
 import { OrderService } from '../order/order.service';
@@ -17,9 +18,10 @@ export class ApiService {
   ) {}
 
   async findAll(user_id: number): Promise<Response> {
+    const banner_type = [BannerType.APP, BannerType.BOTH];
     const [service, banners, invoice, cart] = await Promise.all([
       (await this.serviceService.getAll()).data,
-      (await this.bannerService.getAll()).data,
+      (await this.bannerService.getAll(banner_type)).data,
       (await this.orderService.pendingDueAmount(user_id)).data,
       (await this.cartService.getAllCarts(user_id)).data,
     ]);

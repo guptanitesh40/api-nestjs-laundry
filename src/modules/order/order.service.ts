@@ -1750,6 +1750,38 @@ export class OrderService {
     };
   }
 
+  async deliveryComplete(
+    order_id: number,
+    user_id: number,
+    deliveryOrderDto: DeliveryOrderDto,
+    imagePaths: string[],
+  ): Promise<Response> {
+    return this.updateOrderPickupAndDeliveryStatus(
+      order_id,
+      user_id,
+      deliveryOrderDto,
+      imagePaths,
+      OrderStatus.DELIVERED,
+      'Order delivery confirmed successfully',
+    );
+  }
+
+  async pickupComplete(
+    order_id: number,
+    user_id: number,
+    deliveryOrderDto: DeliveryOrderDto,
+    imagePaths: string[],
+  ): Promise<Response> {
+    return this.updateOrderPickupAndDeliveryStatus(
+      order_id,
+      user_id,
+      deliveryOrderDto,
+      imagePaths,
+      OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
+      'Order Pickup Confirmed successfully',
+    );
+  }
+
   async updateOrderPickupAndDeliveryStatus(
     order_id: number,
     user_id: number,
@@ -1759,8 +1791,9 @@ export class OrderService {
     statusMessage: string,
   ): Promise<Response> {
     const order: any = await this.orderRepository.findOne({
-      where: { order_id, user_id: user_id },
+      where: { order_id: order_id },
     });
+
     if (!order) {
       throw new NotFoundException('Order not found');
     }
@@ -1768,6 +1801,29 @@ export class OrderService {
     order.order_status = status;
     order.order_status_details = getOrderStatusDetails(order);
     await this.orderRepository.save(order);
+
+    const deviceToken = await this.userService.getDeviceToken(order.user_id);
+    if (order.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
+      if (deviceToken) {
+        await this.notificationService.sendPushNotification(
+          customerApp,
+          deviceToken,
+          'Order Received at Branch',
+          `Great news! Your order #${order.order_id} has arrived at our branch and is being processed. We'll update you soon!`,
+        );
+      }
+    }
+
+    if (order.order_status === OrderStatus.DELIVERED) {
+      if (deviceToken) {
+        await this.notificationService.sendPushNotification(
+          customerApp,
+          deviceToken,
+          'Your Order Has Been Delivered!',
+          `Great news! Your order #${order.order_id} has been successfully delivered. Thank you for choosing Sikka Cleaners! We appreciate your trust in us.`,
+        );
+      }
+    }
 
     const noteDto: CreateNoteDto = {
       user_id,
@@ -1783,38 +1839,6 @@ export class OrderService {
       message: statusMessage,
       data: { order, note },
     };
-  }
-
-  async deliveryComplete(
-    user_id: number,
-    order_id: number,
-    deliveryOrderDto: DeliveryOrderDto,
-    imagePaths: string[],
-  ): Promise<Response> {
-    return this.updateOrderPickupAndDeliveryStatus(
-      user_id,
-      order_id,
-      deliveryOrderDto,
-      imagePaths,
-      OrderStatus.DELIVERED,
-      'Order delivery confirmed successfully',
-    );
-  }
-
-  async pickupComplete(
-    user_id: number,
-    order_id: number,
-    deliveryOrderDto: DeliveryOrderDto,
-    imagePaths: string[],
-  ): Promise<Response> {
-    return this.updateOrderPickupAndDeliveryStatus(
-      user_id,
-      order_id,
-      deliveryOrderDto,
-      imagePaths,
-      OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
-      'Order Pickup Confirmed successfully',
-    );
   }
 
   async delete(order_id: number): Promise<Response> {
