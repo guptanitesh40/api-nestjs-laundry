@@ -12,6 +12,7 @@ import path, { join } from 'path';
 import puppeteer, { Browser } from 'puppeteer';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
+import { customerApp } from 'src/firebase.config';
 import numberToWords from 'src/utils/numberToWords';
 import {
   getOrderInvoiceFileFileName,
@@ -19,8 +20,10 @@ import {
   getPdfUrl,
   getRefundFileFileName,
 } from 'src/utils/pdf-url.helper';
+import { NotificationService } from '../notification/notification.service';
 import { OrderService } from '../order/order.service';
 import { PriceService } from '../price/price.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class InvoiceService {
@@ -29,6 +32,10 @@ export class InvoiceService {
     private readonly orderService: OrderService,
     @Inject(forwardRef(() => PriceService))
     private readonly priceService: PriceService,
+
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async generateAndSaveInvoicePdf(order_id: number): Promise<any> {
@@ -103,6 +110,19 @@ export class InvoiceService {
     if (orderData.order_status !== OrderStatus.DELIVERED) {
       throw new BadRequestException(
         `This order is not delivered yet. You cannot download the invoice.`,
+      );
+    }
+
+    const deviceTokenCustomer = await this.userService.getDeviceToken(
+      orderData.user_id,
+    );
+
+    if (deviceTokenCustomer) {
+      await this.notificationService.sendPushNotification(
+        customerApp,
+        deviceTokenCustomer,
+        'Your Order Receipt is Ready!',
+        `Good news! The receipt for your order #${orderData.order_id} has been generated successfully. You can view it in your account.`,
       );
     }
 
