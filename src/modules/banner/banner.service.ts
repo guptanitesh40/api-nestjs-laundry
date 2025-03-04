@@ -2,8 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Banner } from 'src/entities/banner.entity';
+import { BannerType } from 'src/enum/banner_type.enum';
 import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { BannerFilterDto } from '../dto/banner-filter.dto';
 import { CreateBannerDto } from './dto/create-banner.dto';
 import { UpdateBannerDto } from './dto/update-banner.dto';
@@ -15,9 +16,9 @@ export class BannerService {
     private BannerRepository: Repository<Banner>,
   ) {}
 
-  async getAll(): Promise<Response> {
+  async getAll(banner_type?: BannerType[]): Promise<Response> {
     const banner = await this.BannerRepository.find({
-      where: { deleted_at: null },
+      where: { deleted_at: null, banner_type: In(banner_type) },
     });
 
     const Banner = appendBaseUrlToImagesOrPdf(banner);
