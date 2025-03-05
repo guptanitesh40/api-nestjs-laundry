@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Queue, Worker } from 'bullmq';
+import admin from 'firebase-admin';
 import { RedisOptions } from 'ioredis';
 
 const redisConfig: RedisOptions = {
@@ -15,6 +16,7 @@ export class RedisQueueService {
     this.notificationQueue = new Queue('pushNotifications', {
       connection: redisConfig,
     });
+
     this.processQueue();
   }
 
@@ -26,7 +28,10 @@ export class RedisQueueService {
     new Worker(
       'pushNotifications',
       async (job) => {
-        const { app, deviceToken, title, body } = job.data;
+        const { appName, deviceToken, title, body } = job.data;
+
+        const app = admin.app(appName);
+
         try {
           await app.messaging().send({
             notification: { title, body },

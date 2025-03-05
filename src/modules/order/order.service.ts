@@ -940,6 +940,7 @@ export class OrderService {
 
     order.order_status = status;
     const deviceToken = await this.userService.getDeviceToken(order.user_id);
+
     if (order.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
       if (deviceToken) {
         await this.notificationService.sendPushNotification(
@@ -1083,6 +1084,7 @@ export class OrderService {
         'order.order_status',
         'order.payment_status',
         'order.estimated_delivery_time',
+        'order.estimated_pickup_time',
         'order.created_at',
         'items',
         'feedback.feedback_id',
