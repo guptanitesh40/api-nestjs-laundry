@@ -289,7 +289,7 @@ export class UserService {
     const baseUrl = process.env.VISION360_BASE_URL;
     const apiKey = process.env.VISION360_API_KEY;
     const senderId = process.env.VISION360_SENDER_ID;
-    const dltTemplateId = process.env.VISION360_DLT_TEMPLATE_ID;
+    const dltTemplateId = process.env.VISION360_DLT_TEMPLATE_ID2;
 
     const smsUrl = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${dltTemplateId}`;
 

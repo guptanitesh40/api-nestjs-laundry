@@ -74,7 +74,7 @@ export class NotificationService {
   ) {
     try {
       await this.redisQueueService.addNotificationToQueue({
-        app,
+        appName: app.name,
         deviceToken,
         title,
         body,
