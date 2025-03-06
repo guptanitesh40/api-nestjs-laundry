@@ -20,7 +20,6 @@ import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
 import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
 import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
-import { DeviceType } from 'src/enum/device_type.enum';
 import { OtpType } from 'src/enum/otp.enum';
 import { PaymentStatus } from 'src/enum/payment.enum';
 import { Role } from 'src/enum/role.enum';
@@ -1079,15 +1078,5 @@ export class UserService {
     });
 
     return token ? token.device_token : null;
-  }
-
-  async getAllDeviceToken(): Promise<any> {
-    const deviceType = [DeviceType.ANDROID, DeviceType.IOS];
-
-    const token = await this.deviceUserRepository.find({
-      where: { deleted_at: null, device_type: In(deviceType) },
-    });
-
-    return token;
   }
 }
