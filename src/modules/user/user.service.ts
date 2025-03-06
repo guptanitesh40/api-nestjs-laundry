@@ -11,6 +11,10 @@ import axios from 'axios';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { firstValueFrom } from 'rxjs';
+import {
+  vision360_template_id_otp_send,
+  vision360_template_id_password_send,
+} from 'src/constants/TemplateId';
 import { Response } from 'src/dto/response.dto';
 import { DeviceUser } from 'src/entities/device-user.entity';
 import { LoginHistory } from 'src/entities/login-history.entity';
@@ -36,8 +40,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
-  private readonly vision360_template_id_otp_send = '1707173952247561304';
-  private readonly vision360_template_id_password_send = '1707174108935802395';
+  // private readonly vision360_template_id_otp_send = '1707173952247561304';
+  // private readonly vision360_template_id_password_send = '1707174108935802395';
 
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
@@ -293,7 +297,7 @@ export class UserService {
     const apiKey = process.env.VISION360_API_KEY;
     const senderId = process.env.VISION360_SENDER_ID;
 
-    const smsUrl = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${this.vision360_template_id_password_send}`;
+    const smsUrl = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${vision360_template_id_password_send}`;
 
     try {
       const response = await axios.get(smsUrl);
@@ -895,7 +899,7 @@ export class UserService {
 
     const message = `Your verification code for Sikka Cleaners is ${otp}. This code is valid for a limited time. Do not share it with anyone.`;
 
-    const url = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${this.vision360_template_id_otp_send}`;
+    const url = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${vision360_template_id_otp_send}`;
 
     try {
       const response = await firstValueFrom(this.httpService.post(url, {}));
