@@ -16,7 +16,7 @@ export class ModuleService {
 
     return {
       statusCode: 201,
-      message: 'modules retrived successfully',
+      message: 'Modules retrived successfully',
       data: module,
     };
   }

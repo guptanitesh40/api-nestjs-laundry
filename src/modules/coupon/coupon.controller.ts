@@ -24,7 +24,6 @@ import { UpdateCouponDto } from './dto/update-coupon.dto';
 @Controller()
 @UseGuards(RolesGuard)
 @UseGuards(AuthGuard('jwt'))
-@Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
 export class CouponController {
   constructor(private readonly couponService: CouponService) {}
 
@@ -63,7 +62,6 @@ export class CouponController {
   }
 
   @Post('admin/coupon/apply')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async applyCouponForAdmin(
     @Body() applyCouponDto: ApplyCouponDto,
     @Query('user_id') user_id: number,
