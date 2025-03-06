@@ -40,9 +40,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
-  // private readonly vision360_template_id_otp_send = '1707173952247561304';
-  // private readonly vision360_template_id_password_send = '1707174108935802395';
-
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(DeviceUser)
