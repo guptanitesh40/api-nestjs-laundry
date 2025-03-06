@@ -20,6 +20,7 @@ import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
 import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
 import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
+import { DeviceType } from 'src/enum/device_type.enum';
 import { OtpType } from 'src/enum/otp.enum';
 import { PaymentStatus } from 'src/enum/payment.enum';
 import { Role } from 'src/enum/role.enum';
@@ -36,6 +37,9 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
+  private readonly vision360_template_id_otp_send = '1707173952247561304';
+  private readonly vision360_template_id_password_send = '1707174108935802395';
+
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(DeviceUser)
@@ -167,7 +171,7 @@ export class UserService {
     delete user.password;
     return {
       statusCode: 200,
-      message: 'password change successfully',
+      message: 'Password change successfully',
       data: { user },
     };
   }
@@ -289,9 +293,8 @@ export class UserService {
     const baseUrl = process.env.VISION360_BASE_URL;
     const apiKey = process.env.VISION360_API_KEY;
     const senderId = process.env.VISION360_SENDER_ID;
-    const dltTemplateId = process.env.VISION360_DLT_TEMPLATE_ID2;
 
-    const smsUrl = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${dltTemplateId}`;
+    const smsUrl = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${this.vision360_template_id_password_send}`;
 
     try {
       const response = await axios.get(smsUrl);
@@ -889,12 +892,11 @@ export class UserService {
 
     const apiKey = process.env.VISION360_API_KEY;
     const senderId = process.env.VISION360_SENDER_ID;
-    const dltTemplateId = process.env.VISION360_DLT_TEMPLATE_ID;
     const baseUrl = process.env.VISION360_BASE_URL;
 
     const message = `Your verification code for Sikka Cleaners is ${otp}. This code is valid for a limited time. Do not share it with anyone.`;
 
-    const url = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${dltTemplateId}`;
+    const url = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${this.vision360_template_id_otp_send}`;
 
     try {
       const response = await firstValueFrom(this.httpService.post(url, {}));
@@ -1077,5 +1079,15 @@ export class UserService {
     });
 
     return token ? token.device_token : null;
+  }
+
+  async getAllDeviceToken(): Promise<any> {
+    const deviceType = [DeviceType.ANDROID, DeviceType.IOS];
+
+    const token = await this.deviceUserRepository.find({
+      where: { deleted_at: null, device_type: In(deviceType) },
+    });
+
+    return token;
   }
 }

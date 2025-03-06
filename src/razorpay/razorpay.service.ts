@@ -46,7 +46,7 @@ export class RazorpayService {
     await this.razorpayRepository.save(razorpay);
     return {
       statusCode: 200,
-      message: 'transaction details',
+      message: 'Transaction details',
       data: {
         razorpay_order_id: razorpay.razorpay_order_id,
         razorpay_key_id: process.env.RAZORPAY_KEY_ID,
@@ -155,7 +155,7 @@ export class RazorpayService {
 
     return {
       statusCode: 200,
-      message: 'transaction retrieved successfully',
+      message: 'Transaction retrieved successfully',
       data: { result, limit: perPage, page_number: pageNumber, count: total },
     };
   }

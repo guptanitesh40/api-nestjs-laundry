@@ -34,7 +34,7 @@ export class CouponService {
 
       return {
         statusCode: 201,
-        message: 'discount coupon added successfully',
+        message: 'Discount coupon added successfully',
         data: result,
       };
     } catch (error) {
@@ -188,7 +188,7 @@ export class CouponService {
     if (!coupon) {
       return {
         statusCode: 404,
-        message: 'coupon not found',
+        message: 'Coupon not found',
         data: null,
       };
     }
@@ -199,7 +199,7 @@ export class CouponService {
 
     return {
       statusCode: 200,
-      message: 'coupon updated successfully',
+      message: 'Coupon updated successfully',
       data: { coupon },
     };
   }
@@ -211,7 +211,7 @@ export class CouponService {
     if (!coupon) {
       return {
         statusCode: 404,
-        message: 'coupon not found',
+        message: 'Coupon not found',
         data: null,
       };
     }
@@ -220,7 +220,7 @@ export class CouponService {
 
     return {
       statusCode: 200,
-      message: 'coupon deleted successfully',
+      message: 'Coupon deleted successfully',
       data: coupon,
     };
   }

@@ -68,7 +68,7 @@ export class ContactUsService {
 
     return {
       statusCode: 200,
-      message: 'contact-us retrieved successfully',
+      message: 'Contact-us retrieved successfully',
       data: { result, limit: perPage, page_number: pageNumber, count: total },
     };
   }

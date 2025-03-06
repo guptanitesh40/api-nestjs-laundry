@@ -1291,7 +1291,7 @@ export class OrderService {
 
     return {
       statusCode: 200,
-      message: 'orders invoice retrieved successfully',
+      message: 'Orders invoice retrieved successfully',
       data: {
         result,
         order_ids,
@@ -1383,7 +1383,7 @@ export class OrderService {
 
     return {
       statusCode: 200,
-      message: 'orders invoice retrived successfully',
+      message: 'Orders invoice retrived successfully',
       data: {
         result,
         order_ids,

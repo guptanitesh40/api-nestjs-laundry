@@ -103,7 +103,7 @@ export class CompanyService {
     const Company = appendBaseUrlToImagesOrPdf([result])[0];
     return {
       statusCode: 200,
-      message: 'company retrieved successfully',
+      message: 'Company retrieved successfully',
       data: { result: Company },
     };
   }
@@ -155,10 +155,11 @@ export class CompanyService {
     const company = await this.companyRepository.findOne({
       where: { company_id: id, deleted_at: null },
     });
+
     if (!company) {
       return {
         statusCode: 404,
-        message: 'company not found',
+        message: 'Company not found',
         data: null,
       };
     }
@@ -170,7 +171,7 @@ export class CompanyService {
 
     return {
       statusCode: 200,
-      message: 'company deleted successfully',
+      message: 'Company deleted successfully',
       data: { company: Company },
     };
   }
