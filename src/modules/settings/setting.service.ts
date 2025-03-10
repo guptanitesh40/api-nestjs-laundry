@@ -130,6 +130,8 @@ export class SettingService {
         'privacy-policy',
         'refund-policy',
         'faq',
+        'contact-us',
+        'about-us',
       ];
 
       if (webIpKeys.includes(element.setting_key)) {
