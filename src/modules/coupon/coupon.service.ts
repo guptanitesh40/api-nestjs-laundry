@@ -10,10 +10,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Coupon } from 'src/entities/coupon.entity';
 import { Order } from 'src/entities/order.entity';
-import { DiscountType } from 'src/enum/coupon_type.enum';
+import { CouponType, DiscountType } from 'src/enum/coupon_type.enum';
+import { customerApp } from 'src/firebase.config';
 import { Repository } from 'typeorm';
 import { CouponFiltrerDto } from '../dto/coupon-filter.dto';
+import { NotificationService } from '../notification/notification.service';
 import { OrderService } from '../order/order.service';
+import { UserService } from '../user/user.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { ApplyCouponDto } from './dto/create.verify-coupon.dto';
 import { UpdateCouponDto } from './dto/update-coupon.dto';
@@ -25,12 +28,38 @@ export class CouponService {
     private readonly couponRepository: Repository<Coupon>,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(createCouponDto: CreateCouponDto): Promise<Response> {
     try {
       const discountCoupon = this.couponRepository.create(createCouponDto);
       const result = await this.couponRepository.save(discountCoupon);
+
+      if (
+        createCouponDto.coupon_type === CouponType.APP ||
+        createCouponDto.coupon_type === CouponType.BOTH
+      ) {
+        const users = await this.userService.getAllCustomerDeviceTokens();
+
+        const msg =
+          createCouponDto.discount_type === DiscountType.AMOUNT
+            ? `${createCouponDto.discount_value}rs`
+            : `${createCouponDto.discount_value}%`;
+
+        if (users) {
+          const title = 'New Discount Coupon!';
+          const body = `Use Coupon code: ${result.code} to get ${msg} off. Hurry up!`;
+          await this.notificationService.sendPushNotificationsAllCustomer(
+            customerApp,
+            users,
+            title,
+            body,
+          );
+        }
+      }
 
       return {
         statusCode: 201,
@@ -119,7 +148,7 @@ export class CouponService {
     };
   }
 
-  async getAll(user_id: number): Promise<Response> {
+  async getAll(user_id: number, coupon_type?: CouponType): Promise<Response> {
     const currentDate = new Date();
 
     const queryBuilder = this.couponRepository
@@ -152,6 +181,17 @@ export class CouponService {
         'usage_count < coupon.total_usage_count AND user_usage_count < coupon.maximum_usage_count_per_user',
       )
       .orderBy('coupon_id', 'DESC');
+
+    if (Number(coupon_type) === CouponType.APP) {
+      queryBuilder.andWhere('coupon.coupon_type IN (:...couponType)', {
+        couponType: [CouponType.APP, CouponType.BOTH],
+      });
+    }
+    if (Number(coupon_type) === CouponType.WEBSITE) {
+      queryBuilder.andWhere('coupon.coupon_type IN (:...couponType)', {
+        couponType: [CouponType.WEBSITE, CouponType.BOTH],
+      });
+    }
 
     const result = await queryBuilder.getMany();
 

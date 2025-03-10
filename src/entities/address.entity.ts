@@ -28,10 +28,10 @@ export class UserAddress extends BaseEntity {
   @Column({ nullable: true })
   landmark: string;
 
-  @Column({ type: 'decimal', nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   lat: number;
 
-  @Column({ type: 'decimal', nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   long: number;
 
   @Column({ nullable: true })

@@ -13,6 +13,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
+import { CouponType } from 'src/enum/coupon_type.enum';
 import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from '../auth/guard/role.guard';
 import { CouponFiltrerDto } from '../dto/coupon-filter.dto';
@@ -46,9 +47,12 @@ export class CouponController {
 
   @Get('customer/coupon')
   @Roles(Role.CUSTOMER)
-  async getAll(@Request() req): Promise<Response> {
+  async getAll(
+    @Request() req,
+    @Query('coupon_type') coupon_type: CouponType,
+  ): Promise<Response> {
     const user = req.user;
-    return this.couponService.getAll(user.user_id);
+    return this.couponService.getAll(user.user_id, coupon_type);
   }
 
   @Post('coupon/apply')

@@ -83,4 +83,25 @@ export class NotificationService {
       console.error('Error adding notification to queue:', error);
     }
   }
+
+  async sendPushNotificationsAllCustomer(
+    app: admin.app.App,
+    deviceTokens: string[],
+    title: string,
+    body: string,
+  ) {
+    try {
+      const message = {
+        notification: { title, body },
+        tokens: deviceTokens,
+      };
+
+      await app.messaging().sendEachForMulticast(message);
+    } catch (error) {
+      console.error(
+        'Error sending push notifications:',
+        error?.errorInfo || error,
+      );
+    }
+  }
 }

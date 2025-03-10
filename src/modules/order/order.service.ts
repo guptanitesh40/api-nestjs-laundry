@@ -138,7 +138,9 @@ export class OrderService {
         kasar_amount = paid_amount < total ? total - paid_amount : 0;
       }
 
-      const estimated_pickup_time = createOrderDto.express_delivery_charges
+      const isExpress = createOrderDto.express_delivery_charges > 0;
+
+      const estimated_pickup_time = isExpress
         ? addHours(
             new Date(),
             parseInt(settings['estimate_pickup_express_hour']),
@@ -148,9 +150,9 @@ export class OrderService {
             parseInt(settings['estimate_pickup_normal_hour']),
           );
 
-      const deliveryDaysToAdd = createOrderDto.express_delivery_charges
-        ? settings['estimate_delivery_express_day']
-        : settings['estimate_delivery_normal_day'];
+      const deliveryDaysToAdd = isExpress
+        ? parseInt(settings['estimate_delivery_express_day'])
+        : parseInt(settings['estimate_delivery_normal_day']);
 
       const estimated_delivery_date = addDays(new Date(), deliveryDaysToAdd);
 
@@ -846,9 +848,7 @@ export class OrderService {
       }
     }
 
-    const data = (await this.getOrderDetail(order.order_id)).data;
-
-    const refundReceipt = await this.invoiceService.generateOrderLabels(data);
+    const orderLabel = await this.invoiceService.generateOrderLabels(order_id);
 
     return {
       statusCode: 200,
@@ -859,7 +859,7 @@ export class OrderService {
         total: updatedOrder.total,
         address_details: updatedOrder.address_details,
         items: items ? items.length : 0,
-        url: refundReceipt,
+        url: orderLabel,
       },
     };
   }

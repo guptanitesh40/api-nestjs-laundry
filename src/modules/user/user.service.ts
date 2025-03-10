@@ -24,8 +24,11 @@ import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
 import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
 import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
+import { DeviceType } from 'src/enum/device_type.enum';
+import { OrderStatus } from 'src/enum/order-status.eum';
 import { OtpType } from 'src/enum/otp.enum';
 import { PaymentStatus } from 'src/enum/payment.enum';
+import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
@@ -504,6 +507,15 @@ export class UserService {
       .where('user.user_id = :user_id', { user_id })
       .andWhere('user.deleted_at IS NULL')
       .andWhere('orders.deleted_at IS NULL')
+      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.refund_status != :excludeRefundStatus', {
+        excludeRefundStatus: RefundStatus.FULL,
+      })
       .andWhere('companyMapping.deleted_at IS NULL')
       .andWhere('company.deleted_at IS NULL')
       .andWhere('branchMapping.deleted_at IS NULL')
@@ -1049,6 +1061,7 @@ export class UserService {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
       .where('user.role_id = :role_id', { role_id })
+      .orderBy('user.created_at', 'DESC')
       .select([
         'user.user_id',
         'user.first_name',
@@ -1075,9 +1088,27 @@ export class UserService {
 
   async getDeviceToken(user_id: number): Promise<string | null> {
     const token = await this.deviceUserRepository.findOne({
-      where: { user_id: user_id },
+      where: {
+        user_id: user_id,
+        device_type: In([DeviceType.ANDROID, DeviceType.IOS]),
+        deleted_at: null,
+      },
     });
 
     return token ? token.device_token : null;
+  }
+
+  async getAllCustomerDeviceTokens(): Promise<string[]> {
+    const deviceType = [DeviceType.ANDROID, DeviceType.IOS];
+
+    const deviceUsers = await this.deviceUserRepository.find({
+      where: {
+        user: { role_id: Role.CUSTOMER, deleted_at: null },
+        device_type: In(deviceType),
+        deleted_at: null,
+      },
+    });
+
+    return deviceUsers.map((d) => d.device_token).filter((token) => !!token);
   }
 }
