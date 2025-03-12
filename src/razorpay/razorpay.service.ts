@@ -56,9 +56,10 @@ export class RazorpayService {
   }
 
   async findTransactionByOrderId(orderId: string): Promise<any> {
-    return this.razorpayRepository.findOne({
+    const result = await this.razorpayRepository.findOne({
       where: { razorpay_order_id: orderId, deleted_at: null },
     });
+    return result;
   }
 
   async updateTransactionStatus(
@@ -205,6 +206,23 @@ export class RazorpayService {
       statusCode: 201,
       data: { payment_link: response.short_url, razorpay },
     };
+  }
+
+  async updateStatusPaymentLinkId(payment_link_id: string, status: string) {
+    const payment = await this.razorpay.paymentLink.fetch(payment_link_id);
+
+    console.log('payment :', payment);
+
+    const razorpay = await this.razorpayRepository.findOne({
+      where: { razorpay_payment_link_id: payment_link_id, deleted_at: null },
+    });
+
+    razorpay.status = status;
+    // console.log('payment.payments :', payment.payments);
+
+    await this.razorpayRepository.save(razorpay);
+
+    return razorpay;
   }
 
   async verifySignature(
