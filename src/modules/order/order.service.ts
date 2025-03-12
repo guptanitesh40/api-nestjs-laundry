@@ -98,7 +98,7 @@ export class OrderService {
       }
 
       const user = await this.userService.findUserById(
-        createOrderDto.user_id | user_id,
+        createOrderDto.user_id ?? user_id,
       );
 
       await queryRunner.manager.findOne(Branch, {
@@ -1024,6 +1024,7 @@ export class OrderService {
         'service.image',
         'branch.branch_name',
         'branch.branch_phone_number',
+        'branch.branch_email',
       ])
       .groupBy(
         'order.order_id, items.item_id, category.category_id, product.product_id, service.service_id',

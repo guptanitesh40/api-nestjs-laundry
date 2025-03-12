@@ -47,7 +47,7 @@ export class AuthService {
       const userImageWithUrl = appendBaseUrlToImagesOrPdf([user])[0];
       return {
         statusCode: 200,
-        message: 'user data retrived successfully',
+        message: 'User data retrived successfully',
         data: { user: userImageWithUrl },
       };
     } catch (error) {

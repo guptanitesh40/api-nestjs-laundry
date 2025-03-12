@@ -496,7 +496,18 @@ export class UserService {
   async getUserById(user_id: number): Promise<Response> {
     const userQuery = this.userRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.orders', 'orders')
+      .leftJoinAndSelect(
+        'user.orders',
+        'orders',
+        'orders.deleted_at IS NULL AND orders.order_status NOT IN (:...excludeOrderStatus) AND orders.refund_status != :excludeRefundStatus',
+        {
+          excludeOrderStatus: [
+            OrderStatus.CANCELLED_BY_ADMIN,
+            OrderStatus.CANCELLED_BY_CUSTOMER,
+          ],
+          excludeRefundStatus: RefundStatus.FULL,
+        },
+      )
       .leftJoinAndSelect('orders.items', 'items')
       .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
       .leftJoinAndSelect('companyMapping.company', 'company')
@@ -507,15 +518,6 @@ export class UserService {
       .where('user.user_id = :user_id', { user_id })
       .andWhere('user.deleted_at IS NULL')
       .andWhere('orders.deleted_at IS NULL')
-      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
-        excludeOrderStatus: [
-          OrderStatus.CANCELLED_BY_ADMIN,
-          OrderStatus.CANCELLED_BY_CUSTOMER,
-        ],
-      })
-      .andWhere('orders.refund_status != :excludeRefundStatus', {
-        excludeRefundStatus: RefundStatus.FULL,
-      })
       .andWhere('companyMapping.deleted_at IS NULL')
       .andWhere('company.deleted_at IS NULL')
       .andWhere('branchMapping.deleted_at IS NULL')
@@ -846,7 +848,7 @@ export class UserService {
     if (!user) {
       return {
         statusCode: 404,
-        message: 'user not found',
+        message: 'User not found',
         data: null,
       };
     }
@@ -879,7 +881,7 @@ export class UserService {
 
   async findOneByRole(user_id: number, role_id: Role): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { user_id: user_id, role_id: role_id },
+      where: { user_id: user_id, role_id: role_id, deleted_at: null },
     });
 
     if (!user) {
