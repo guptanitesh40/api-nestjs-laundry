@@ -4,7 +4,7 @@ import admin from 'firebase-admin';
 import { firstValueFrom } from 'rxjs';
 import { Order } from 'src/entities/order.entity';
 import { getCustomerOrderStatusLabel } from 'src/utils/order-status.helper';
-import { RedisQueueService } from '../../radis.config';
+import { RedisQueueService } from '../../redis.config';
 
 @Injectable()
 export class NotificationService {
