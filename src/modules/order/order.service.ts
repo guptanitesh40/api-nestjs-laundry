@@ -246,8 +246,6 @@ export class OrderService {
             createOrderDto.transaction_id,
           );
 
-        // console.log(razorPayTransaction);
-
         if (!razorPayTransaction) {
           throw new BadRequestException(
             `Razorpay transaction with ID ${createOrderDto.transaction_id} not found`,
@@ -275,8 +273,6 @@ export class OrderService {
           createOrderDto.transaction_id,
           'paid',
         );
-
-        // console.log('razorpay', razorpay);
 
         if (razorpay.amount !== createOrderDto.paid_amount) {
           throw new BadRequestException(

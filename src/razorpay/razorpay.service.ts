@@ -209,16 +209,11 @@ export class RazorpayService {
   }
 
   async updateStatusPaymentLinkId(payment_link_id: string, status: string) {
-    const payment = await this.razorpay.paymentLink.fetch(payment_link_id);
-
-    console.log('payment :', payment);
-
     const razorpay = await this.razorpayRepository.findOne({
       where: { razorpay_payment_link_id: payment_link_id, deleted_at: null },
     });
 
     razorpay.status = status;
-    // console.log('payment.payments :', payment.payments);
 
     await this.razorpayRepository.save(razorpay);
 
