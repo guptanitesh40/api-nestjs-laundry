@@ -158,7 +158,7 @@ export class InvoiceService {
         };
       }) || [];
 
-    const totalAmount = orderData.normal_delivery_charges
+    const totalAmount = orderData.total
       ? parseFloat(orderData.total.toString())
       : 0;
 

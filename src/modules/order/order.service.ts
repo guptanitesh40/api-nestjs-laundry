@@ -583,7 +583,9 @@ export class OrderService {
         sort_by === 'email' ||
         sort_by === 'mobile_number'
           ? `user.${sort_by}`
-          : `order.${sort_by}`;
+          : sort_by === 'branch_name'
+            ? `branch.${sort_by}`
+            : `order.${sort_by}`;
     }
 
     if (order) {
@@ -1994,8 +1996,8 @@ export class OrderService {
     }
 
     if (workshop_manager_ids) {
-      queryBuilder.andWhere('manager_user.user_id In(:...workshopManagerId)', {
-        workshopManagerId: workshop_manager_ids,
+      queryBuilder.andWhere('manager_user.user_id In(:...workshopManagerIds)', {
+        workshopManagerIds: workshop_manager_ids,
       });
     }
 
