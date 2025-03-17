@@ -9,7 +9,7 @@ import { Response } from 'src/dto/response.dto';
 import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
 import { Workshop } from 'src/entities/workshop.entity';
 import { Role } from 'src/enum/role.enum';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { WorkshopFilterDto } from '../dto/workshop-filter.dto';
 import { UserService } from '../user/user.service';
 import { CreateWorkshopDto } from './dto/create-workshop.dto';
@@ -124,11 +124,19 @@ export class WorkshopService {
 
     const workshopIds = workshops.map((workshop) => workshop.workshop_id);
 
-    const workshopManagerMappings = await this.workshopManagerRepository.find({
-      where: { workshop_id: In(workshopIds) },
-      relations: ['user'],
-      select: ['workshop_id', 'user_id', 'user'],
-    });
+    const workshopManagerMappings = await this.workshopManagerRepository
+      .createQueryBuilder('mapping')
+      .leftJoinAndSelect('mapping.user', 'user')
+      .where('mapping.workshop_id IN (:...workshopIds)', { workshopIds })
+      .andWhere('user.deleted_at IS NULL')
+      .select([
+        'mapping.workshop_id',
+        'mapping.user_id',
+        'user.user_id',
+        'user.first_name',
+        'user.last_name',
+      ])
+      .getMany();
 
     const workshopManagerMap = new Map<
       number,
@@ -137,13 +145,14 @@ export class WorkshopService {
 
     workshopManagerMappings.forEach((mapping) => {
       const fullName =
-        `${mapping.user?.first_name} ${mapping.user?.last_name}` || '';
+        `${mapping.user?.first_name || ''} ${mapping.user?.last_name || ''}` ||
+        '';
       if (!workshopManagerMap.has(mapping.workshop_id)) {
         workshopManagerMap.set(mapping.workshop_id, []);
       }
       workshopManagerMap.get(mapping.workshop_id)?.push({
-        user_id: mapping.user_id,
-        full_name: fullName,
+        user_id: mapping.user?.user_id,
+        full_name: fullName || '',
       });
     });
 
