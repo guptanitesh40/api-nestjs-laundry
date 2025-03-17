@@ -237,7 +237,10 @@ export class OrderService {
         transaction_id: createOrderDto?.transaction_id,
       });
 
-      if (createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT) {
+      if (
+        createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT &&
+        !createOrderDto.created_by_user_id
+      ) {
         const razorPayTransaction =
           await this.razorpayService.findTransactionByOrderId(
             createOrderDto.transaction_id,
@@ -262,6 +265,21 @@ export class OrderService {
         createOrderDto.transaction_id = razorPayTransaction.razorpay_order_id;
       }
 
+      if (
+        createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT &&
+        createOrderDto.created_by_user_id
+      ) {
+        const razorpay = await this.razorpayService.updateStatusPaymentLinkId(
+          createOrderDto.transaction_id,
+          'paid',
+        );
+
+        if (razorpay.amount !== createOrderDto.paid_amount) {
+          throw new BadRequestException(
+            `Paid amount does not match the expected amount. Expected: ${razorpay.amount}, Received: ${createOrderDto.paid_amount}`,
+          );
+        }
+      }
       const savedOrder = await queryRunner.manager.save(order);
 
       const orderItems = Array.from(orderItemsMap.values()).map((item) => ({
