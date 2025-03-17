@@ -23,6 +23,7 @@ import { OtpType } from 'src/enum/otp.enum';
 import { Role } from 'src/enum/role.enum';
 import { fileFieldsInterceptor } from 'src/utils/file-upload.helper';
 import { RolesGuard } from '../auth/guard/role.guard';
+import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { UserFilterDto } from '../dto/users-filter.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -159,8 +160,11 @@ export class UserController {
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN)
-  async getUserById(@Param('user_id') user_id: number): Promise<Response> {
-    return await this.userService.getUserById(user_id);
+  async getUserById(
+    @Param('user_id') user_id: number,
+    @Query() paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
+    return await this.userService.getUserById(user_id, paginationQueryDto);
   }
 
   @Get()

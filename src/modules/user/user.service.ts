@@ -35,6 +35,7 @@ import { SignupDto } from 'src/modules/auth/dto/signup.dto';
 import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { getOrderStatusDetails } from 'src/utils/order-status.helper';
 import { In, MoreThan, Repository } from 'typeorm';
+import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { UserFilterDto } from '../dto/users-filter.dto';
 import { OrderService } from '../order/order.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -493,7 +494,10 @@ export class UserService {
     };
   }
 
-  async getUserById(user_id: number): Promise<Response> {
+  async getUserById(
+    user_id: number,
+    paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
     const userQuery = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect(
@@ -551,17 +555,16 @@ export class UserService {
         'workshopMapping.workshop_id',
         'workshop.workshop_name',
       ]);
-
     const user: any = await userQuery.getOne();
 
-    user.orders.map((order) => {
-      order.admin_order_status = getOrderStatusDetails(order);
+    const orders: any = await this.orderService.getOrdersByUserId(
+      user_id,
+      paginationQueryDto,
+    );
 
-      return {
-        order_id: order.id,
-        admin_order_status: order.admin_order_status,
-      };
-    });
+    for (const order of orders.orders) {
+      order.admin_order_status = getOrderStatusDetails(order);
+    }
 
     let pending_due_amount = 0;
     for (const order of user.orders) {
@@ -574,6 +577,7 @@ export class UserService {
 
     const mappedUser = {
       ...userImageWithUrl,
+      orders: orders.orders,
       branches: user.userBranchMappings.map(
         (branch) => branch.branch.branch_name,
       ),
@@ -598,6 +602,9 @@ export class UserService {
       data: {
         user: mappedUser,
         total_pending_amount: pending_due_amount,
+        limit: orders.limit,
+        page_number: orders.page_number,
+        count: orders.count,
       },
     };
   }

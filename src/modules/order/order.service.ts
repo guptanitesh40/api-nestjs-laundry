@@ -269,16 +269,10 @@ export class OrderService {
         createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT &&
         createOrderDto.created_by_user_id
       ) {
-        const razorpay = await this.razorpayService.updateStatusPaymentLinkId(
+        await this.razorpayService.updateStatusPaymentLinkId(
           createOrderDto.transaction_id,
           'paid',
         );
-
-        if (razorpay.amount !== createOrderDto.paid_amount) {
-          throw new BadRequestException(
-            `Paid amount does not match the expected amount. Expected: ${razorpay.amount}, Received: ${createOrderDto.paid_amount}`,
-          );
-        }
       }
       const savedOrder = await queryRunner.manager.save(order);
 
@@ -2298,5 +2292,47 @@ export class OrderService {
         notes,
       },
     };
+  }
+
+  async getOrdersByUserId(
+    user_id: number,
+    paginationQueryDto: PaginationQueryDto,
+  ): Promise<any> {
+    const { per_page, page_number } = paginationQueryDto;
+
+    const pageNumber = page_number ?? 1;
+    const perPage = per_page ?? 100;
+    const skip = (pageNumber - 1) * perPage;
+
+    const ordersQuery = this.orderRepository
+      .createQueryBuilder('orders')
+      .innerJoinAndSelect('orders.items', 'items')
+      .select([
+        'orders.order_id',
+        'orders.payment_status',
+        'orders.total',
+        'orders.order_status',
+        'orders.payment_type',
+        'orders.paid_amount',
+        'orders.kasar_amount',
+        'items.item_id',
+      ])
+      .where('orders.user_id = :user_id', { user_id })
+      .andWhere('orders.deleted_at IS NULL')
+      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.refund_status != :excludeRefundStatus', {
+        excludeRefundStatus: RefundStatus.FULL,
+      })
+      .skip(skip)
+      .take(perPage);
+
+    const [orders, total] = await ordersQuery.getManyAndCount();
+
+    return { orders, limit: perPage, page_number: pageNumber, count: total };
   }
 }
