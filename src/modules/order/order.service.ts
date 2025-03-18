@@ -2309,6 +2309,7 @@ export class OrderService {
       .innerJoinAndSelect('orders.items', 'items')
       .select([
         'orders.order_id',
+        'orders.created_at',
         'orders.payment_status',
         'orders.total',
         'orders.order_status',
@@ -2328,6 +2329,7 @@ export class OrderService {
       .andWhere('orders.refund_status != :excludeRefundStatus', {
         excludeRefundStatus: RefundStatus.FULL,
       })
+      .orderBy('orders.created_at', 'DESC')
       .skip(skip)
       .take(perPage);
 
