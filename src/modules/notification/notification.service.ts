@@ -1,6 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import admin from 'firebase-admin';
+import { nanoid } from 'nanoid';
 import { firstValueFrom } from 'rxjs';
 import { Order } from 'src/entities/order.entity';
 import { getCustomerOrderStatusLabel } from 'src/utils/order-status.helper';
@@ -90,10 +91,16 @@ export class NotificationService {
     title: string,
     body: string,
   ) {
+    const dateWithMilliseconds = new Date();
+    const unixTimeStampWithMilliseconds = dateWithMilliseconds.getTime();
     try {
       const message = {
         notification: { title, body },
         tokens: deviceTokens,
+        data: {
+          updatedAt: String(unixTimeStampWithMilliseconds),
+          id: nanoid(10),
+        },
       };
 
       await app.messaging().sendEachForMulticast(message);

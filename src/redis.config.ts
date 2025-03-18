@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Queue, Worker } from 'bullmq';
 import admin from 'firebase-admin';
 import { RedisOptions } from 'ioredis';
+import { nanoid } from 'nanoid';
 
 const redisConfig: RedisOptions = {
   host: process.env.REDIS_HOST,
@@ -25,6 +26,8 @@ export class RedisQueueService {
   }
 
   private processQueue() {
+    const dateWithMilliseconds = new Date();
+    const unixTimeStampWithMilliseconds = dateWithMilliseconds.getTime();
     new Worker(
       'pushNotifications',
       async (job) => {
@@ -36,6 +39,10 @@ export class RedisQueueService {
           await app.messaging().send({
             notification: { title, body },
             token: deviceToken,
+            data: {
+              updatedAt: String(unixTimeStampWithMilliseconds),
+              id: nanoid(10),
+            },
           });
         } catch (error) {
           console.error('Failed to send push notification:', error);
