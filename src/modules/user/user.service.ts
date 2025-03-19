@@ -63,7 +63,8 @@ export class UserService {
   ) {}
 
   async signup(signUpDto: SignupDto): Promise<User> {
-    const { mobile_number, otp, vendor_code } = signUpDto;
+    const { mobile_number, otp, vendor_code, device_type, device_token } =
+      signUpDto;
     const existingUser = await this.userRepository.findOne({
       where: { mobile_number },
     });
@@ -98,7 +99,12 @@ export class UserService {
       password: hashedPassword,
       vendor_id,
     });
-    return await this.userRepository.save(user);
+
+    const users = await this.userRepository.save(user);
+
+    await this.storeDeviceUser(users, device_type, device_token);
+
+    return users;
   }
 
   async login(loginDto: LoginDto): Promise<Response> {
@@ -1046,6 +1052,7 @@ export class UserService {
         'last_name',
         'email',
         'mobile_number',
+        'gender',
         'image',
         'id_proof',
       ],
