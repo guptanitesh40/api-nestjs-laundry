@@ -8,6 +8,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { User } from 'src/entities/user.entity';
+import { DeviceType } from 'src/enum/device_type.enum';
 import { Gender } from 'src/enum/gender.enum';
 import { IsUnique } from 'src/modules/validator/is-unique';
 
@@ -45,4 +46,10 @@ export class SignupDto {
 
   @IsOptional()
   vendor_code?: string;
+
+  @IsOptional()
+  device_type?: DeviceType;
+
+  @IsOptional()
+  device_token?: string;
 }
