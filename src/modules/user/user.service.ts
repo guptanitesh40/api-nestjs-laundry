@@ -25,10 +25,8 @@ import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
 import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
 import { DeviceType } from 'src/enum/device_type.enum';
-import { OrderStatus } from 'src/enum/order-status.eum';
 import { OtpType } from 'src/enum/otp.enum';
 import { PaymentStatus } from 'src/enum/payment.enum';
-import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
@@ -506,18 +504,7 @@ export class UserService {
   ): Promise<Response> {
     const userQuery = this.userRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect(
-        'user.orders',
-        'orders',
-        'orders.deleted_at IS NULL AND orders.order_status NOT IN (:...excludeOrderStatus) AND orders.refund_status != :excludeRefundStatus',
-        {
-          excludeOrderStatus: [
-            OrderStatus.CANCELLED_BY_ADMIN,
-            OrderStatus.CANCELLED_BY_CUSTOMER,
-          ],
-          excludeRefundStatus: RefundStatus.FULL,
-        },
-      )
+      .leftJoinAndSelect('user.orders', 'orders', 'orders.deleted_at IS NULL ')
       .leftJoinAndSelect('orders.items', 'items')
       .leftJoinAndSelect('user.UserCompanyMappings', 'companyMapping')
       .leftJoinAndSelect('companyMapping.company', 'company')
@@ -570,6 +557,10 @@ export class UserService {
 
     for (const order of orders.orders) {
       order.admin_order_status = getOrderStatusDetails(order);
+      order.remaining_amount =
+        order.total - order.paid_amount - order.kasar_amount ||
+        0 - order.refund_amount ||
+        0;
     }
 
     let pending_due_amount = 0;
@@ -904,7 +895,7 @@ export class UserService {
     return user;
   }
 
-  async generateOtp(mobile_number: number, type: OtpType): Promise<number> {
+  async generateOtp(mobile_number: number, type: OtpType): Promise<Response> {
     const otp = Math.floor(100000 + Math.random() * 900000);
 
     const otpEntry = this.otpRepository.create({
@@ -932,7 +923,10 @@ export class UserService {
         throw new Error('Failed to send OTP');
       }
 
-      return otp;
+      return {
+        statusCode: 200,
+        message: 'Otp send successfully',
+      };
     } catch (error) {
       console.error('Vision360 Error:', error.response?.data || error.message);
       throw new BadRequestException('Failed to send OTP via SMS');
@@ -965,12 +959,11 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    const otp = await this.generateOtp(mobile_number, OtpType.FORGOT_PASSWORD);
+    await this.generateOtp(mobile_number, OtpType.FORGOT_PASSWORD);
 
     return {
       statusCode: 200,
       message: 'OTP Sent successfully',
-      data: otp,
     };
   }
 

@@ -265,15 +265,6 @@ export class OrderService {
         createOrderDto.transaction_id = razorPayTransaction.razorpay_order_id;
       }
 
-      if (
-        createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT &&
-        createOrderDto.created_by_user_id
-      ) {
-        await this.razorpayService.updateStatusPaymentLinkId(
-          createOrderDto.transaction_id,
-          'paid',
-        );
-      }
       const savedOrder = await queryRunner.manager.save(order);
 
       const orderItems = Array.from(orderItemsMap.values()).map((item) => ({
@@ -592,7 +583,10 @@ export class OrderService {
     orders.map((order) => {
       if (order.total > order.paid_amount) {
         order.pending_due_amount =
-          order.total - order.paid_amount - order.refund_amount;
+          order.total -
+          order.paid_amount -
+          order.kasar_amount -
+          order.refund_amount;
       }
       order.order_status_details = getOrderStatusDetails(order);
       order.pickup_boy = order.pickup_boy_id
@@ -725,7 +719,10 @@ export class OrderService {
 
     if (orders.total > orders.paid_amount) {
       orders.pending_due_amount =
-        orders.total - orders.paid_amount - orders.refund_amount;
+        orders.total -
+        orders.paid_amount -
+        orders.kasar_amount -
+        orders.refund_amount;
     }
     orders.workshop_status_name = getWorkshopOrdersStatusLabel(
       orders.order_status,
@@ -773,14 +770,6 @@ export class OrderService {
 
     const { address_id, items, ...orderUpdates } = updateOrderDto;
 
-    if (
-      orderUpdates.payment_type === PaymentType.CASH_ON_DELIVERY &&
-      orderUpdates.payment_status === PaymentStatus.FULL_PAYMENT_RECEIVED
-    ) {
-      orderUpdates.kasar_amount =
-        order.total > order.paid_amount ? order.total - order.paid_amount : 0;
-    }
-
     if (address_id) {
       const address = await this.dataSource.manager.findOne(UserAddress, {
         where: { address_id },
@@ -817,7 +806,16 @@ export class OrderService {
     order.sub_total = sub_total;
     order.gst = gst_amount;
     order.total = total;
-    order.branch_id, Object.assign(order, orderUpdates);
+    order.branch_id;
+    Object.assign(order, orderUpdates);
+
+    if (
+      orderUpdates.payment_type === PaymentType.CASH_ON_DELIVERY &&
+      orderUpdates.payment_status === PaymentStatus.FULL_PAYMENT_RECEIVED
+    ) {
+      order.kasar_amount =
+        order.total > order.paid_amount ? order.total - order.paid_amount : 0;
+    }
 
     const updatedOrder = await this.dataSource.manager.save(order);
 
@@ -840,6 +838,7 @@ export class OrderService {
             `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${price}, Received: ${item.price}`,
           );
         }
+
         if (orderItemsMap.has(key)) {
           const existingItem = orderItemsMap.get(key);
           existingItem.quantity += item.quantity || 1;
@@ -1146,16 +1145,14 @@ export class OrderService {
           OrderStatus.WORKSHOP_WORK_IN_PROGRESS,
           OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
           OrderStatus.ORDER_COMPLETED_AND_RECEIVED_AT_BRANCH,
+          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
         ],
       });
     }
 
     if (orderStatus === CustomerOrderStatuseLabel.COMPLETED) {
       queryBuilder.andWhere('order.order_status In (:...orderStatuses)', {
-        orderStatuses: [
-          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
-          OrderStatus.DELIVERED,
-        ],
+        orderStatuses: [OrderStatus.DELIVERED],
       });
     }
 
@@ -2320,15 +2317,6 @@ export class OrderService {
       ])
       .where('orders.user_id = :user_id', { user_id })
       .andWhere('orders.deleted_at IS NULL')
-      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
-        excludeOrderStatus: [
-          OrderStatus.CANCELLED_BY_ADMIN,
-          OrderStatus.CANCELLED_BY_CUSTOMER,
-        ],
-      })
-      .andWhere('orders.refund_status != :excludeRefundStatus', {
-        excludeRefundStatus: RefundStatus.FULL,
-      })
       .orderBy('orders.created_at', 'DESC')
       .skip(skip)
       .take(perPage);

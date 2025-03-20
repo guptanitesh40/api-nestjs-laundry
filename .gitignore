@@ -5,8 +5,7 @@
 /pdf
 /build
 
-/src/firebase/sikkacleaners-driver-app.json
-/src/firebase/sikkacleaners-customer-app.json
+/src/firebase
 
 # Logs
 logs

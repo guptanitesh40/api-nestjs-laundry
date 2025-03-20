@@ -71,7 +71,7 @@ export class CompanyService {
     let sortOrder: 'ASC' | 'DESC' = 'DESC';
 
     if (sort_by) {
-      sortColumn = sort_by;
+      sortColumn = `company.${sort_by}`;
     }
     if (order) {
       sortOrder = order;

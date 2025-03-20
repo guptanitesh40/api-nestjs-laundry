@@ -222,12 +222,12 @@ export const getOrderStatusList = (currentStatus: number): any[] => {
       description: 'Workshop processing items.',
     },
     {
-      order_status: [9],
+      order_status: [9, 10],
       status: 'Ready for Delivery',
       description: 'Items ready for delivery.',
     },
     {
-      order_status: [10, 11],
+      order_status: [11],
       status: 'Delivered',
       description: 'Order delivered.',
     },
