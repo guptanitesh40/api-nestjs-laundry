@@ -105,7 +105,9 @@ export class BranchService {
       sortColumn =
         sort_by === 'first_name' || sort_by === 'last_name'
           ? `user.${sort_by}`
-          : `branch.${sort_by}`;
+          : sort_by === 'company_name'
+            ? `company.${sort_by}`
+            : `branch.${sort_by}`;
     }
     if (order) {
       sortOrder = order;
