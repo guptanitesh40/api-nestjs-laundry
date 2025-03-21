@@ -365,6 +365,7 @@ export class OrderService {
     orderFilterDto: OrderFilterDto,
     list: string,
     orderList: string,
+    user: any,
   ): Promise<Response> {
     const {
       per_page,
@@ -575,6 +576,29 @@ export class OrderService {
 
     if (order) {
       sortOrder = order;
+    }
+
+    if (user.role_id === Role.SUB_ADMIN) {
+      const subAdmin = user?.user_id;
+      if (subAdmin) {
+        queryBuilder.andWhere('order.created_by_user_id = :subAdmin', {
+          subAdmin,
+        });
+      }
+    }
+
+    if (user.role_id === Role.BRANCH_MANAGER) {
+      const userData = await this.userService.getUserById(
+        user.user_id,
+        orderFilterDto,
+      );
+
+      const manager = userData.data.user;
+      const branchIds = manager.branch_ids;
+
+      queryBuilder.andWhere('order.branch_id IN (:...branchIds)', {
+        branchIds,
+      });
     }
 
     queryBuilder.orderBy(sortColumn, sortOrder);
@@ -1878,6 +1902,7 @@ export class OrderService {
 
   async getAllAssignWorkshopOrders(
     orderFilterDto: OrderFilterDto,
+    user: any,
   ): Promise<Response> {
     const {
       per_page,
@@ -2013,6 +2038,21 @@ export class OrderService {
 
     if (order) {
       sortOrder = order;
+    }
+
+    if (user.role_id === Role.WORKSHOP_MANAGER) {
+      const userData = await this.userService.getUserById(
+        user.user_id,
+        orderFilterDto,
+      );
+
+      const manager = userData.data.user;
+
+      const workshopIds = manager.workshop_ids;
+
+      queryBuilder.andWhere('order.workshop_id IN (:...workshopIds)', {
+        workshopIds,
+      });
     }
 
     queryBuilder.orderBy(sortColumn, sortOrder);

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class ResetPasswordDto {
   @IsNotEmpty()
@@ -10,4 +10,7 @@ export class ResetPasswordDto {
 
   @IsNotEmpty()
   new_password: string;
+
+  @IsOptional()
+  role_id: number;
 }

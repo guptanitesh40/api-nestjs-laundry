@@ -44,8 +44,13 @@ export class AuthController {
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<Response> {
-    const { mobile_number, otp, new_password } = resetPasswordDto;
-    return this.userService.resetPassword(mobile_number, otp, new_password);
+    const { mobile_number, otp, new_password, role_id } = resetPasswordDto;
+    return this.userService.resetPassword(
+      mobile_number,
+      otp,
+      new_password,
+      role_id,
+    );
   }
 
   @Post('logout')
