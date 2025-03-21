@@ -103,8 +103,10 @@ export class OrderController {
   @Get('admin/orders/workshop')
   async getAllWorkshopOrders(
     @Query() orderFilterDto: OrderFilterDto,
+    @Request() req,
   ): Promise<Response> {
-    return this.orderService.getAllAssignWorkshopOrders(orderFilterDto);
+    const user = req.user;
+    return this.orderService.getAllAssignWorkshopOrders(orderFilterDto, user);
   }
 
   @Post('orders')
@@ -156,8 +158,10 @@ export class OrderController {
     @Query() orderFilterDto: OrderFilterDto,
     @Query('list') list: string,
     @Query('orderList') orderList: string,
+    @Request() req,
   ): Promise<Response> {
-    return this.orderService.findAll(orderFilterDto, list, orderList);
+    const user = req.user;
+    return this.orderService.findAll(orderFilterDto, list, orderList, user);
   }
 
   @Get('admin/order/:order_id')

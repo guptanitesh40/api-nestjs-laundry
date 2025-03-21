@@ -500,7 +500,7 @@ export class UserService {
 
   async getUserById(
     user_id: number,
-    paginationQueryDto: PaginationQueryDto,
+    paginationQueryDto?: PaginationQueryDto,
   ): Promise<Response> {
     const userQuery = this.userRepository
       .createQueryBuilder('user')
@@ -971,10 +971,13 @@ export class UserService {
     mobile_number: number,
     otp: number,
     new_password: string,
+    role_id: number,
   ): Promise<Response> {
     const user = await this.userRepository.findOne({
       where: {
         mobile_number,
+        role_id,
+        deleted_at: null,
       },
     });
 
