@@ -35,9 +35,6 @@ export class UpdateUserDto {
   @IsOptional()
   image?: string;
 
-  @IsNumber()
-  address_id: number;
-
   @IsOptional()
   @IsString()
   password?: string;
