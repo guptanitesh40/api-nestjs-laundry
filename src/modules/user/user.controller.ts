@@ -195,13 +195,7 @@ export class UserController {
   @Post('generate')
   async generateOtp(@Body() body: { mobile_number: number; type: OtpType }) {
     const { mobile_number, type } = body;
-    const otp = await this.userService.generateOtp(mobile_number, type);
-
-    return {
-      statusCode: 200,
-      message: 'OTP generated successfully',
-      data: { otp },
-    };
+    return await this.userService.generateOtp(mobile_number, type);
   }
 
   @Post('validate')

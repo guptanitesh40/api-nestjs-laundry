@@ -22,7 +22,7 @@ export class NullTransformInterceptor implements NestInterceptor {
       'express_delivery_charges',
     ];
 
-    const nullKeys = ['next_step', 'feedback'];
+    const nullKeys = ['next_step', 'feedback', 'data'];
 
     if (Array.isArray(data)) {
       return data.map((item) => this.transform(item));
