@@ -806,14 +806,17 @@ export class OrderService {
       throw new NotFoundException(`Order with id ${order_id} not found`);
     }
 
-    const { address_id, items, ...orderUpdates } = updateOrderDto;
+    const { items, ...orderUpdates } = updateOrderDto;
 
-    if (address_id) {
+    if (updateOrderDto.address_id) {
       const address = await this.dataSource.manager.findOne(UserAddress, {
-        where: { address_id },
+        where: { address_id: updateOrderDto.address_id },
       });
+
       if (!address) {
-        throw new NotFoundException(`Address with id ${address_id} not found`);
+        throw new NotFoundException(
+          `Address with id ${updateOrderDto.address_id} not found`,
+        );
       }
       order.address_details = `${address.building_number}, ${address.area}, ${address.city}, ${address.state}, ${address.country} - ${address.pincode}`;
     }
