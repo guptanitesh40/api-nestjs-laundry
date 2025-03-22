@@ -925,7 +925,8 @@ export class UserService {
 
       return {
         statusCode: 200,
-        message: 'Otp send successfully',
+        message: 'OTP has been sent successfully to your mobile number.',
+        data: null,
       };
     } catch (error) {
       console.error('Vision360 Error:', error.response?.data || error.message);
@@ -963,7 +964,8 @@ export class UserService {
 
     return {
       statusCode: 200,
-      message: 'OTP Sent successfully',
+      message: 'OTP has been sent successfully to your mobile number.',
+      data: null,
     };
   }
 

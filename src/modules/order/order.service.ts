@@ -39,6 +39,7 @@ import {
 } from 'src/utils/pdf-url.helper';
 import { DataSource, In, Repository } from 'typeorm';
 import { RazorpayService } from '../../razorpay/razorpay.service';
+import { BranchService } from '../branch/branch.service';
 import { CartService } from '../cart/cart.service';
 import { CouponService } from '../coupon/coupon.service';
 import { OrderFilterDto } from '../dto/orders-filter.dto';
@@ -76,6 +77,7 @@ export class OrderService {
     @Inject(forwardRef(() => InvoiceService))
     private readonly invoiceService: InvoiceService,
     private readonly razorpayService: RazorpayService,
+    private readonly branchService: BranchService,
     private dataSource: DataSource,
   ) {}
 
@@ -579,10 +581,22 @@ export class OrderService {
     }
 
     if (user.role_id === Role.SUB_ADMIN) {
-      const subAdmin = user?.user_id;
-      if (subAdmin) {
-        queryBuilder.andWhere('order.created_by_user_id = :subAdmin', {
-          subAdmin,
+      const userData = await this.userService.getUserById(
+        user.user_id,
+        orderFilterDto,
+      );
+      const manager = userData.data.user;
+      const companyIds = manager.company_ids;
+
+      const branchData = (
+        await this.branchService.getBranchesByCompanyIds([companyIds])
+      ).data;
+
+      const branchIds = branchData?.map((b) => b.branch_id);
+
+      if (branchIds > 0) {
+        queryBuilder.andWhere('order.branch_id IN (:...branchIds)', {
+          branchIds,
         });
       }
     }
@@ -1932,6 +1946,8 @@ export class OrderService {
       .innerJoinAndSelect('order.workshop', 'workshop')
       .leftJoinAndSelect('workshop.workshopManagerMappings', 'mapping')
       .leftJoinAndSelect('mapping.user', 'manager_user')
+      .where('order.deleted_at IS NULL')
+      .andWhere('workshop.deleted_at IS NULL')
       .select([
         'order',
         'workshop',
@@ -2031,6 +2047,7 @@ export class OrderService {
         mobile_number: 'user.mobile_number',
         workshop_name: 'workshop.workshop_name',
         workshop_id: 'workshop.workshop_id',
+        branch_name: 'branch.branch_name',
       };
 
       sortColumn = sortableColumns[sort_by] ?? `order.${sort_by}`;
