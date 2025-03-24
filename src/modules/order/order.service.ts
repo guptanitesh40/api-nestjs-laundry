@@ -1824,6 +1824,49 @@ export class OrderService {
     );
   }
 
+  async markDeliveryPaymentReceived(
+    order_id: number,
+    amount: number,
+    notes: string,
+    user_id: number,
+  ): Promise<Response> {
+    const order = await this.orderRepository.findOne({ where: { order_id } });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    order.payment_status = PaymentStatus.FULL_PAYMENT_RECEIVED;
+    order.paid_amount = amount;
+
+    await this.orderRepository.save(order);
+
+    const noteDto: CreateNoteDto = {
+      user_id,
+      order_id,
+      text_note: notes,
+    };
+
+    const note = await this.notesService.create(noteDto);
+
+    const deviceToken = await this.userService.getDeviceToken(order.user_id);
+
+    if (deviceToken) {
+      await this.notificationService.sendPushNotification(
+        customerApp,
+        deviceToken,
+        'Payment Received - Order Delivered',
+        `Thanks for your payment! Your order #${order.order_id} has been successfully delivered and marked as received. We hope you enjoy our service!`,
+      );
+    }
+
+    return {
+      statusCode: 200,
+      message: 'Order payment successfully received',
+      data: { order, note },
+    };
+  }
+
   async updateOrderPickupAndDeliveryStatus(
     order_id: number,
     user_id: number,

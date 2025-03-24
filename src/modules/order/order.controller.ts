@@ -282,6 +282,23 @@ export class OrderController {
     );
   }
 
+  @Patch('order/:order_id/delivery-payment-received')
+  @Roles(Role.DELIVERY_BOY_AND_PICKUP_BOY)
+  async markDeliveryPaymentReceived(
+    @Param('order_id') order_id: number,
+    @Request() req,
+    @Body() body: any,
+  ): Promise<Response> {
+    const user = req.user;
+
+    return this.orderService.markDeliveryPaymentReceived(
+      order_id,
+      body.amount,
+      body.notes,
+      user.user_id,
+    );
+  }
+
   @Delete('admin/order/:order_id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async deleteOrder(
