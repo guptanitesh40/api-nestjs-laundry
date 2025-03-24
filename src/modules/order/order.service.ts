@@ -131,14 +131,6 @@ export class OrderService {
         (createOrderDto.normal_delivery_charges || 0) +
         (createOrderDto.express_delivery_charges || 0);
       const paid_amount = createOrderDto.paid_amount || 0;
-      let kasar_amount = 0;
-
-      if (
-        createOrderDto.payment_type === PaymentType.CASH_ON_DELIVERY &&
-        createOrderDto.payment_status === PaymentStatus.FULL_PAYMENT_RECEIVED
-      ) {
-        kasar_amount = paid_amount < total ? total - paid_amount : 0;
-      }
 
       const isExpress = createOrderDto.express_delivery_charges > 0;
 
@@ -229,7 +221,7 @@ export class OrderService {
         coupon_code,
         coupon_discount,
         address_details,
-        kasar_amount,
+        kasar_amount: createOrderDto.kasar_amount || 0,
         paid_amount,
         address_type: addess_type,
         payment_status: createOrderDto.payment_status,
@@ -849,14 +841,6 @@ export class OrderService {
     order.total = total;
     order.branch_id;
     Object.assign(order, orderUpdates);
-
-    if (
-      orderUpdates.payment_type === PaymentType.CASH_ON_DELIVERY &&
-      orderUpdates.payment_status === PaymentStatus.FULL_PAYMENT_RECEIVED
-    ) {
-      order.kasar_amount =
-        order.total > order.paid_amount ? order.total - order.paid_amount : 0;
-    }
 
     const updatedOrder = await this.dataSource.manager.save(order);
 
