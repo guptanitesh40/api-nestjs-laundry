@@ -1,30 +1,18 @@
 import { Transform } from 'class-transformer';
-import {
-  IsArray,
-  IsDecimal,
-  IsEmail,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsArray, IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { Gender } from 'src/enum/gender.enum';
 
 export class UpdateUserDto {
   @IsOptional()
-  @IsString()
   first_name?: string;
 
   @IsOptional()
-  @IsString()
   last_name?: string;
 
   @IsOptional()
-  @IsEmail()
   email?: string;
 
   @IsOptional()
-  @IsDecimal()
   mobile_number?: number;
 
   @IsOptional()
@@ -36,11 +24,9 @@ export class UpdateUserDto {
   image?: string;
 
   @IsOptional()
-  @IsString()
   password?: string;
 
   @IsOptional()
-  @IsNumber()
   role_id?: number;
 
   @IsOptional()
@@ -49,15 +35,24 @@ export class UpdateUserDto {
   @IsArray()
   @IsOptional()
   @IsNumber({}, { each: true })
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value.map(Number) : [Number(value)],
+  )
   company_ids?: number[];
 
   @IsArray()
   @IsOptional()
   @IsNumber({}, { each: true })
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value.map(Number) : [Number(value)],
+  )
   branch_ids?: number[];
 
   @IsArray()
   @IsOptional()
   @IsNumber({}, { each: true })
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value.map(Number) : [Number(value)],
+  )
   workshop_ids?: number[];
 }
