@@ -376,7 +376,7 @@ export class UserService {
     let branchMappings = [];
     let workshopMappings = [];
 
-    if (updateUserDto.role_id === Role.SUB_ADMIN) {
+    if (Number(updateUserDto.role_id) === Role.SUB_ADMIN) {
       if (company_ids) {
         await this.userCompanyMappingRepository.delete({ user_id });
         companyMappings = await this.userCompanyMappingRepository.save(
@@ -395,7 +395,7 @@ export class UserService {
       }
     }
 
-    if (updateUserDto.role_id === Role.BRANCH_MANAGER) {
+    if (Number(updateUserDto.role_id) === Role.BRANCH_MANAGER) {
       if (branch_ids) {
         await this.userBranchMappingRepository.delete({ user_id });
         branchMappings = await this.userBranchMappingRepository.save(
@@ -414,7 +414,7 @@ export class UserService {
       }
     }
 
-    if (updateUserDto.role_id === Role.WORKSHOP_MANAGER) {
+    if (Number(updateUserDto.role_id) === Role.WORKSHOP_MANAGER) {
       if (workshop_ids) {
         await this.workshopManagerMappingRepository.delete({ user_id });
         workshopMappings = await this.workshopManagerMappingRepository.save(
