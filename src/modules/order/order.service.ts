@@ -303,8 +303,6 @@ export class OrderService {
         },
       };
 
-      await this.notificationService.sendOrderNotification(orderDetail);
-
       const deviceToken = await this.userService?.getDeviceToken(user?.user_id);
 
       if (deviceToken) {
@@ -1006,8 +1004,6 @@ export class OrderService {
 
     await this.orderRepository.save(order);
 
-    await this.notificationService.sendOrderStatusNotification(order);
-
     return {
       statusCode: 200,
       message: 'Order status updated successfully',
@@ -1083,6 +1079,13 @@ export class OrderService {
     const file = fs.existsSync(invoice.fileName);
 
     order.order_invoice = file ? invoice.fileUrl : '';
+
+    order.order_status_name = getCustomerOrderStatusLabel(
+      order.order_status,
+      order.branch_id,
+      order.pickup_boy_id,
+      order.workshop_id,
+    );
 
     order.items = order.items.map((item) => {
       item.product = appendBaseUrlToImagesOrPdf([item.product])[0];
