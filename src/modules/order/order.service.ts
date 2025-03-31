@@ -15,6 +15,7 @@ import { OrderItem } from 'src/entities/order-item.entity';
 import { Order } from 'src/entities/order.entity';
 import { AssignTo } from 'src/enum/assign_to.enum';
 import { CustomerOrderStatuseLabel } from 'src/enum/customer_order_status_label.enum';
+import { ExpressDeliveryHour } from 'src/enum/express_delivery_hour.enum';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
@@ -58,6 +59,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { DeliveryOrderDto } from './dto/delivery-order.dto';
 import { OrdersDto } from './dto/pay-due-amount.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Injectable()
@@ -115,7 +117,6 @@ export class OrderService {
         'estimate_pickup_normal_hour',
         'estimate_pickup_express_hour',
         'estimate_delivery_normal_day',
-        'estimate_delivery_express_day',
         'gst_percentage',
       ];
       const settingsResponse = await this.settingService.findAll(settingKeys);
@@ -144,11 +145,24 @@ export class OrderService {
             parseInt(settings['estimate_pickup_normal_hour']),
           );
 
-      const deliveryDaysToAdd = isExpress
-        ? parseInt(settings['estimate_delivery_express_day'])
-        : parseInt(settings['estimate_delivery_normal_day']);
+      const expressHour = createOrderDto.express_delivery_hour;
+      const normalDay = settings['estimate_delivery_normal_day'];
 
-      const estimated_delivery_date = addDays(new Date(), deliveryDaysToAdd);
+      let deliveryDaysToAdd: any = '';
+
+      if (expressHour) {
+        deliveryDaysToAdd = isExpress
+          ? expressHour === ExpressDeliveryHour.HOURS_24
+            ? addHours(new Date(), 24)
+            : expressHour === ExpressDeliveryHour.HOURS_48
+              ? addHours(new Date(), 48)
+              : expressHour === ExpressDeliveryHour.HOURS_72
+                ? addHours(new Date(), 72)
+                : 0
+          : 0;
+      } else {
+        deliveryDaysToAdd = addDays(new Date(), Number(normalDay));
+      }
 
       const uniquePriceKeys = createOrderDto.items.map(
         (item) => `${item.category_id}_${item.product_id}_${item.service_id}`,
@@ -226,7 +240,7 @@ export class OrderService {
         address_type: addess_type,
         payment_status: createOrderDto.payment_status,
         estimated_pickup_time,
-        estimated_delivery_time: estimated_delivery_date,
+        estimated_delivery_time: deliveryDaysToAdd,
         branch_id: createOrderDto.branch_id,
         transaction_id: createOrderDto?.transaction_id,
       });
@@ -444,28 +458,26 @@ export class OrderService {
         });
       }
 
+      if (orderList === 'confirm_order') {
+        queryBuilder.andWhere('order.order_status IN (:...orderStatus)', {
+          orderStatus: [OrderStatus.ITEMS_RECEIVED_AT_BRANCH],
+        });
+      }
+
+      if (orderList === 'ready_for_delivery') {
+        queryBuilder.andWhere('order.order_status IN (:...orderStatus)', {
+          orderStatus: [
+            OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
+            OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+          ],
+        });
+      }
+
       if (orderList === 'delivered_order') {
         queryBuilder.andWhere('order.order_status IN (:...orderStatus)', {
           orderStatus: [OrderStatus.DELIVERED],
         });
       }
-    }
-
-    if (list === 'booking_list') {
-      queryBuilder.andWhere('order.order_status IN (:...orderStatus)', {
-        orderStatus: [
-          OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
-          OrderStatus.WORKSHOP_ASSIGNED,
-          OrderStatus.WORKSHOP_RECEIVED_ITEMS,
-          OrderStatus.WORKSHOP_WORK_IN_PROGRESS,
-          OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
-          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
-        ],
-      });
-    } else if (!list) {
-      queryBuilder.andWhere('order.order_status != :orderStatus', {
-        orderStatus: OrderStatus.DELIVERED,
-      });
     }
 
     if (order_statuses) {
@@ -903,112 +915,126 @@ export class OrderService {
     };
   }
 
-  async updateOrderStatus(order_id: number, status: OrderStatus): Promise<any> {
-    const order = (await this.getOrderDetail(order_id)).data;
+  async updateOrderStatus(
+    updateOrderStatusDto: UpdateOrderStatusDto,
+  ): Promise<any> {
+    const { order_ids, order_status } = updateOrderStatusDto;
+    const orders = await this.orderRepository.findBy({
+      order_id: In(order_ids),
+    });
 
-    if (!order) {
-      throw new NotFoundException(`Order with id ${order_id} not found`);
+    if (!orders.length) {
+      throw new NotFoundException(`Orders with IDs ${order_ids} not found`);
     }
 
-    switch (status) {
-      case OrderStatus.ASSIGNED_PICKUP_BOY:
-        if (
-          order.order_status !==
-          OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING
-        ) {
-          throw new BadRequestException(
-            'Cannot mark as Items Received by Pickup Boy. Previous status must be Pickup Pending.',
-          );
-        }
-        break;
+    for (const order of orders) {
+      switch (order_status) {
+        case OrderStatus.ASSIGNED_PICKUP_BOY:
+          if (
+            order.order_status !==
+            OrderStatus.PICKUP_PENDING_OR_BRANCH_ASSIGNMENT_PENDING
+          ) {
+            throw new BadRequestException(
+              'Cannot mark as Items Received by Pickup Boy. Previous status must be Pickup Pending.',
+            );
+          }
+          break;
 
-      case OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY:
-        if (order.order_status !== OrderStatus.ASSIGNED_PICKUP_BOY) {
-          throw new BadRequestException(
-            'Cannot mark as Items Received at Branch. Previous status must be Items Received by Pickup Boy.',
-          );
-        }
-        break;
+        case OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY:
+          if (order.order_status !== OrderStatus.ASSIGNED_PICKUP_BOY) {
+            throw new BadRequestException(
+              'Cannot mark as Items Received at Branch. Previous status must be Items Received by Pickup Boy.',
+            );
+          }
+          break;
 
-      case OrderStatus.ITEMS_RECEIVED_AT_BRANCH:
-        if (order.order_status !== OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY) {
-          throw new BadRequestException(
-            'Cannot mark as Workshop Received Items. Previous status must be Items Received at Branch.',
-          );
-        }
-        break;
+        case OrderStatus.ITEMS_RECEIVED_AT_BRANCH:
+          if (
+            order.order_status !== OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY
+          ) {
+            throw new BadRequestException(
+              'Cannot mark as Workshop Received Items. Previous status must be Items Received at Branch.',
+            );
+          }
+          break;
 
-      case OrderStatus.WORKSHOP_ASSIGNED:
-        if (order.order_status !== OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
-          throw new BadRequestException(
-            'Cannot mark as Workshop In Process. Previous status must be Workshop Received Items.',
-          );
-        }
-        break;
+        case OrderStatus.WORKSHOP_ASSIGNED:
+          if (order.order_status !== OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
+            throw new BadRequestException(
+              'Cannot mark as Workshop In Process. Previous status must be Workshop Received Items.',
+            );
+          }
+          break;
 
-      case OrderStatus.WORKSHOP_RECEIVED_ITEMS:
-        if (order.order_status !== OrderStatus.WORKSHOP_ASSIGNED) {
-          throw new BadRequestException(
-            'Cannot mark as Workshop Completed. Previous status must be Workshop In Process.',
-          );
-        }
-        break;
+        case OrderStatus.WORKSHOP_RECEIVED_ITEMS:
+          if (order.order_status !== OrderStatus.WORKSHOP_ASSIGNED) {
+            throw new BadRequestException(
+              'Cannot mark as Workshop Completed. Previous status must be Workshop In Process.',
+            );
+          }
+          break;
 
-      case OrderStatus.DELIVERED:
-        if (
-          order.order_status !==
-          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
-        ) {
-          throw new BadRequestException(
-            'Cannot mark as Delivered. Previous status must be Delivery Boy Marks As Completed.',
-          );
-        }
-        break;
+        case OrderStatus.DELIVERED:
+          if (
+            order.order_status !==
+            OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
+          ) {
+            throw new BadRequestException(
+              'Cannot mark as Delivered. Previous status must be Delivery Boy Marks As Completed.',
+            );
+          }
+          break;
 
-      case OrderStatus.CANCELLED_BY_ADMIN:
-        if (order.order_status === OrderStatus.DELIVERED) {
-          throw new BadRequestException(
-            'Cannot cancel an order that has been delivered.',
-          );
-        }
-        break;
+        case OrderStatus.CANCELLED_BY_ADMIN:
+          if (order.order_status === OrderStatus.DELIVERED) {
+            throw new BadRequestException(
+              'Cannot cancel an order that has been delivered.',
+            );
+          }
+          break;
 
-      default:
-        break;
+        default:
+          break;
+      }
+
+      order.order_status = order_status;
     }
 
-    order.order_status = status;
-    const deviceToken = await this.userService.getDeviceToken(order.user_id);
+    await this.orderRepository.save(orders);
 
-    if (order.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
-      if (deviceToken) {
-        await this.notificationService.sendPushNotification(
+    const userIds = orders?.map((order) => order?.user_id);
+    const deviceTokens = await this.userService.getDeviceTokens(userIds);
+
+    const notifications = orders.map(async (order) => {
+      const deviceToken = deviceTokens[order.user_id];
+      if (!deviceToken) return;
+
+      if (order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
+        return this.notificationService.sendPushNotification(
           customerApp,
           deviceToken,
           'Order Received at Branch',
           `Great news! Your order #${order.order_id} has arrived at our branch and is being processed. We'll update you soon!`,
         );
       }
-    }
 
-    if (order.order_status === OrderStatus.DELIVERED) {
-      if (deviceToken) {
-        await this.notificationService.sendPushNotification(
+      if (order_status === OrderStatus.DELIVERED) {
+        return this.notificationService.sendPushNotification(
           customerApp,
           deviceToken,
           'Your Order Has Been Delivered!',
-          `Great news! Your order #${order.order_id} has been successfully delivered. Thank you for choosing Sikka Cleaners! We appreciate your trust in us.`,
+          `Great news! Your order #${order.order_id} has been successfully delivered. Thank you for choosing Sikka Cleaners!`,
         );
       }
-    }
+    });
 
-    await this.orderRepository.save(order);
+    await Promise.all(notifications);
 
     return {
       statusCode: 200,
       message: 'Order status updated successfully',
-      orderId: order_id,
-      orderStatus: status,
+      orderId: order_ids,
+      orderStatus: order_status,
     };
   }
 
@@ -1019,10 +1045,6 @@ export class OrderService {
     const order = await this.orderRepository.findOne({
       where: { order_id: order_id },
     });
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${order_id} not found`);
-    }
 
     order.payment_status = status;
     await this.orderRepository.save(order);
@@ -1631,15 +1653,15 @@ export class OrderService {
   }
 
   async assignWorkshop(
-    order_id: number,
+    order_ids: number[],
     workshop_id: number,
   ): Promise<Response> {
-    const order = await this.orderRepository.findOne({
-      where: { order_id },
+    const orders = await this.orderRepository.findBy({
+      order_id: In(order_ids),
     });
 
-    if (!order) {
-      throw new NotFoundException(`Order with id ${order_id} not found`);
+    if (!orders) {
+      throw new NotFoundException(`Order with id ${order_ids} not found`);
     }
 
     const workshop = await this.workshopService.findOne(workshop_id);
@@ -1648,23 +1670,28 @@ export class OrderService {
       throw new NotFoundException(`Workshop with id ${workshop_id} not found`);
     }
 
-    order.workshop_id = workshop_id;
-    order.order_status = OrderStatus.WORKSHOP_ASSIGNED;
-
-    const deviceTokenCustomer = await this.userService.getDeviceToken(
-      order.user_id,
+    await this.orderRepository.update(
+      { order_id: In(order_ids) },
+      {
+        workshop_id: workshop_id,
+        order_status: OrderStatus.WORKSHOP_ASSIGNED,
+      },
     );
 
-    if (deviceTokenCustomer) {
-      await this.notificationService.sendPushNotification(
-        customerApp,
-        deviceTokenCustomer,
-        'Your Order Has Been Assigned to a Workshop',
-        `Great news! Your order #${order.order_id} has been assigned to a workshop for processing. We'll keep you updated on its progress.`,
-      );
-    }
+    const customerTokens = await Promise.all(
+      orders.map((order) => this.userService.getDeviceToken(order.user_id)),
+    );
 
-    await this.orderRepository.save(order);
+    for (const [index, token] of customerTokens.entries()) {
+      if (token) {
+        await this.notificationService.sendPushNotification(
+          customerApp,
+          token,
+          'Your Order Has Been Assigned to a Workshop',
+          `Great news! Your order #${orders[index].order_id} has been assigned to a workshop for processing. We'll keep you updated on its progress.`,
+        );
+      }
+    }
 
     return {
       statusCode: 200,
@@ -1673,16 +1700,12 @@ export class OrderService {
   }
 
   async assignDeliveryBoy(
-    order_id: number,
+    order_ids: number[],
     delivery_boy_id: number,
   ): Promise<Response> {
-    const order = await this.orderRepository.findOne({
-      where: { order_id: order_id },
+    const orders = await this.orderRepository.findBy({
+      order_id: In(order_ids),
     });
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${order_id} not found`);
-    }
 
     const deliveryBoy = await this.userService.findOneByRole(
       delivery_boy_id,
@@ -1695,11 +1718,13 @@ export class OrderService {
       );
     }
 
-    order.delivery_boy_id = deliveryBoy.user_id;
-    order.order_status =
-      OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY;
-
-    await this.orderRepository.save(order);
+    await this.orderRepository.update(
+      { order_id: In(order_ids) },
+      {
+        delivery_boy_id: deliveryBoy.user_id,
+        order_status: OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+      },
+    );
 
     const deviceToken = await this.userService?.getDeviceToken(
       deliveryBoy.user_id,
@@ -1710,21 +1735,23 @@ export class OrderService {
         driverApp,
         deviceToken,
         'New Delivery Assigned',
-        `Order #${order_id} has been assinged to you for delivery`,
+        `You have been assigned ${orders.length} new orders for delivery.`,
       );
     }
 
-    const deviceTokenCustomer = await this.userService.getDeviceToken(
-      order.user_id,
+    const customerTokens = await Promise.all(
+      orders.map((order) => this.userService.getDeviceToken(order.user_id)),
     );
 
-    if (deviceTokenCustomer) {
-      await this.notificationService.sendPushNotification(
-        customerApp,
-        deviceTokenCustomer,
-        'Your Order is Out for Delivery!',
-        `Good news! Your order #${order.order_id} has been assigned to a delivery partner and will be on its way to you soon. Stay tuned!`,
-      );
+    for (const [index, token] of customerTokens.entries()) {
+      if (token) {
+        await this.notificationService.sendPushNotification(
+          customerApp,
+          token,
+          'Your Order is Out for Delivery!',
+          `Good news! Your order #${orders[index].order_id} is on its way.`,
+        );
+      }
     }
 
     return {
@@ -1734,16 +1761,15 @@ export class OrderService {
   }
 
   async assignPickupBoy(
-    order_id: number,
+    order_ids: number[],
     pickup_boy_id: number,
-    comment: string,
   ): Promise<Response> {
-    const order = await this.orderRepository.findOne({
-      where: { order_id },
+    const orders = await this.orderRepository.findBy({
+      order_id: In(order_ids),
     });
 
-    if (!order) {
-      throw new NotFoundException(`Order with id ${order_id} not found`);
+    if (!orders) {
+      throw new NotFoundException(`Order with id ${order_ids} not found`);
     }
 
     const pickupBoy = await this.userService.findOneByRole(
@@ -1757,11 +1783,13 @@ export class OrderService {
       );
     }
 
-    order.pickup_boy_id = pickupBoy.user_id;
-    order.pickup_comment = comment;
-    order.order_status = OrderStatus.ASSIGNED_PICKUP_BOY;
-
-    await this.orderRepository.save(order);
+    await this.orderRepository.update(
+      { order_id: In(order_ids) },
+      {
+        pickup_boy_id: pickupBoy.user_id,
+        order_status: OrderStatus.ASSIGNED_PICKUP_BOY,
+      },
+    );
 
     const deviceToken = await this.userService.getDeviceToken(
       pickupBoy.user_id,
@@ -1772,21 +1800,23 @@ export class OrderService {
         driverApp,
         deviceToken,
         'New Pickup Assigned',
-        `Order #${order.order_id} has been assigned to you for pickup`,
+        `Order #${orders.length} has been assigned to you for pickup`,
       );
     }
 
-    const deviceTokenCustomer = await this.userService.getDeviceToken(
-      order.user_id,
+    const customerTokens = await Promise.all(
+      orders.map((order) => this.userService.getDeviceToken(order.user_id)),
     );
 
-    if (deviceTokenCustomer) {
-      await this.notificationService.sendPushNotification(
-        customerApp,
-        deviceTokenCustomer,
-        'Assigned PickupBoy',
-        `Your order #${order.order_id} has been assigned to a pickup boy. They will collect your order soon.`,
-      );
+    for (const [index, token] of customerTokens.entries()) {
+      if (token) {
+        await this.notificationService.sendPushNotification(
+          customerApp,
+          token,
+          'Assigned PickupBoy',
+          `Your order #${orders[index].order_id} has been assigned to a pickup boy. They will collect your order soon.`,
+        );
+      }
     }
 
     return {

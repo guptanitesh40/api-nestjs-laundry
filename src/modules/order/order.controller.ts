@@ -31,6 +31,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { DeliveryOrderDto } from './dto/delivery-order.dto';
 import { OrdersDto } from './dto/pay-due-amount.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderService } from './order.service';
 
@@ -179,14 +180,12 @@ export class OrderController {
     return this.orderService.updateOrder(id, updateOrderDto);
   }
 
-  @Patch('admin/orders/:order_id/update-status')
+  @Patch('admin/orders/update-status')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async updateOrderStatus(
-    @Param('order_id') orderId: number,
-    @Body() updateOrderStatusDto: UpdateOrderDto,
+    @Body() updateOrderStatusDto: UpdateOrderStatusDto,
   ): Promise<any> {
-    const { order_status } = updateOrderStatusDto;
-    return this.orderService.updateOrderStatus(orderId, order_status);
+    return this.orderService.updateOrderStatus(updateOrderStatusDto);
   }
 
   @Patch('admin/orders/:order_id/update-payment-status')
@@ -201,29 +200,28 @@ export class OrderController {
   @Patch('admin/orders/assign-pickup')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async assignPickupBoy(
-    @Body('order_id', ParseIntPipe) order_id: number,
-    @Body('pickup_boy_id', ParseIntPipe) pickup_boy_id: number,
-    @Body('comment') comment: string,
+    @Body('order_ids') order_ids: number[],
+    @Body('pickup_boy_id') pickup_boy_id: number,
   ): Promise<Response> {
-    return this.orderService.assignPickupBoy(order_id, pickup_boy_id, comment);
+    return this.orderService.assignPickupBoy(order_ids, pickup_boy_id);
   }
 
   @Patch('admin/orders/assign-workshop')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async assignWorkshop(
-    @Body('order_id', ParseIntPipe) order_id: number,
-    @Body('workshop_id', ParseIntPipe) workshop_id: number,
+    @Body('order_ids') order_ids: number[],
+    @Body('workshop_id') workshop_id: number,
   ): Promise<Response> {
-    return this.orderService.assignWorkshop(order_id, workshop_id);
+    return this.orderService.assignWorkshop(order_ids, workshop_id);
   }
 
   @Patch('admin/orders/assign-delivery')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async assignDeliveryBoy(
-    @Body('order_id', ParseIntPipe) order_id: number,
-    @Body('delivery_boy_id', ParseIntPipe) delivery_boy_id: number,
+    @Body('order_ids') order_ids: number[],
+    @Body('delivery_boy_id') delivery_boy_id: number,
   ): Promise<Response> {
-    return this.orderService.assignDeliveryBoy(order_id, delivery_boy_id);
+    return this.orderService.assignDeliveryBoy(order_ids, delivery_boy_id);
   }
 
   @Patch('admin/orders/assign-branch')

@@ -86,6 +86,10 @@ export class CreateOrderDto {
   @IsOptional()
   @IsNumber()
   workshop_id?: number;
+
+  @IsOptional()
+  @IsNumber()
+  express_delivery_hour?: number;
 }
 
 export class OrderItemDto {

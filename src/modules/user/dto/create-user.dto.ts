@@ -28,6 +28,7 @@ export class CreateUserDto {
   @IsUnique({ tablename: User.name, column: 'mobile_number' })
   mobile_number: number;
 
+  @IsOptional()
   password: string;
 
   @IsNotEmpty()
