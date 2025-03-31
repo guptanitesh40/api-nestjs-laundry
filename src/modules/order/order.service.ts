@@ -1660,8 +1660,8 @@ export class OrderService {
       order_id: In(order_ids),
     });
 
-    if (!orders) {
-      throw new NotFoundException(`Order with id ${order_ids} not found`);
+    if (!orders.length) {
+      throw new NotFoundException(`Orders with ids ${order_ids} not found`);
     }
 
     const workshop = await this.workshopService.findOne(workshop_id);
@@ -1678,20 +1678,22 @@ export class OrderService {
       },
     );
 
-    const customerTokens = await Promise.all(
-      orders.map((order) => this.userService.getDeviceToken(order.user_id)),
-    );
+    const userIds = orders.map((order) => order.user_id);
+    const deviceTokensMap = await this.userService.getDeviceTokens(userIds);
 
-    for (const [index, token] of customerTokens.entries()) {
-      if (token) {
+    await Promise.all(
+      orders.map(async (order) => {
+        const deviceToken = deviceTokensMap[order.user_id];
+        if (!deviceToken) return;
+
         await this.notificationService.sendPushNotification(
           customerApp,
-          token,
+          deviceToken,
           'Your Order Has Been Assigned to a Workshop',
-          `Great news! Your order #${orders[index].order_id} has been assigned to a workshop for processing. We'll keep you updated on its progress.`,
+          `Great news! Your order #${order.order_id} has been assigned to a workshop for processing. We'll keep you updated on its progress.`,
         );
-      }
-    }
+      }),
+    );
 
     return {
       statusCode: 200,
@@ -1706,6 +1708,10 @@ export class OrderService {
     const orders = await this.orderRepository.findBy({
       order_id: In(order_ids),
     });
+
+    if (!orders.length) {
+      throw new NotFoundException(`Orders with ids ${order_ids} not found`);
+    }
 
     const deliveryBoy = await this.userService.findOneByRole(
       delivery_boy_id,
@@ -1726,37 +1732,39 @@ export class OrderService {
       },
     );
 
-    const deviceToken = await this.userService?.getDeviceToken(
+    const deliveryBoyDeviceToken = await this.userService.getDeviceToken(
       deliveryBoy.user_id,
     );
 
-    if (deviceToken) {
+    if (deliveryBoyDeviceToken) {
       await this.notificationService.sendPushNotification(
         driverApp,
-        deviceToken,
+        deliveryBoyDeviceToken,
         'New Delivery Assigned',
-        `You have been assigned ${orders.length} new orders for delivery.`,
+        `You have been assigned ${orders.length} new order(s) for delivery.`,
       );
     }
 
-    const customerTokens = await Promise.all(
-      orders.map((order) => this.userService.getDeviceToken(order.user_id)),
-    );
+    const userIds = orders.map((order) => order.user_id);
+    const deviceTokensMap = await this.userService.getDeviceTokens(userIds);
 
-    for (const [index, token] of customerTokens.entries()) {
-      if (token) {
+    await Promise.all(
+      orders.map(async (order) => {
+        const deviceToken = deviceTokensMap[order.user_id];
+        if (!deviceToken) return;
+
         await this.notificationService.sendPushNotification(
           customerApp,
-          token,
+          deviceToken,
           'Your Order is Out for Delivery!',
-          `Good news! Your order #${orders[index].order_id} is on its way.`,
+          `Good news! Your order #${order.order_id} is on its way.`,
         );
-      }
-    }
+      }),
+    );
 
     return {
       statusCode: 200,
-      message: 'Delivery boy assigned successfully',
+      message: 'Delivery Boy assigned successfully',
     };
   }
 
@@ -1768,8 +1776,8 @@ export class OrderService {
       order_id: In(order_ids),
     });
 
-    if (!orders) {
-      throw new NotFoundException(`Order with id ${order_ids} not found`);
+    if (!orders.length) {
+      throw new NotFoundException(`Orders with ids ${order_ids} not found`);
     }
 
     const pickupBoy = await this.userService.findOneByRole(
@@ -1791,37 +1799,39 @@ export class OrderService {
       },
     );
 
-    const deviceToken = await this.userService.getDeviceToken(
+    const pickupBoyDeviceToken = await this.userService.getDeviceToken(
       pickupBoy.user_id,
     );
 
-    if (deviceToken) {
+    if (pickupBoyDeviceToken) {
       await this.notificationService.sendPushNotification(
         driverApp,
-        deviceToken,
+        pickupBoyDeviceToken,
         'New Pickup Assigned',
-        `Order #${orders.length} has been assigned to you for pickup`,
+        `You have been assigned ${orders.length} new pickup(s).`,
       );
     }
 
-    const customerTokens = await Promise.all(
-      orders.map((order) => this.userService.getDeviceToken(order.user_id)),
-    );
+    const userIds = orders.map((order) => order.user_id);
+    const deviceTokensMap = await this.userService.getDeviceTokens(userIds);
 
-    for (const [index, token] of customerTokens.entries()) {
-      if (token) {
+    await Promise.all(
+      orders.map(async (order) => {
+        const deviceToken = deviceTokensMap[order.user_id];
+        if (!deviceToken) return;
+
         await this.notificationService.sendPushNotification(
           customerApp,
-          token,
-          'Assigned PickupBoy',
-          `Your order #${orders[index].order_id} has been assigned to a pickup boy. They will collect your order soon.`,
+          deviceToken,
+          'Assigned Pickup Boy',
+          `Your order #${order.order_id} has been assigned to a pickup boy.`,
         );
-      }
-    }
+      }),
+    );
 
     return {
       statusCode: 200,
-      message: 'PickupBoy assigned successfully',
+      message: 'Pickup Boy assigned successfully',
     };
   }
 
