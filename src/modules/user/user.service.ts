@@ -207,10 +207,17 @@ export class UserService {
     admin_id: number,
     createUserDto: CreateUserDto,
   ): Promise<Response> {
-    createUserDto.password = crypto.randomBytes(4).toString('hex');
+    let password = '';
+    if (!createUserDto.password) {
+      password = crypto.randomBytes(4).toString('hex');
+    }
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
+
+    const hashedPassword = await bcrypt.hash(
+      password || createUserDto.password,
+      salt,
+    );
 
     createUserDto.created_by_user_id = admin_id;
 
@@ -1110,6 +1117,18 @@ export class UserService {
     });
 
     return token ? token.device_token : null;
+  }
+
+  async getDeviceTokens(user_id: number[]): Promise<any> {
+    const token = await this.deviceUserRepository.find({
+      where: {
+        user_id: In(user_id),
+        device_type: In([DeviceType.ANDROID, DeviceType.IOS]),
+        deleted_at: null,
+      },
+    });
+
+    return token.map((d) => d.device_token).filter((token) => !!token);
   }
 
   async getAllCustomerDeviceTokens(): Promise<string[]> {
