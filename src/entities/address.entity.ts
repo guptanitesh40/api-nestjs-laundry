@@ -49,6 +49,9 @@ export class UserAddress extends BaseEntity {
   @Column({ nullable: true })
   user_id: number;
 
+  @Column({ nullable: true, default: false })
+  is_default: boolean;
+
   @ManyToOne(() => User, (user) => user.addresses)
   user: User;
 }

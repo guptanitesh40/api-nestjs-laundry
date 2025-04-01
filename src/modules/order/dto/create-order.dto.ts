@@ -9,6 +9,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { DeliveryBy } from 'src/enum/delivery_by.enum';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 
@@ -90,6 +91,9 @@ export class CreateOrderDto {
   @IsOptional()
   @IsNumber()
   express_delivery_hour?: number;
+
+  @IsOptional()
+  delivery_by?: DeliveryBy;
 }
 
 export class OrderItemDto {

@@ -32,6 +32,16 @@ export class AddressController {
     return this.userAddressService.getAll(user.user_id);
   }
 
+  @Post('set-default')
+  @Roles(Role.CUSTOMER)
+  async setDefaultAddress(
+    @Request() req,
+    @Body('address_id') address_id: number,
+  ): Promise<any> {
+    const user = req.user;
+    return this.userAddressService.setDefaultAddress(user.user_id, address_id);
+  }
+
   @Get(':id')
   @Roles(Role.CUSTOMER)
   async findOne(@Request() req, @Param('id') id: number): Promise<Response> {
