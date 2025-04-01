@@ -1,4 +1,4 @@
 export enum DeliveryBy {
   HOME = 1,
-  SHOp = 2,
+  SHOP = 2,
 }
