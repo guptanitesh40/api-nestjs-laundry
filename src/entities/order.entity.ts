@@ -1,4 +1,5 @@
 import { IsOptional } from 'class-validator';
+import { DeliveryBy } from 'src/enum/delivery_by.enum';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
@@ -169,4 +170,8 @@ export class Order extends BaseEntity {
   @Column({ nullable: true })
   @IsOptional()
   express_delivery_hour?: number;
+
+  @Column({ type: 'int', nullable: true })
+  @IsOptional()
+  delivery_by: DeliveryBy;
 }

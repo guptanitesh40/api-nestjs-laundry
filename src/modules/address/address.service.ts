@@ -25,6 +25,38 @@ export class AddressService {
     };
   }
 
+  async setDefaultAddress(
+    user_id: number,
+    address_id: number,
+  ): Promise<Response> {
+    await this.userAddressRepository.update(
+      { user_id: user_id },
+      { is_default: false },
+    );
+
+    const updated = await this.userAddressRepository.update(
+      { user_id: user_id, address_id: address_id },
+      { is_default: true },
+    );
+
+    if (updated.affected === 0) {
+      return {
+        statusCode: 404,
+        message: 'Address not found',
+        data: null,
+      };
+    }
+    const address = await this.userAddressRepository.findOne({
+      where: { address_id },
+    });
+
+    return {
+      statusCode: 200,
+      message: 'Default address updated successfully',
+      data: address,
+    };
+  }
+
   async findOne(user_id: number, id: number): Promise<Response> {
     const result = await this.userAddressRepository.findOne({
       where: { address_id: id, user_id: user_id, deleted_at: null },
