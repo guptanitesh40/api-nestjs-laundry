@@ -376,9 +376,23 @@ export class InvoiceService {
       const htmlContent = await ejs.renderFile(templatePath, data);
 
       const page = await browser.newPage();
-      await page.setContent(htmlContent);
+      await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
 
-      const pdfBuffer = await page.pdf({ format: 'Letter' });
+      const bodyHeight = await page.evaluate(() => document.body.scrollHeight);
+
+      const pdfBuffer = await page.pdf({
+        printBackground: false,
+        margin: {
+          top: '0mm',
+          right: '0mm',
+          bottom: '0mm',
+          left: '0mm',
+        },
+        width: '57.4mm',
+        height: `${bodyHeight}px`,
+        preferCSSPageSize: true,
+      });
+
       await browser.close();
 
       const orderLabel = getPdfUrl(order.order_id, getOrderLabelFileFileName());

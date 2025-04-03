@@ -1,70 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order Labels</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
       font-family: Arial, sans-serif;
     }
-    .label-container {
-      display: flex;
-      flex-direction: column;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-    }
+
+    
     .label {
-     width: 1in;
-     height: 2in;
-     border: 1px solid #000;
-     margin: 5px;
-     box-sizing: border-box;
-     padding: 5px;
+      width: 57.4mm;
+      height: 40mm;
       text-align: center;
+      border: 1px solid #000;
+      font-size: 10px;
     }
 
     .logo {
-      height: 40px; 
-      width: auto;
-      margin-bottom: 10px;
+      height: 30px;
+      width: 30px;
+      display: inline-block;
+      object-fit: contain;
     }
+
     .order-number,
     .company-name {
       font-weight: bold;
-      font-size: 12px; 
-      margin-bottom: 5px; 
+      font-size: 12px;
     }
+
     .details {
-      font-size: 8px;
-      margin-bottom: 1px; 
+      font-size: 10px;
+      line-height: 1.1;
     }
+
     .remarks {
-      font-size: 7px; 
-      margin-top: 4px;
+      font-size: 10px;
       font-style: italic;
     }
   </style>
 </head>
+
 <body>
   <div class="label-container">
-    <% items.forEach((item, index) => { %>
+    <% items.forEach((item, index)=> { %>
       <div class="label">
         <img src="<%= logoUrl %>" alt="Company Logo" class="logo">
         <div class="company-name">SIKKA CLEANERS</div>
-        <div class="order-number">Order #: <%= orderNumber %></div>
-        <div class="details">Date: <%= date %></div>
-        <div class="details">Customer: <%= customerName %></div>
-        <div class="details">Item: <%= index + 1 %>/<%= items.length %></div>
-        <div class="details">Service: <%= item.serviceName %></div>
+        <div class="order-number">Order #: <%= orderNumber %>
+        </div>
+        <div class="details">Date: <%= date %>
+        </div>
+        <div class="details">Customer: <%= customerName %>
+        </div>
+        <div class="details">Item: <%= index + 1 %>/<%= items.length %>
+        </div>
+        <div class="details">Service: <%= item.serviceName %>
+        </div>
         <% if (item.remarks) { %>
-          <div class="remarks">Remarks: <%= item.remarks %></div>
-        <% } %>
+          <div class="remarks">Remarks: <%= item.remarks %>
+          </div>
+          <% } %>
       </div>
-    <% }); %>
+      <% }); %>
   </div>
 </body>
+
 </html>
