@@ -329,6 +329,7 @@ export class OrderService {
       }
 
       await queryRunner.commitTransaction();
+
       const itemsLabel = await this.invoiceService.generateOrderLabels(
         orderDetail.order_id,
       );
@@ -1088,6 +1089,7 @@ export class OrderService {
       .groupBy(
         'order.order_id, items.item_id, category.category_id, product.product_id, service.service_id',
       );
+
     const order: any = await orderQuery.getOne();
 
     order.order_statuses = getOrderStatusList(order.order_status);

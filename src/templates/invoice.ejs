@@ -13,18 +13,19 @@
         body {
             box-sizing: border-box;
             font-family: "Arial", sans-serif;
-            margin: 30px;
+            margin: 20px;
             padding: 0;
             background-color: #f8f8f8;
             color: #333;
             border: 2px solid black;
-            padding-bottom: 10px;
+            padding-bottom: 5px;
         }
 
         .container {
             display: flex;
             align-items: center;
             border-bottom: 2px solid black;
+            padding: 0;
         }
 
         h1,
@@ -51,18 +52,19 @@
             width: 100%;
             height: 30%;
             border-collapse: collapse;
-            margin-top: 5px;
+            /* margin-top: 5px; */
         }
 
         table,
         th,
         td {
+            border-top: hidden;
             border: 1px solid #ccc;
         }
 
         th,
         td {
-            padding: 8px;
+            padding: 4px;
             text-align: center;
             font-size: 12px;
         }
@@ -73,7 +75,7 @@
         }
 
         .header-section {
-            flex-basis: 80%;
+            flex-basis: 70%;
             border-right: 2px solid black;
             display: flex;
             justify-content: center;
@@ -83,12 +85,13 @@
         .header-section img {
             display: inline-block;
             height: auto;
-            width: 65px;
-            padding: 0 10px;
+            width: 70px;
+            padding: 0 8px;
         }
 
         .box2 {
-            flex-basis: 20%;
+            flex-basis: 30%;
+            margin-left: 2px;
         }
 
         .box11 {
@@ -98,18 +101,26 @@
         .box11 h2 {
             color: black;
             text-align: left;
+            font-size: 12px;
             text-transform: uppercase;
         }
 
         .box11 .address {
-            font-size: 14px;
+            padding-top: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            ;
+        }
+
+        .box11 .gst {
+            font-size: 12px;
         }
 
         .box11 .genuine-text {
             font-family: "Atma", serif;
             font-weight: 300;
             font-style: italic;
-            font-size: 14px;
+            font-size: 10px;
             border-bottom: 2px solid black;
         }
 
@@ -118,7 +129,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 10px;
+            padding: 0 8px;
             font-size: 12px;
         }
 
@@ -126,17 +137,17 @@
             display: flex;
             align-items: start;
             justify-content: space-between;
-            padding: 0 10px;
+            padding: 0 8px;
         }
 
         .totals {
-            margin-top: 10px;
+            margin-top: 5px;
         }
 
         .totals p {
             display: flex;
             justify-content: space-between;
-            margin: 0;
+            margin: 2px;
             font-size: 12px;
         }
 
@@ -189,15 +200,20 @@
                     <h2>Sikka Cleaners</h2>
                     <p class="genuine-text">The Genuine Dry Cleaners</p>
                     <p class="address">Address: XYZ, Near Subhash Chowk, Ahmedabad</p>
-                    <p>GSTIN: 24ACPPV3865Q1Z</p>
-                    <p style="font-weight: bold; font-style: italic;">RECEIPT</p>
+                    <p class="gst">GSTIN: 24ACPPV3865Q1Z</p>
+                    <p style="font-weight: bold; font-style: italic; margin-left: 20px; margin-bottom: 1px; font-size: 12px;">RECEIPT/INVOICE</p>
                 </div>
             </div>
             <div class="box2">
-                <p><span style="font-weight: bold;">Branch.:</span><br>
+                <p style="font-size: 13px; font-weight:bold;">
                     <%= invoice.branchName %>
                 </p>
-                <p><span style="font-weight: bold;">Mo.:</span><br>+<%= invoice.branchMobileNumber %>
+                <p style="font-size: 12px;"><span>Branch.:</span>
+                    <%= invoice.branchName %>
+                </p>
+                <p style="font-size: 12px;"><span>Mo-1. : </span><%= invoice.branchMobileNumber %>
+                </p>
+                <p style="font-size: 12px;"><span>Mo-2. : </span><%= invoice.branchMobileNumber %>
                 </p>
             </div>
         </div>
@@ -261,13 +277,14 @@
                                                 <td>
                                                     <%= totalQuantity %>
                                                 </td>
-                                                <td colspan="3">Sub total</td>
+                                                <td colspan="3" style="text-align: right;">Sub total</td>
                                                 <td>
                                                     <%= invoice.itemsTotal.toFixed(2) %>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td colspan="4">In Words: <%= invoice.totalInWords %>
+                                                <td colspan="5" style="text-align: left;  font-size: 10px;">In Words:
+                                                    <%= invoice.totalInWords %>
                                                 </td>
                                             </tr>
                 </tbody>
@@ -283,45 +300,45 @@
             <div class="summary-section" style="width: 38%;">
                 <div class="totals">
                     <% if (invoice.normalDeliveryCharges> 0) { %>
-                        <p><span>Normal Delivery Charges:</span><span>
+                        <p style="font-size: 10px;"><span>Normal Delivery Charge:</span><span>
                                 <%= invoice.normalDeliveryCharges.toFixed(2) %>
                             </span></p>
                         <% } %>
 
                             <% if (invoice.expressDeliveryCharges> 0) { %>
-                                <p><span>Express Delivery Charges:</span><span>
+                                <p style="font-size: 10px;"><span>Express Delivery Charge:</span><span>
                                         <%= invoice.expressDeliveryCharges.toFixed(2) %>
                                     </span></p>
                                 <% } %>
 
 
                                     <% if (invoice.adjustmentCharges> 0) { %>
-                                        <p><span>Kasar Amount:</span><span>
+                                        <p style="font-size: 10px;"><span>Kasar Amount:</span><span>
                                                 <%= invoice.adjustmentCharges.toFixed(2) %>
                                             </span></p>
                                         <% } %>
-                                            <p><span>Gst:</span><span>
+                                            <p style="font-size: 10px;"><span>Gst:</span><span>
                                                     <%= invoice.Gst.toFixed(2) %>
                                                 </span></p>
 
                                             <% if (invoice.discount> 0) { %>
-                                                <p><span>Discount:</span><span>
+                                                <p style="font-size: 10px;"><span>Discount Amount:</span><span>
                                                         <%= invoice.discount.toFixed(2) %>
                                                     </span></p>
                                                 <% } %>
 
-                                                    <p><span>Sub Total:</span><span>
+                                                    <p style="font-size: 10px;"><span>Current Bill Amount:</span><span>
                                                             <%= invoice. subTotal.toFixed(2) %>
                                                         </span></p>
-                                                    <p><span style="color: green;">Paid Amount:</span><span
-                                                            style="color: green;">
+                                                    <p style="font-size: 10px;"><span style="color: green;">Advance Paid
+                                                            Amount:</span><span style="color: green;">
                                                             <%= invoice.paidAmount.toFixed(2) %>
                                                         </span></p>
-                                                    <p><span style="color: red;">Previous Due Amount:</span><span
-                                                            style="color: red;">
+                                                    <p style="font-size: 10px;"> <span style="color: red;">Previous Due
+                                                            Amount:</span><span style="color: red;">
                                                             <%= invoice.pendingDueAmount.toFixed(2) %>
                                                         </span></p>
-                                                    <p><span>Total Due Amount:</span><span>
+                                                    <p style="font-size: 10px;"> <span>Total Amount:</span><span>
                                                             <%= invoice.totalAmount.toFixed(2) %>
                                                         </span></p>
                 </div>
