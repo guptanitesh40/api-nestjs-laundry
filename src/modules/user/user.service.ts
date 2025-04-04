@@ -1120,15 +1120,16 @@ export class UserService {
   }
 
   async getDeviceTokens(user_id: number[]): Promise<any> {
-    const token = await this.deviceUserRepository.find({
+    const tokens = await this.deviceUserRepository.find({
       where: {
         user_id: In(user_id),
         device_type: In([DeviceType.ANDROID, DeviceType.IOS]),
         deleted_at: null,
       },
+      select: ['user_id', 'device_token'],
     });
 
-    return token.map((d) => d.device_token).filter((token) => !!token);
+    return tokens.filter((t) => !!t.device_token);
   }
 
   async getAllCustomerDeviceTokens(): Promise<string[]> {
