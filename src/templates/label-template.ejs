@@ -8,15 +8,19 @@
   <style>
     body {
       font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
     }
 
-    
     .label {
       width: 57.4mm;
       height: 40mm;
+      min-height: 40mm;
       text-align: center;
       border: 1px solid #000;
       font-size: 10px;
+      margin: 0;
+      padding: 0;
     }
 
     .logo {
@@ -45,7 +49,7 @@
 </head>
 
 <body>
-  <div class="label-container">
+  <div class="label-container" style="margin: 0; padding: 0 ;">
     <% items.forEach((item, index)=> { %>
       <div class="label">
         <img src="<%= logoUrl %>" alt="Company Logo" class="logo">
@@ -59,6 +63,8 @@
         <div class="details">Item: <%= index + 1 %>/<%= items.length %>
         </div>
         <div class="details">Service: <%= item.serviceName %>
+        </div>
+        <div class="details">Product: <%= item.productName %>
         </div>
         <% if (item.remarks) { %>
           <div class="remarks">Remarks: <%= item.remarks %>

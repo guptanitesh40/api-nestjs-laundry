@@ -186,13 +186,19 @@ export class CartService {
     const shippingCharge = (
       await this.settingService.findAll([
         'normal_delivery_charges',
-        'express_delivery_charge',
+        'express_delivery_24hrs',
+        'express_delivery_48hrs',
+        'express_delivery_72hrs',
       ])
     ).data;
 
     const normalCharges = Number(shippingCharge.normal_delivery_charges);
 
-    const expressCharges = Number(shippingCharge.express_delivery_charge);
+    const expressCharges24 = Number(shippingCharge.express_delivery_24hrs);
+
+    const expressCharges48 = Number(shippingCharge.express_delivery_48hrs);
+
+    const expressCharges72 = Number(shippingCharge.express_delivery_72hrs);
 
     const branches = (await this.branchService.getBranchList()).data;
     const total = subTotal + normalCharges;
@@ -200,7 +206,16 @@ export class CartService {
     return {
       statusCode: 200,
       message: 'Cart retrieved successfully',
-      data: { carts, branches, subTotal, normalCharges, expressCharges, total },
+      data: {
+        carts,
+        branches,
+        subTotal,
+        normalCharges,
+        expressCharges24,
+        expressCharges48,
+        expressCharges72,
+        total,
+      },
     };
   }
 

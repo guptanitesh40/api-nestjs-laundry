@@ -1007,7 +1007,9 @@ export class OrderService {
     const deviceTokens = await this.userService.getDeviceTokens(userIds);
 
     const notifications = orders.map(async (order) => {
-      const deviceToken = deviceTokens[order.user_id];
+      const deviceToken = deviceTokens.find(
+        (token) => token.user_id === order.user_id,
+      )?.device_token;
       if (!deviceToken) return;
 
       if (order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
@@ -1685,7 +1687,9 @@ export class OrderService {
 
     await Promise.all(
       orders.map(async (order) => {
-        const deviceToken = deviceTokensMap[order.user_id];
+        const deviceToken = deviceTokensMap.find(
+          (token) => token.user_id === order.user_id,
+        )?.device_token;
         if (!deviceToken) return;
 
         await this.notificationService.sendPushNotification(
@@ -1752,7 +1756,10 @@ export class OrderService {
 
     await Promise.all(
       orders.map(async (order) => {
-        const deviceToken = deviceTokensMap[order.user_id];
+        const deviceToken = deviceTokensMap.find(
+          (token) => token.user_id === order.user_id,
+        )?.device_token;
+
         if (!deviceToken) return;
 
         await this.notificationService.sendPushNotification(
@@ -1819,7 +1826,10 @@ export class OrderService {
 
     await Promise.all(
       orders.map(async (order) => {
-        const deviceToken = deviceTokensMap[order.user_id];
+        const deviceToken = deviceTokensMap.find(
+          (token) => token.user_id === order.user_id,
+        )?.device_token;
+
         if (!deviceToken) return;
 
         await this.notificationService.sendPushNotification(

@@ -343,6 +343,7 @@ export class InvoiceService {
     const items = order.items.flatMap((item) =>
       Array.from({ length: item.quantity || 1 }, () => ({
         serviceName: item.service?.name || 'Unknown Service',
+        productName: item.product?.name || 'Unknown Service',
         remarks: item.description || 'No remarks provided',
       })),
     );
