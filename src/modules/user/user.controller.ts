@@ -115,6 +115,13 @@ export class UserController {
     return await this.userService.createUser(user.user_id, createUserDto);
   }
 
+  @Get('login-logs')
+  async getLoginLogs(
+    @Query() paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
+    return await this.userService.getLoginLogs(paginationQueryDto);
+  }
+
   @Put(':user_id')
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
