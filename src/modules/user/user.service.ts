@@ -1145,4 +1145,67 @@ export class UserService {
 
     return deviceUsers.map((d) => d.device_token).filter((token) => !!token);
   }
+
+  async getLoginLogs(
+    paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
+    const { per_page, page_number, search, sort_by, order } =
+      paginationQueryDto;
+
+    const pageNumber = page_number ?? 1;
+    const perPage = per_page ?? 10;
+    const skip = (pageNumber - 1) * perPage;
+
+    const logs = this.loginHistoryRepository
+      .createQueryBuilder('loginHistory')
+      .innerJoinAndSelect('loginHistory.user', 'user')
+      .where('loginHistory.deleted_at IS NULL')
+      .andWhere('user.deleted_at IS NULL')
+      .andWhere('user.role_id = :roleId', { roleId: Role.CUSTOMER })
+      .select([
+        'loginHistory.login_id',
+        'loginHistory.created_at',
+        'user.user_id',
+        'user.first_name',
+        'user.last_name',
+      ])
+      .take(perPage)
+      .skip(skip);
+
+    if (search) {
+      logs.andWhere(
+        '(user.first_name LIKE :search OR ' + 'user.last_name LIKE :search',
+        { search: `%${search}%` },
+      );
+    }
+
+    let sortColumn = 'loginHistory.created_at';
+
+    let sortOrder: 'ASC' | 'DESC' = 'DESC';
+
+    if (sort_by) {
+      sortColumn =
+        sort_by === 'first_name' || sortColumn === 'last_name'
+          ? `user.${sort_by}`
+          : `loginHistory.${sort_by}`;
+    }
+    if (order) {
+      sortOrder = order;
+    }
+
+    logs.orderBy(sortColumn, sortOrder);
+
+    const [log, total] = await logs.getManyAndCount();
+
+    return {
+      statusCode: 200,
+      message: 'Customers logs retrived Successfully',
+      data: {
+        userLogs: log,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+      },
+    };
+  }
 }
