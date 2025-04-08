@@ -1177,7 +1177,7 @@ export class UserService {
 
     if (search) {
       logs.andWhere(
-        '(user.first_name LIKE :search OR ' + 'user.last_name LIKE :search',
+        '(user.first_name LIKE :search OR user.last_name LIKE :search)',
         { search: `%${search}%` },
       );
     }

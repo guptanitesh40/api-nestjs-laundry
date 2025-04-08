@@ -22,7 +22,9 @@ export class NotesService {
       ...createNoteDto,
       images: imagePaths,
     });
+
     const result = await this.notesRepository.save(note);
+
     const Note = appendBaseUrlToArrayImages([result])[0];
     return {
       statusCode: 201,
