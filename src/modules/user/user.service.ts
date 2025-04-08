@@ -137,12 +137,12 @@ export class UserService {
       return loginErrrorMessage;
     }
 
-    await this.storeLoginHistory(user);
     const deviceUser = await this.storeDeviceUser(
       user,
       device_type,
       device_token,
     );
+    await this.storeLoginHistory(user, device_type || null);
 
     return {
       statusCode: 200,
@@ -184,9 +184,11 @@ export class UserService {
     };
   }
 
-  async storeLoginHistory(user: User): Promise<void> {
+  async storeLoginHistory(user: User, device_type: number): Promise<void> {
     const loginHistory = new LoginHistory();
+
     loginHistory.user_id = user.user_id;
+    loginHistory.type = String(device_type) || null;
     await this.loginHistoryRepository.save(loginHistory);
   }
 
@@ -1165,6 +1167,7 @@ export class UserService {
       .select([
         'loginHistory.login_id',
         'loginHistory.created_at',
+        'loginHistory.type',
         'user.user_id',
         'user.first_name',
         'user.last_name',
