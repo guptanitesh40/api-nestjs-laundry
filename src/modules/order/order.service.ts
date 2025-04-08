@@ -86,6 +86,7 @@ export class OrderService {
   async create(
     createOrderDto: CreateOrderDto,
     user_id?: number,
+    is_quick_order?: boolean,
   ): Promise<Response> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -162,6 +163,35 @@ export class OrderService {
           : 0;
       } else {
         deliveryDaysToAdd = addDays(new Date(), Number(normalDay));
+      }
+
+      if (Boolean(is_quick_order) === true) {
+        const order = this.orderRepository.create({
+          ...createOrderDto,
+          user_id: user_id,
+          payment_type: createOrderDto.payment_type,
+          payment_status: createOrderDto.payment_status,
+          normal_delivery_charges: createOrderDto.normal_delivery_charges || 0,
+          express_delivery_charges:
+            createOrderDto.express_delivery_charges || 0,
+          express_delivery_hour: createOrderDto.express_delivery_hour || 0,
+          sub_total: createOrderDto.sub_total,
+          address_id: createOrderDto.address_id,
+          address_details: address_details,
+          total: 0,
+          address_type: addess_type,
+          branch_id: createOrderDto.branch_id,
+          estimated_pickup_time,
+          estimated_delivery_time: deliveryDaysToAdd,
+        });
+
+        const result = await this.orderRepository.save(order);
+
+        return {
+          statusCode: 200,
+          message: 'Order details added successfully',
+          data: result,
+        };
       }
 
       const uniquePriceKeys = createOrderDto.items.map(

@@ -115,9 +115,14 @@ export class OrderController {
   async create(
     @Body() createOrderDto: CreateOrderDto,
     @Request() req,
+    @Query('is_quick_order') is_quick_order?: boolean,
   ): Promise<Response> {
     const user = req.user;
-    return this.orderService.create(createOrderDto, user?.user_id);
+    return this.orderService.create(
+      createOrderDto,
+      user?.user_id,
+      is_quick_order,
+    );
   }
 
   @Get('admin/orders/:order_id')

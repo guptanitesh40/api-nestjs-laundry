@@ -56,15 +56,11 @@
         <div class="company-name">SIKKA CLEANERS</div>
         <div class="order-number">Order #: <%= orderNumber %>
         </div>
-        <div class="details">Date: <%= date %>
+        <div class="details" style="font-size: 12px;  font-weight: bold;">Customer: <%= customerName %>.
         </div>
-        <div class="details">Customer: <%= customerName %>
-        </div>
-        <div class="details">Item: <%= index + 1 %>/<%= items.length %>
+        <div class="details">Item: <%= item.productName %> (<%= index + 1 %>/<%= items.length %>) ,  QTY : <%= itemsQty %>
         </div>
         <div class="details">Service: <%= item.serviceName %>
-        </div>
-        <div class="details">Product: <%= item.productName %>
         </div>
         <% if (item.remarks) { %>
           <div class="remarks">Remarks: <%= item.remarks %>

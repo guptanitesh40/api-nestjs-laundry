@@ -15,9 +15,10 @@ import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 
 export class CreateOrderDto {
   @IsArray()
+  @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
-  items: OrderItemDto[];
+  items?: OrderItemDto[];
 
   @IsOptional()
   coupon_code?: string;

@@ -354,6 +354,7 @@ export class InvoiceService {
       date,
       customerName,
       items,
+      itemsQty: items.length,
     };
 
     try {
