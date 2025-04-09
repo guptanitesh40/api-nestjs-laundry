@@ -198,7 +198,7 @@ export class OrderService {
         return {
           statusCode: 200,
           message: 'Order details added successfully',
-          data: orderDetail,
+          data: { orderDetail },
         };
       }
 
