@@ -186,11 +186,19 @@ export class OrderService {
         });
 
         const result = await this.orderRepository.save(order);
+        const orderDetail = {
+          ...result,
+          user: {
+            first_name: user.first_name,
+            last_name: user.last_name,
+            mobile_number: user.mobile_number,
+          },
+        };
 
         return {
           statusCode: 200,
           message: 'Order details added successfully',
-          data: result,
+          data: { orderDetail },
         };
       }
 
@@ -425,11 +433,11 @@ export class OrderService {
 
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
-      .innerJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('order.items', 'items')
       .innerJoinAndSelect('order.user', 'user')
-      .innerJoinAndSelect('items.category', 'category')
-      .innerJoinAndSelect('items.product', 'product')
-      .innerJoinAndSelect('items.service', 'service')
+      .leftJoinAndSelect('items.category', 'category')
+      .leftJoinAndSelect('items.product', 'product')
+      .leftJoinAndSelect('items.service', 'service')
       .leftJoinAndSelect('order.branch', 'branch')
       .leftJoin('order.pickup_boy', 'pickupBoy')
       .addSelect([
@@ -699,11 +707,11 @@ export class OrderService {
   async findOne(order_id: number): Promise<Response> {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
-      .innerJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('order.items', 'items')
       .innerJoinAndSelect('order.user', 'user')
-      .innerJoinAndSelect('items.category', 'category')
-      .innerJoinAndSelect('items.product', 'product')
-      .innerJoinAndSelect('items.service', 'service')
+      .leftJoinAndSelect('items.category', 'category')
+      .leftJoinAndSelect('items.product', 'product')
+      .leftJoinAndSelect('items.service', 'service')
       .leftJoinAndSelect('order.workshop', 'workshop')
       .leftJoinAndSelect('workshop.workshopManagerMappings', 'mapping')
       .leftJoinAndSelect('mapping.user', 'manager_user')
@@ -1092,10 +1100,10 @@ export class OrderService {
     const orderQuery = this.orderRepository
       .createQueryBuilder('order')
       .innerJoinAndSelect('order.user', 'user')
-      .innerJoinAndSelect('order.items', 'items')
-      .innerJoinAndSelect('items.category', 'category')
-      .innerJoinAndSelect('items.product', 'product')
-      .innerJoinAndSelect('items.service', 'service')
+      .leftJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('items.category', 'category')
+      .leftJoinAndSelect('items.product', 'product')
+      .leftJoinAndSelect('items.service', 'service')
       .leftJoinAndSelect('order.branch', 'branch')
       .where('order.order_id = :orderId', { orderId: order_id })
       .andWhere('order.deleted_at IS NULL')
@@ -1172,7 +1180,7 @@ export class OrderService {
 
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
-      .innerJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('order.items', 'items')
       .leftJoinAndSelect('order.feedback', 'feedback')
       .where('order.user_id = :user_id', { user_id: user_id })
       .andWhere('order.deleted_at IS NULL')
