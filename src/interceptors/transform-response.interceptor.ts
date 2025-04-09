@@ -14,6 +14,8 @@ export class NullTransformInterceptor implements NestInterceptor {
       'created_by_user_id',
       'vendor_id',
       'workshop_id',
+      'kasar_amount',
+      'coupon_discount',
       'commission_percentage',
       'security_deposit',
       'delivery_boy_id',
