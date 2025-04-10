@@ -40,6 +40,7 @@ import {
 } from 'src/utils/pdf-url.helper';
 import { DataSource, In, Repository } from 'typeorm';
 import { RazorpayService } from '../../razorpay/razorpay.service';
+import { AddressService } from '../address/address.service';
 import { BranchService } from '../branch/branch.service';
 import { CartService } from '../cart/cart.service';
 import { CouponService } from '../coupon/coupon.service';
@@ -80,6 +81,7 @@ export class OrderService {
     private readonly invoiceService: InvoiceService,
     private readonly razorpayService: RazorpayService,
     private readonly branchService: BranchService,
+    private readonly addressService: AddressService,
     private dataSource: DataSource,
   ) {}
 
@@ -88,8 +90,99 @@ export class OrderService {
     user_id?: number,
     is_quick_order?: boolean,
   ): Promise<Response> {
+    if (Boolean(is_quick_order) === true) {
+      const user = await this.userService.findUserById(
+        createOrderDto.user_id ?? user_id,
+      );
+      const address = await (
+        await this.addressService.findOne(user_id, createOrderDto.address_id)
+      ).data;
+      const address_details = `${address.building_number}, ${address.area}, ${address.city}, ${address.state}, ${address.country} - ${address.pincode}`;
+
+      const address_type = address?.address_type || 1;
+
+      const settingKeys = [
+        'estimate_pickup_normal_hour',
+        'estimate_pickup_express_hour',
+        'estimate_delivery_normal_day',
+        'gst_percentage',
+      ];
+      const settingsResponse = await this.settingService.findAll(settingKeys);
+      const settings = settingsResponse.data;
+      const isExpress = createOrderDto.express_delivery_charges > 0;
+
+      const estimated_pickup_time = isExpress
+        ? addHours(
+            new Date(),
+            parseInt(settings['estimate_pickup_express_hour']),
+          )
+        : addHours(
+            new Date(),
+            parseInt(settings['estimate_pickup_normal_hour']),
+          );
+
+      const expressHour = createOrderDto.express_delivery_hour;
+      const normalDay = settings['estimate_delivery_normal_day'];
+
+      let deliveryDaysToAdd: any = '';
+
+      if (expressHour) {
+        deliveryDaysToAdd = isExpress
+          ? expressHour === ExpressDeliveryHour.HOURS_24
+            ? addHours(new Date(), 24)
+            : expressHour === ExpressDeliveryHour.HOURS_48
+              ? addHours(new Date(), 48)
+              : expressHour === ExpressDeliveryHour.HOURS_72
+                ? addHours(new Date(), 72)
+                : 0
+          : 0;
+      } else {
+        deliveryDaysToAdd = addDays(new Date(), Number(normalDay));
+      }
+
+      if (!address) {
+        throw new NotFoundException(
+          `Address with id ${createOrderDto.address_id} not found`,
+        );
+      }
+      const order = this.orderRepository.create({
+        ...createOrderDto,
+        user_id: user_id,
+        payment_type: createOrderDto.payment_type,
+        payment_status: createOrderDto.payment_status,
+        normal_delivery_charges: createOrderDto.normal_delivery_charges || 0,
+        express_delivery_charges: createOrderDto.express_delivery_charges || 0,
+        express_delivery_hour: createOrderDto.express_delivery_hour || 0,
+        sub_total: createOrderDto.sub_total,
+        address_id: createOrderDto.address_id,
+        address_details: address_details,
+        total: 0,
+        address_type: address_type,
+        branch_id: createOrderDto.branch_id,
+        estimated_pickup_time,
+        estimated_delivery_time: deliveryDaysToAdd,
+      });
+
+      const result = await this.orderRepository.save(order);
+
+      const orderDetail = {
+        ...result,
+        user: {
+          first_name: user.first_name,
+          last_name: user.last_name,
+          mobile_number: user.mobile_number,
+        },
+      };
+
+      return {
+        statusCode: 200,
+        message: 'Order details added successfully',
+        data: { orderDetail },
+      };
+    }
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
+
     await queryRunner.startTransaction();
 
     try {
@@ -163,43 +256,6 @@ export class OrderService {
           : 0;
       } else {
         deliveryDaysToAdd = addDays(new Date(), Number(normalDay));
-      }
-
-      if (Boolean(is_quick_order) === true) {
-        const order = this.orderRepository.create({
-          ...createOrderDto,
-          user_id: user_id,
-          payment_type: createOrderDto.payment_type,
-          payment_status: createOrderDto.payment_status,
-          normal_delivery_charges: createOrderDto.normal_delivery_charges || 0,
-          express_delivery_charges:
-            createOrderDto.express_delivery_charges || 0,
-          express_delivery_hour: createOrderDto.express_delivery_hour || 0,
-          sub_total: createOrderDto.sub_total,
-          address_id: createOrderDto.address_id,
-          address_details: address_details,
-          total: 0,
-          address_type: addess_type,
-          branch_id: createOrderDto.branch_id,
-          estimated_pickup_time,
-          estimated_delivery_time: deliveryDaysToAdd,
-        });
-
-        const result = await this.orderRepository.save(order);
-        const orderDetail = {
-          ...result,
-          user: {
-            first_name: user.first_name,
-            last_name: user.last_name,
-            mobile_number: user.mobile_number,
-          },
-        };
-
-        return {
-          statusCode: 200,
-          message: 'Order details added successfully',
-          data: { orderDetail },
-        };
       }
 
       const uniquePriceKeys = createOrderDto.items.map(
@@ -937,6 +993,9 @@ export class OrderService {
         await this.dataSource.manager.insert(OrderItem, orderItem);
       }
     }
+    const orders = await this.orderRepository.findOne({
+      where: { order_id },
+    });
 
     const orderLabel = await this.invoiceService.generateOrderLabels(order_id);
 
@@ -944,7 +1003,7 @@ export class OrderService {
       statusCode: 200,
       message: 'Order updated successfully',
       data: {
-        order: order,
+        order: orders,
         branch_id: updatedOrder.branch_id,
         total: updatedOrder.total,
         address_details: updatedOrder.address_details,
