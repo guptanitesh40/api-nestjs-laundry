@@ -130,7 +130,7 @@ export class OrderService {
       let deliveryDaysToAdd: any = '';
 
       if (expressHour) {
-        deliveryDaysToAdd = isExpress
+        deliveryDaysToAdd = expressHour
           ? expressHour === ExpressDeliveryHour.HOURS_24
             ? addHours(new Date(), 24)
             : expressHour === ExpressDeliveryHour.HOURS_48
@@ -1071,17 +1071,6 @@ export class OrderService {
           if (order.order_status !== OrderStatus.WORKSHOP_ASSIGNED) {
             throw new BadRequestException(
               'Cannot mark as Workshop Completed. Previous status must be Workshop In Process.',
-            );
-          }
-          break;
-
-        case OrderStatus.DELIVERED:
-          if (
-            order.order_status !==
-            OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
-          ) {
-            throw new BadRequestException(
-              'Cannot mark as Delivered. Previous status must be Delivery Boy Marks As Completed.',
             );
           }
           break;
@@ -2415,6 +2404,108 @@ export class OrderService {
       paid_amount: order.paid_amount,
       kasar_amount: order.kasar_amount,
       payment_status: order.payment_status,
+      pending_amount:
+        order.total -
+        order.paid_amount -
+        order.kasar_amount -
+        order.refund_amount,
+    }));
+
+    return {
+      statusCode: 200,
+      message: 'Payment applied successfully',
+      data: {
+        orders: updateOrders,
+      },
+    };
+  }
+
+  async payDueAmountOrders(ordersDto: OrdersDto): Promise<Response> {
+    const updatedOrders = [];
+
+    const orders_ids = ordersDto.orders.map((order) => order.order_id);
+    const user_ids = ordersDto.orders.map((order) => order.user_id);
+
+    const orderdata = await this.orderRepository.find({
+      where: {
+        order_id: In(orders_ids),
+        user_id: In(user_ids),
+      },
+    });
+
+    for (const orderData of ordersDto.orders) {
+      const order = orderdata.find(
+        (o) =>
+          o.order_id === orderData.order_id && o.user_id === orderData.user_id,
+      );
+
+      if (!order) {
+        throw new NotFoundException(
+          `Order with ID ${orderData.order_id} not found`,
+        );
+      }
+
+      order.order_status = orderData.order_status;
+
+      const dueAmount =
+        order.total -
+        order.paid_amount -
+        (order.kasar_amount || 0) -
+        (order.refund_amount || 0);
+
+      if (dueAmount <= 0) {
+        throw new BadRequestException(
+          `No pending due amount for order ${orderData.order_id}`,
+        );
+      }
+
+      if (order.refund_status === RefundStatus.FULL) {
+        throw new BadRequestException(
+          `This order ${orderData.order_id} is fully refunded`,
+        );
+      }
+
+      if (
+        orderData.payment_status === PaymentStatus.FULL_PAYMENT_RECEIVED &&
+        orderData.paid_amount +
+          (orderData.kasar_amount || 0) +
+          order.paid_amount !=
+          order.total
+      ) {
+        throw new BadRequestException(
+          `Total payment for this order is not matching with order ${order.order_id} total amount`,
+        );
+      }
+
+      if (
+        orderData.payment_status === PaymentStatus.PARTIAL_PAYMENT_RECEIVED &&
+        orderData.paid_amount +
+          (orderData.kasar_amount || 0) +
+          order.paid_amount >=
+          order.total
+      ) {
+        throw new BadRequestException(
+          `you can not pay more than total order amount as partial payment `,
+        );
+      }
+
+      order.paid_amount += orderData.paid_amount;
+      order.kasar_amount = orderData.kasar_amount;
+
+      order.payment_status = orderData.payment_status;
+
+      updatedOrders.push(order);
+    }
+
+    await this.orderRepository.save(updatedOrders);
+
+    const updateOrders = updatedOrders.map((order) => ({
+      order_id: order.order_id,
+      total_amount: order.total,
+      paid_amount: order.paid_amount,
+      kasar_amount: order.kasar_amount,
+      payment_status: order.payment_status,
+      order_status: order.order_status,
       pending_amount:
         order.total -
         order.paid_amount -

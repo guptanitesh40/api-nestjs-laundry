@@ -325,4 +325,12 @@ export class OrderController {
   ): Promise<Response> {
     return await this.orderService.payDueAmount(user_id, body);
   }
+
+  @Post('orders/payments/pay-due')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.SUPER_ADMIN)
+  async payDueAmountOrders(@Body() body: OrdersDto): Promise<Response> {
+    return await this.orderService.payDueAmountOrders(body);
+  }
 }
