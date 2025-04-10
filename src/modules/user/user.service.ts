@@ -305,7 +305,7 @@ export class UserService {
 
     const full_name = `${createUserDto.first_name} ${createUserDto.last_name}`;
 
-    const message = `Dear ${full_name}, Welcome to Sikka Cleaners! Your account has been successfully created , Your Password Is: ${createUserDto.password}. For security reasons, please do not share your password with anyone.`;
+    const message = `Dear ${full_name}, Welcome to Sikka Cleaners! Your account has been successfully created , Your Password Is: ${password}. For security reasons, please do not share your password with anyone.`;
 
     const baseUrl = process.env.VISION360_BASE_URL;
     const apiKey = process.env.VISION360_API_KEY;
