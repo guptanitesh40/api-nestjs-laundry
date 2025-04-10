@@ -97,7 +97,10 @@ export class OrderService {
       const address = await (
         await this.addressService.findOne(user_id, createOrderDto.address_id)
       ).data;
-      const address_details = `${address.building_number}, ${address.area}, ${address.city}, ${address.state}, ${address.country} - ${address.pincode}`;
+
+      const userAddress = address.result;
+
+      const address_details = `${userAddress.building_number}, ${userAddress.area}, ${userAddress.city}, ${userAddress.state}, ${userAddress.country} - ${userAddress.pincode}`;
 
       const address_type = address?.address_type || 1;
 
