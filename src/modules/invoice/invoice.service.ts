@@ -325,7 +325,7 @@ export class InvoiceService {
     const order = (await this.orderService.getOrderDetail(order_id)).data;
 
     if (!order) {
-      throw new NotFoundException(`Order with ID ${order.order_id} not found`);
+      throw new NotFoundException(`Order with ID ${order_id} not found`);
     }
 
     const logoPath = path.join(
@@ -340,47 +340,50 @@ export class InvoiceService {
 
     const customerName = `${order.user.first_name} ${order.user.last_name}`;
     const date = new Date(order.created_at).toLocaleDateString();
-    const items = order.items.flatMap((item) =>
-      Array.from({ length: item.quantity || 1 }, () => ({
-        serviceName: item.service?.name || 'Unknown Service',
-        productName: item.product?.name || 'Unknown Service',
-        remarks: item.description || 'No remarks provided',
-      })),
+
+    const templatePath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/templates/label-template.ejs',
     );
 
-    const data = {
-      logoUrl,
-      orderNumber: order.order_id,
-      date,
-      customerName,
-      items,
-      itemsQty: items.length,
-    };
+    const browser: Browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+      ],
+    });
 
-    try {
-      const templatePath = path.join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'src/templates/label-template.ejs',
-      );
+    const urls = [];
 
-      const browser: Browser = await puppeteer.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-        ],
-      });
+    for (let index = 0; index < order.items.length; index++) {
+      const item = order.items[index];
+
+      const service = item.service;
+      const serviceName = service.name;
+
+      const product = item.product;
+      const productName = product.name;
+      const data = {
+        logoUrl,
+        orderNumber: order.order_id,
+        date,
+        customerName,
+        items: [item],
+        itemsQty: item.quantity,
+        serviceName,
+        productName,
+        remarks: item.description,
+      };
 
       const htmlContent = await ejs.renderFile(templatePath, data);
 
       const page = await browser.newPage();
       await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
-
-      const bodyHeight = await page.evaluate(() => document.body.scrollHeight);
 
       const pdfBuffer = await page.pdf({
         printBackground: false,
@@ -390,26 +393,24 @@ export class InvoiceService {
           bottom: '0mm',
           left: '0mm',
         },
-        width: '57.4mm',
-        height: `${bodyHeight}px`,
+        width: '57.8mm',
+        height: `40.4mm`,
         preferCSSPageSize: true,
       });
 
-      await browser.close();
-
-      const orderLabel = getPdfUrl(order.order_id, getOrderLabelFileFileName());
+      const orderLabel = getPdfUrl(item.item_id, getOrderLabelFileFileName());
 
       const outputPath = join(process.cwd(), '', orderLabel.fileName);
       writeFileSync(outputPath, pdfBuffer);
 
-      const fileUrl = orderLabel.fileUrl;
+      urls.push(orderLabel.fileUrl);
 
-      return { url: fileUrl };
-    } catch (error) {
-      throw new BadRequestException(
-        `Failed to generate order labels: ${error.message}`,
-      );
+      await page.close();
     }
+
+    await browser.close();
+
+    return { urls };
   }
 
   async generatePriceListPDF(): Promise<any> {

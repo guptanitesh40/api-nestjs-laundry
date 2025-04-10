@@ -17,6 +17,12 @@ export class OrderDto {
   @IsOptional()
   @IsNumber()
   kasar_amount: number;
+
+  @IsOptional()
+  order_status: number;
+
+  @IsOptional()
+  user_id: number;
 }
 
 export class OrdersDto {

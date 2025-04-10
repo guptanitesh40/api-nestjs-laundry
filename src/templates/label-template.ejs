@@ -19,7 +19,7 @@
       text-align: center;
       border: 1px solid #000;
       font-size: 10px;
-      margin: 0;
+      margin: 2;
       padding: 0;
     }
 
@@ -58,12 +58,12 @@
         </div>
         <div class="details" style="font-size: 12px;  font-weight: bold;">Customer: <%= customerName %>.
         </div>
-        <div class="details">Item: <%= item.productName %> (<%= index + 1 %>/<%= items.length %>) ,  QTY : <%= itemsQty %>
+        <div class="details">Item: <%= productName %> (<%= index + 1 %>/<%= items.length %>) ,  QTY : <%= itemsQty %>
         </div>
-        <div class="details">Service: <%= item.serviceName %>
+        <div class="details">Service: <%= serviceName %>
         </div>
-        <% if (item.remarks) { %>
-          <div class="remarks">Remarks: <%= item.remarks %>
+        <% if (remarks) { %>
+          <div class="remarks">Remarks: <%= remarks %>
           </div>
           <% } %>
       </div>
