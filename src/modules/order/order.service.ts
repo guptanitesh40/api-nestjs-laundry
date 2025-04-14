@@ -112,9 +112,10 @@ export class OrderService {
       ];
       const settingsResponse = await this.settingService.findAll(settingKeys);
       const settings = settingsResponse.data;
-      const isExpress = createOrderDto.express_delivery_charges > 0;
 
-      const estimated_pickup_time = isExpress
+      const expressHour = createOrderDto.express_delivery_hour;
+
+      const estimated_pickup_time = expressHour
         ? addHours(
             new Date(),
             parseInt(settings['estimate_pickup_express_hour']),
@@ -124,7 +125,6 @@ export class OrderService {
             parseInt(settings['estimate_pickup_normal_hour']),
           );
 
-      const expressHour = createOrderDto.express_delivery_hour;
       const normalDay = settings['estimate_delivery_normal_day'];
 
       let deliveryDaysToAdd: any = '';
@@ -518,6 +518,7 @@ export class OrderService {
         'user.mobile_number',
         'user.email',
         'items.item_id',
+        'items.quantity',
         'category.category_id',
         'category.name',
         'product.product_id',
@@ -2447,18 +2448,6 @@ export class OrderService {
 
       order.order_status = orderData.order_status;
 
-      const dueAmount =
-        order.total -
-        order.paid_amount -
-        (order.kasar_amount || 0) -
-        (order.refund_amount || 0);
-
-      if (dueAmount <= 0) {
-        throw new BadRequestException(
-          `No pending due amount for order ${orderData.order_id}`,
-        );
-      }
-
       if (order.refund_status === RefundStatus.FULL) {
         throw new BadRequestException(
           `This order ${orderData.order_id} is fully refunded`,
@@ -2474,18 +2463,6 @@ export class OrderService {
       ) {
         throw new BadRequestException(
           `Total payment for this order is not matching with order ${order.order_id} total amount`,
-        );
-      }
-
-      if (
-        orderData.payment_status === PaymentStatus.PARTIAL_PAYMENT_RECEIVED &&
-        orderData.paid_amount +
-          (orderData.kasar_amount || 0) +
-          order.paid_amount >=
-          order.total
-      ) {
-        throw new BadRequestException(
-          `you can not pay more than total order amount as partial payment `,
         );
       }
 
