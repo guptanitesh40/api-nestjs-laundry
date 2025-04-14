@@ -851,10 +851,10 @@ export class OrderService {
 
     orders.order_status_details = getOrderStatusDetails(orders);
 
-    orders.order_label = getPdfUrl(
-      orders.order_id,
-      getOrderLabelFileFileName(),
-    );
+    orders.order_label = orders.items.map((i) => {
+      const orderLabel = getPdfUrl(i.item_id, getOrderLabelFileFileName());
+      return orderLabel.fileUrl;
+    });
 
     if (orders.total > orders.paid_amount) {
       orders.pending_due_amount =
@@ -2444,6 +2444,10 @@ export class OrderService {
         throw new NotFoundException(
           `Order with ID ${orderData.order_id} not found`,
         );
+      }
+
+      if (order.order_status === OrderStatus.DELIVERED) {
+        continue;
       }
 
       order.order_status = orderData.order_status;

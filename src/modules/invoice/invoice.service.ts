@@ -189,6 +189,15 @@ export class InvoiceService {
       (orderData.kasar_amount || 0) -
       (orderData.refund_amount || 0);
 
+    const dueOrder = await this.orderService.pendingDueAmount(
+      orderData.user_id,
+    );
+
+    const totalPendingDue =
+      dueOrder.data.totalPendingAmount - pendingDueAmount || 0;
+
+    const totalDue = totalAmount + totalPendingDue - paidAmount;
+
     const gst = orderData.gst ? parseFloat(orderData.gst.toString()) : 0;
 
     const invoiceData = {
@@ -221,6 +230,8 @@ export class InvoiceService {
       branchMobileNumber,
       totalInWords: numberToWords(totalAmount),
       logoUrl,
+      totalPendingDue,
+      totalDue,
     };
 
     return ejs.render(html, { invoice: invoiceData });
@@ -386,14 +397,14 @@ export class InvoiceService {
       await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
 
       const pdfBuffer = await page.pdf({
-        printBackground: false,
+        printBackground: true,
         margin: {
           top: '0mm',
           right: '0mm',
           bottom: '0mm',
           left: '0mm',
         },
-        width: '48mm',
+        width: '50mm',
         height: `32.4mm`,
         preferCSSPageSize: true,
       });

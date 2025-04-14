@@ -298,13 +298,13 @@
             <div class="summary-section" style="width: 38%;">
                 <div class="totals">
                     <% if (invoice.normalDeliveryCharges> 0) { %>
-                        <p style="font-size: 10px;"><span>Normal Delivery Charge:</span><span>
+                        <p style="font-size: 10px;"><span>Normal Delivery Charge:</span><span>+</span><span>
                                 <%= invoice.normalDeliveryCharges.toFixed(2) %>
                             </span></p>
                         <% } %>
 
                             <% if (invoice.expressDeliveryCharges> 0) { %>
-                                <p style="font-size: 10px;"><span>Express Delivery Charge:</span><span>
+                                <p style="font-size: 10px;"><span>Express Delivery Charge:</span><span>+</span><span>
                                         <%= invoice.expressDeliveryCharges.toFixed(2) %>
                                     </span></p>
                                 <% } %>
@@ -320,24 +320,24 @@
                                                 </span></p>
 
                                             <% if (invoice.discount> 0) { %>
-                                                <p style="font-size: 10px;"><span>Discount Amount:</span><span>
+                                                <p style="font-size: 10px;"><span>Discount Amount:</span><span>-</span><span>
                                                         <%= invoice.discount.toFixed(2) %>
                                                     </span></p>
                                                 <% } %>
 
                                                     <p style="font-size: 10px;"><span>Current Bill Amount:</span><span>
-                                                            <%= invoice. subTotal.toFixed(2) %>
+                                                            <%= invoice.totalAmount.toFixed(2) %>
                                                         </span></p>
                                                     <p style="font-size: 10px;"><span style="color: green;">Advance Paid
-                                                            Amount:</span><span style="color: green;">
+                                                            Amount:</span><span>-</span><span style="color: green;">
                                                             <%= invoice.paidAmount.toFixed(2) %>
                                                         </span></p>
                                                     <p style="font-size: 10px;"> <span style="color: red;">Previous Due
-                                                            Amount:</span><span style="color: red;">
-                                                            <%= invoice.pendingDueAmount.toFixed(2) %>
+                                                            Amount:</span><span>+</span><span style="color: red;">
+                                                            <%= invoice.totalPendingDue.toFixed(2) %>
                                                         </span></p>
                                                     <p style="font-size: 10px;"> <span>Total Amount:</span><span>
-                                                            <%= invoice.totalAmount.toFixed(2) %>
+                                                            <%= invoice.totalDue.toFixed(2) %>
                                                         </span></p>
                 </div>
             </div>
