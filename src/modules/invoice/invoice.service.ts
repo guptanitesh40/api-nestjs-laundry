@@ -393,8 +393,8 @@ export class InvoiceService {
           bottom: '0mm',
           left: '0mm',
         },
-        width: '57.8mm',
-        height: `40.4mm`,
+        width: '48mm',
+        height: `32.4mm`,
         preferCSSPageSize: true,
       });
 
