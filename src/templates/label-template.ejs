@@ -13,7 +13,7 @@
     }
 
     .label {
-      width: 48mm;
+      width: 50mm;
       height: 32mm;
       text-align: center;
       border: 1px solid #000;
@@ -55,7 +55,10 @@
         <div class="company-name">SIKKA CLEANERS</div>
         <div class="order-number">Order #: <%= orderNumber %>
         </div>
+       
         <div class="details" style="font-size: 12px;  font-weight: bold;">Customer: <%= customerName %>.
+        </div>
+        <div class="date">Date : <%= date %>
         </div>
         <div class="details">Item: <%= productName %> (<%= index + 1 %>/<%= items.length %>) ,  QTY : <%= itemsQty %>
         </div>
