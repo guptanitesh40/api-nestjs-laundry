@@ -350,7 +350,9 @@ export class InvoiceService {
     const logoUrl = `data:image/png;base64,${logoBase64}`;
 
     const customerName = `${order.user.first_name} ${order.user.last_name}`;
-    const date = new Date(order.created_at).toLocaleDateString();
+    const date = order.confirm_date
+      ? new Date(order.confirm_date).toLocaleDateString()
+      : '';
 
     const templatePath = path.join(
       __dirname,
@@ -405,7 +407,7 @@ export class InvoiceService {
           left: '0mm',
         },
         width: '50mm',
-        height: `32.4mm`,
+        height: `36mm`,
         preferCSSPageSize: true,
       });
 
