@@ -567,6 +567,7 @@ export class OrderService {
         queryBuilder.andWhere('order.order_status IN (:...orderStatus)', {
           orderStatus: [
             OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
+            OrderStatus.ORDER_COMPLETED_AND_RECEIVED_AT_BRANCH,
             OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
           ],
         });
@@ -1089,6 +1090,10 @@ export class OrderService {
       }
 
       order.order_status = order_status;
+
+      if (order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
+        order.confirm_date = new Date();
+      }
     }
 
     await this.orderRepository.save(orders);
@@ -1097,6 +1102,9 @@ export class OrderService {
     const deviceTokens = await this.userService.getDeviceTokens(userIds);
 
     const notifications = orders.map(async (order) => {
+      if (order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
+        await this.invoiceService.generateOrderLabels(order.order_id);
+      }
       const deviceToken = deviceTokens.find(
         (token) => token.user_id === order.user_id,
       )?.device_token;
@@ -2029,11 +2037,15 @@ export class OrderService {
     }
 
     order.order_status = status;
+    if (status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
+      order.confirm_date = new Date();
+    }
     order.order_status_details = getOrderStatusDetails(order);
     await this.orderRepository.save(order);
 
     const deviceToken = await this.userService.getDeviceToken(order.user_id);
     if (order.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
+      await this.invoiceService.generateOrderLabels(order_id);
       if (deviceToken) {
         await this.notificationService.sendPushNotification(
           customerApp,

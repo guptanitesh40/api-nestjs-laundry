@@ -174,4 +174,8 @@ export class Order extends BaseEntity {
   @Column({ type: 'int', nullable: true })
   @IsOptional()
   delivery_by: DeliveryBy;
+
+  @Column({ type: 'date', nullable: true })
+  @IsOptional()
+  confirm_date: Date;
 }
