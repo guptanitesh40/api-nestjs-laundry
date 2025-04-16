@@ -25,7 +25,7 @@ export class NullTransformInterceptor implements NestInterceptor {
       'express_delivery_hour',
     ];
 
-    const nullKeys = ['next_step', 'feedback', 'data'];
+    const nullKeys = ['next_step', 'feedback', 'data', 'userBranchMappings'];
 
     if (Array.isArray(data)) {
       return data.map((item) => this.transform(item));
