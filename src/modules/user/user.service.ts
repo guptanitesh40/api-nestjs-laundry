@@ -1049,26 +1049,31 @@ export class UserService {
     };
   }
 
-  async findUserById(userId: number): Promise<User> {
-    return this.userRepository.findOne({
-      where: { user_id: userId },
-      select: [
-        'user_id',
-        'role_id',
-        'first_name',
-        'last_name',
-        'email',
-        'mobile_number',
-        'gender',
-        'image',
-        'id_proof',
-      ],
-    });
+  async findUserById(user_id: number): Promise<any> {
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.userBranchMappings', 'userBranchMappings')
+      .select([
+        'user.user_id',
+        'user.role_id',
+        'user.first_name',
+        'user.last_name',
+        'user.email',
+        'user.mobile_number',
+        'user.gender',
+        'user.image',
+        'user.id_proof',
+        'userBranchMappings.branch_id',
+      ])
+      .where('user.user_id = :userId', { userId: user_id })
+      .getOne();
+
+    return user;
   }
 
-  async findUsersByIds(userIds: number[]): Promise<User[]> {
+  async findUsersByIds(user_id: number[]): Promise<User[]> {
     return this.userRepository.find({
-      where: { user_id: In(userIds) },
+      where: { user_id: In(user_id) },
       select: [
         'user_id',
         'role_id',
