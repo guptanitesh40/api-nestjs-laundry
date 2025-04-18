@@ -28,7 +28,6 @@ import { OrderFilterDto } from '../dto/orders-filter.dto';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { ClearDueAmount } from './dto/clear-due-amount.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { DeliveryOrderDto } from './dto/delivery-order.dto';
 import { OrdersDto } from './dto/pay-due-amount.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
@@ -246,17 +245,17 @@ export class OrderController {
   async deliveryComplete(
     @Param('order_id') order_id: number,
     @Request() req,
-    @Body() deliveryOrderDto: DeliveryOrderDto,
-    @UploadedFiles() files: Express.Multer.File[],
+    @Body('deliveryNote') deliveryNote?: string,
+    @UploadedFiles() files?: Express.Multer.File[],
   ): Promise<Response> {
     const user = req.user;
-    const imagePaths = files.map(
-      (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
-    );
+    const imagePaths =
+      files?.map((file) => `${FilePath.NOTE_IMAGES}/${file.filename}`) || [];
+
     return this.orderService.deliveryComplete(
       order_id,
       user.user_id,
-      deliveryOrderDto,
+      deliveryNote,
       imagePaths,
     );
   }
@@ -269,18 +268,18 @@ export class OrderController {
   async pickupComplete(
     @Param('order_id') order_id: number,
     @Request() req,
-    @Body() deliveryOrderDto: DeliveryOrderDto,
-    @UploadedFiles() files: Express.Multer.File[],
+    @Body('deliveryNote') deliveryNote?: string | '',
+    @UploadedFiles() files?: Express.Multer.File[],
   ): Promise<Response> {
     const user = req.user;
-    const imagePaths = files.map(
-      (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
-    );
+
+    const imagePaths =
+      files?.map((file) => `${FilePath.NOTE_IMAGES}/${file.filename}`) || [];
 
     return this.orderService.pickupComplete(
       order_id,
       user.user_id,
-      deliveryOrderDto,
+      deliveryNote,
       imagePaths,
     );
   }

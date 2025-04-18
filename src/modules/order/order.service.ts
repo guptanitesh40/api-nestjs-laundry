@@ -57,7 +57,6 @@ import { WorkshopService } from '../workshop/workshop.service';
 import { CancelOrderDto } from './dto/cancel-order.dto';
 import { ClearDueAmount } from './dto/clear-due-amount.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { DeliveryOrderDto } from './dto/delivery-order.dto';
 import { OrdersDto } from './dto/pay-due-amount.dto';
 import { RefundOrderDto } from './dto/refund-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
@@ -1660,9 +1659,9 @@ export class OrderService {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'items')
-      .leftJoinAndSelect('order.user', 'user')
+      .innerJoinAndSelect('order.user', 'user')
       .leftJoinAndSelect('user.carts', 'cart')
-      .leftJoinAndSelect('order.address', 'address')
+      .innerJoinAndSelect('order.address', 'address')
       .innerJoinAndSelect('order.branch', 'branch')
       .where(
         '(order.order_status != :excludedPickupStatus AND order.order_status != :excludedDeliveryStatus)',
@@ -1948,13 +1947,13 @@ export class OrderService {
   async deliveryComplete(
     order_id: number,
     user_id: number,
-    deliveryOrderDto: DeliveryOrderDto,
+    deliveryNote: string,
     imagePaths: string[],
   ): Promise<Response> {
     return this.updateOrderPickupAndDeliveryStatus(
       order_id,
       user_id,
-      deliveryOrderDto,
+      deliveryNote,
       imagePaths,
       OrderStatus.DELIVERED,
       'Order delivery confirmed successfully',
@@ -1964,13 +1963,13 @@ export class OrderService {
   async pickupComplete(
     order_id: number,
     user_id: number,
-    deliveryOrderDto: DeliveryOrderDto,
-    imagePaths: string[],
+    deliveryNote?: string,
+    imagePaths?: string[],
   ): Promise<Response> {
     return this.updateOrderPickupAndDeliveryStatus(
       order_id,
       user_id,
-      deliveryOrderDto,
+      deliveryNote,
       imagePaths,
       OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
       'Order Pickup Confirmed successfully',
@@ -2023,7 +2022,7 @@ export class OrderService {
   async updateOrderPickupAndDeliveryStatus(
     order_id: number,
     user_id: number,
-    deliveryOrderDto: DeliveryOrderDto,
+    deliveryNote: string,
     imagePaths: string[],
     status: OrderStatus,
     statusMessage: string,
@@ -2066,15 +2065,18 @@ export class OrderService {
         );
       }
     }
+    let note = null;
 
-    const noteDto: CreateNoteDto = {
-      user_id,
-      order_id,
-      text_note: deliveryOrderDto.deliveryNote,
-      images: deliveryOrderDto.images,
-    };
+    if (deliveryNote) {
+      const noteDto: CreateNoteDto = {
+        user_id,
+        order_id,
+        text_note: deliveryNote || '',
+        images: imagePaths,
+      };
 
-    const note = await this.notesService.create(noteDto, imagePaths);
+      note = (await this.notesService.create(noteDto, imagePaths)).data.result;
+    }
 
     return {
       statusCode: 200,
