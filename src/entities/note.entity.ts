@@ -29,7 +29,7 @@ export class Note extends BaseEntity {
   @Column()
   user_id: number;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   text_note: string;
 
   @Column({ type: 'simple-array', nullable: true })
