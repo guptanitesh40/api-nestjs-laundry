@@ -2079,7 +2079,6 @@ export class OrderService {
         );
       }
     }
-    let note = null;
 
     if (deliveryNote) {
       const noteDto: CreateNoteDto = {
@@ -2089,13 +2088,15 @@ export class OrderService {
         images: imagePaths,
       };
 
-      note = (await this.notesService.create(noteDto, imagePaths)).data.result;
+      (await this.notesService.create(noteDto, imagePaths)).data.result;
     }
 
     return {
       statusCode: 200,
       message: statusMessage,
-      data: { order, note },
+      data: {
+        order,
+      },
     };
   }
 
