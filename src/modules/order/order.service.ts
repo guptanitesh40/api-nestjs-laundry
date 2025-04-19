@@ -1660,7 +1660,6 @@ export class OrderService {
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'items')
       .innerJoinAndSelect('order.user', 'user')
-      .leftJoinAndSelect('user.carts', 'cart')
       .innerJoinAndSelect('order.address', 'address')
       .innerJoinAndSelect('order.branch', 'branch')
       .where(
@@ -1682,11 +1681,17 @@ export class OrderService {
         'order.delivery_boy_id',
         'order.pickup_boy_id',
         'order.order_status',
+        'order.payment_type',
+        'order.payment_status',
+        'order.transaction_id',
+        'order.total',
+        'order.paid_amount',
+        'order.kasar_amount',
         'user.user_id',
         'user.first_name',
         'user.last_name',
         'user.mobile_number',
-        'cart',
+        'items',
         'order.address_details',
         'COUNT(items.item_id) AS total_item',
         'order.estimated_pickup_time AS estimated_pickup_time_hour',
@@ -1695,7 +1700,11 @@ export class OrderService {
         'branch.branch_name',
         'branch.branch_address',
       ])
-      .groupBy('order.order_id, user.user_id,cart.cart_id');
+      .addSelect(
+        'order.total - order.paid_amount - order.kasar_amount',
+        'pending_amount',
+      )
+      .groupBy('order.order_id,items.item_id, user.user_id');
 
     if (assignTo === AssignTo.DELIVERY) {
       queryBuilder.andWhere('order.delivery_boy_id = :deliveryBoyId', {
@@ -1718,11 +1727,16 @@ export class OrderService {
 
     const ordersWithAssignedDeliveryBoys = await queryBuilder.getMany();
 
+    const result = ordersWithAssignedDeliveryBoys.map((order) => ({
+      ...order,
+      pending_amount: order.total - order.paid_amount - order.kasar_amount,
+    }));
+
     return {
       statusCode: 200,
       message:
         'Orders with assigned delivery boys or pickup boys retrieved successfully',
-      data: ordersWithAssignedDeliveryBoys,
+      data: result,
     };
   }
 
