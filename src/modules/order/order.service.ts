@@ -2013,7 +2013,7 @@ export class OrderService {
       text_note: notes,
     };
 
-    const note = await this.notesService.create(noteDto);
+    await this.notesService.create(noteDto);
 
     const deviceToken = await this.userService.getDeviceToken(order.user_id);
 
@@ -2029,7 +2029,7 @@ export class OrderService {
     return {
       statusCode: 200,
       message: 'Order payment successfully received',
-      data: { order, note },
+      data: { order },
     };
   }
 
