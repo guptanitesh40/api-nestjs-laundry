@@ -19,6 +19,7 @@ export class NullTransformInterceptor implements NestInterceptor {
       'commission_percentage',
       'security_deposit',
       'delivery_boy_id',
+      'delivery_by',
       'pickup_boy_id',
       'branch_id',
       'express_delivery_charges',
