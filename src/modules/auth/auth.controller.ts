@@ -56,7 +56,7 @@ export class AuthController {
   @Post('logout')
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
-  @Roles(Role.CUSTOMER)
+  @Roles(Role.CUSTOMER, Role.DELIVERY_BOY_AND_PICKUP_BOY)
   async logout(@Request() req): Promise<Response> {
     const user = req.user;
     return this.userService.logout(user.user_id);
