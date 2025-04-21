@@ -16,6 +16,11 @@ export const getOrderLabelFileFileName = () => {
   return file_name;
 };
 
+export const getGeneralOrderLabelFileFileName = () => {
+  const file_name = 'order_general_label_';
+  return file_name;
+};
+
 export const getOrderInvoiceFileFileName = () => {
   const file_name = 'invoice_';
   return file_name;

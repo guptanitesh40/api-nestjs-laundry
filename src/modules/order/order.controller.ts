@@ -56,6 +56,20 @@ export class OrderController {
     );
   }
 
+  @Get('orders/delivery-pickup')
+  @Roles(Role.DELIVERY_BOY_AND_PICKUP_BOY)
+  async getDeliverAndPickupOrder(
+    @Request() req,
+    @Query() paginationQuery: PaginationQueryDto,
+  ): Promise<any> {
+    const user = req.user;
+
+    return await this.orderService.getDeliverAndPickupOrder(
+      user.user_id,
+      paginationQuery,
+    );
+  }
+
   @Get('orders/invoice-list')
   @Roles(Role.CUSTOMER)
   async getOrderInvoiceList(

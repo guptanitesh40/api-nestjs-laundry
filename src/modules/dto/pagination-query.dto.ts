@@ -23,4 +23,13 @@ export class PaginationQueryDto {
   @IsOptional()
   @IsIn(['ASC', 'DESC'])
   order?: 'ASC' | 'DESC';
+
+  @IsOptional()
+  start_date?: string;
+
+  @IsOptional()
+  end_date?: string;
+
+  @IsOptional()
+  customer_name?: string;
 }

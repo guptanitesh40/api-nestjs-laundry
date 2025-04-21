@@ -33,6 +33,7 @@ import {
   getWorkshopOrdersStatusLabel,
 } from 'src/utils/order-status.helper';
 import {
+  getGeneralOrderLabelFileFileName,
   getOrderInvoiceFileFileName,
   getOrderLabelFileFileName,
   getPdfUrl,
@@ -321,6 +322,12 @@ export class OrderService {
         );
       }
 
+      if (
+        createOrderDto.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH
+      ) {
+        createOrderDto.confirm_date = new Date();
+      }
+
       const order = this.orderRepository.create({
         ...createOrderDto,
         normal_delivery_charges: createOrderDto.normal_delivery_charges || 0,
@@ -405,6 +412,7 @@ export class OrderService {
         total_items: orderItems.length,
         branch_id: savedOrder.branch_id,
         transaction_id: savedOrder.transaction_id || '',
+        confirm_date: createOrderDto.confirm_date,
         items: orderItems,
         user: {
           first_name: user.first_name,
@@ -426,16 +434,15 @@ export class OrderService {
 
       await queryRunner.commitTransaction();
 
-      const itemsLabel = await this.invoiceService.generateOrderLabels(
-        orderDetail.order_id,
-      );
+      await this.invoiceService.generateOrderLabels(orderDetail.order_id);
+
+      await this.invoiceService.generateGeneralOrderLabel(orderDetail);
 
       return {
         statusCode: 200,
         message: 'Order details added successfully',
         data: {
           orderDetail,
-          itemsLabel,
         },
       };
     } catch (error) {
@@ -855,6 +862,11 @@ export class OrderService {
       const orderLabel = getPdfUrl(i.item_id, getOrderLabelFileFileName());
       return orderLabel.fileUrl;
     });
+
+    orders.general_order_label = getPdfUrl(
+      order_id,
+      getGeneralOrderLabelFileFileName(),
+    ).fileUrl;
 
     if (orders.total > orders.paid_amount) {
       orders.pending_due_amount =
@@ -1737,6 +1749,109 @@ export class OrderService {
       message:
         'Orders with assigned delivery boys or pickup boys retrieved successfully',
       data: result,
+    };
+  }
+
+  async getDeliverAndPickupOrder(
+    assign_id: number,
+    paginationQueryDto: PaginationQueryDto,
+  ): Promise<any> {
+    const { start_date, end_date, per_page, page_number, customer_name } =
+      paginationQueryDto;
+
+    const pageNumber = page_number ?? 1;
+
+    const perPage = per_page ?? 10;
+    const skip = (pageNumber - 1) * perPage;
+
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.items', 'items')
+      .innerJoinAndSelect('order.user', 'user')
+      .innerJoinAndSelect('order.address', 'address')
+      .innerJoinAndSelect('order.branch', 'branch')
+      .where(
+        '(order.order_status != :excludedPickupStatus AND order.order_status != :excludedDeliveryStatus)',
+        {
+          excludedPickupStatus: OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
+          excludedDeliveryStatus: OrderStatus.DELIVERED,
+        },
+      )
+      .andWhere(
+        'order.delivery_boy_id = :deliveryId OR order.pickup_boy_id = :deliveryId',
+        { deliveryId: assign_id },
+      )
+      .andWhere('order.order_status IN(:...deliveredStatus)', {
+        deliveredStatus: [
+          OrderStatus.ASSIGNED_PICKUP_BOY,
+          OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+        ],
+      })
+      .select([
+        'order.order_id',
+        'order.delivery_boy_id',
+        'order.pickup_boy_id',
+        'order.order_status',
+        'order.payment_type',
+        'order.payment_status',
+        'order.transaction_id',
+        'order.created_at',
+        'order.total',
+        'order.paid_amount',
+        'order.kasar_amount',
+        'user.user_id',
+        'user.first_name',
+        'user.last_name',
+        'user.mobile_number',
+        'items',
+        'order.address_details',
+        'COUNT(items.item_id) AS total_item',
+        'order.estimated_pickup_time AS estimated_pickup_time_hour',
+        'address',
+        'branch.branch_id',
+        'branch.branch_name',
+        'branch.branch_address',
+      ])
+      .addSelect(
+        'order.total - order.paid_amount - order.kasar_amount',
+        'pending_amount',
+      )
+      .groupBy('order.order_id,items.item_id')
+      .take(perPage)
+      .skip(skip);
+
+    if (start_date && end_date) {
+      queryBuilder.andWhere(
+        'order.created_at BETWEEN :startDate AND :endDate',
+        { startDate: start_date, endDate: end_date },
+      );
+    }
+
+    queryBuilder.orderBy('order.created_at', 'DESC');
+
+    const [ordersWithAssignedDeliveryBoys, total] =
+      await queryBuilder.getManyAndCount();
+    const result = ordersWithAssignedDeliveryBoys.map((order) => ({
+      ...order,
+      pending_amount: order.total - order.paid_amount - order.kasar_amount,
+    }));
+
+    const user = await (
+      await this.userService.getAllUsersByRole(Role.CUSTOMER, customer_name)
+    ).data;
+
+    return {
+      statusCode: 200,
+      message:
+        'Orders retrived successfully with assigned delivery boys or pickup boys',
+      data: {
+        result,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+        user,
+      },
     };
   }
 

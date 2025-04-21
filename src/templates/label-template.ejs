@@ -53,16 +53,17 @@
       <div class="label">
         <img src="<%= logoUrl %>" alt="Company Logo" class="logo">
         <div class="company-name">SIKKA CLEANERS</div>
+        <% if (date) { %>
+          <div class="date">Date : <%= date %>
+          </div>
+          <% } %>
         <div class="order-number">Order #: <%= orderNumber %>
         </div>
        
         <div class="details" style="font-size: 12px;  font-weight: bold;">Customer: <%= customerName %>.
         </div>
-        <% if (date) { %>
-        <div class="date">Date : <%= date %>
-        </div>
-        <% } %>
-        <div class="details">Item: <%= productName %> (<%= index + 1 %>/<%= items.length %>) ,  QTY : <%= itemsQty %>
+       
+        <div class="details">Item: <%= productName %> (<%= index + 1 %>/<%= itemsLegth %>) ,  QTY : <%= itemsQty %>
         </div>
         <div class="details">Service: <%= serviceName %>
         </div>

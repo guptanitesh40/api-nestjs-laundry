@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Label</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .label {
+      width: 50mm;
+      height: 30mm;
+      text-align: center;
+      border: 1px solid #000;
+      font-size: 10px;
+      /* padding: 5px; */
+    }
+
+    .logo {
+      height: 30px;
+      width: 30px;
+      display: inline-block;
+      object-fit: contain;
+    }
+
+    .company-name {
+      font-weight: bold;
+      font-size: 12px;
+    }
+
+    .details {
+      font-size: 10px;
+      line-height: 1.4;
+      /* margin-top: 5px; */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="label">
+    <img src="<%= logoUrl %>" alt="Company Logo" class="logo">
+    <div class="company-name">SIKKA CLEANERS</div>
+    <% if (date) { %>
+      <div class="details">Date: <%= date %></div>
+    <% } %>
+    <div class="details" style=" font-weight: bold;
+      font-size: 12px;">Order #: <%= orderNumber %></div>
+    <div class="details" style=" font-weight: bold;
+      font-size: 12px;">Customer: <%= customerName %></div>
+    <div class="details">Total Quantity: <%= totalQuantity %></div>
+  </div>
+</body>
+
+</html>
