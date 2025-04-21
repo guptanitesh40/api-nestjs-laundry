@@ -95,6 +95,9 @@ export class CreateOrderDto {
 
   @IsOptional()
   delivery_by?: DeliveryBy;
+
+  @IsOptional()
+  confirm_date?: Date;
 }
 
 export class OrderItemDto {

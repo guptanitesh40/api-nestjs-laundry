@@ -15,6 +15,7 @@ import { RefundStatus } from 'src/enum/refund_status.enum';
 import { customerApp } from 'src/firebase.config';
 import numberToWords from 'src/utils/numberToWords';
 import {
+  getGeneralOrderLabelFileFileName,
   getOrderInvoiceFileFileName,
   getOrderLabelFileFileName,
   getPdfUrl,
@@ -391,6 +392,7 @@ export class InvoiceService {
         serviceName,
         productName,
         remarks: item.description,
+        itemsLegth: order.items.length,
       };
 
       const htmlContent = await ejs.renderFile(templatePath, data);
@@ -420,6 +422,93 @@ export class InvoiceService {
 
       await page.close();
     }
+
+    await browser.close();
+
+    return { urls };
+  }
+
+  async generateGeneralOrderLabel(order: any): Promise<any> {
+    if (!order) {
+      throw new NotFoundException(`Order with ID not found`);
+    }
+
+    const logoPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/logo/logo.png',
+    );
+    const logoBase64 = fs.readFileSync(logoPath, 'base64');
+    const logoUrl = `data:image/png;base64,${logoBase64}`;
+
+    const customerName = `${order.user.first_name} ${order.user.last_name}`;
+    const date = order.confirm_date
+      ? new Date(order.confirm_date).toLocaleDateString()
+      : '';
+
+    const templatePath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/templates/general-label-template.ejs',
+    );
+
+    const browser: Browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+      ],
+    });
+
+    const urls = [];
+
+    const itemQuantity = order.items.reduce(
+      (acc, cur) => acc + cur.quantity || 0,
+      0,
+    );
+
+    const data = {
+      logoUrl,
+      orderNumber: order.order_id,
+      date,
+      customerName,
+      totalQuantity: itemQuantity,
+    };
+
+    const htmlContent = await ejs.renderFile(templatePath, data);
+
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
+
+    const pdfBuffer = await page.pdf({
+      printBackground: true,
+      margin: {
+        top: '0mm',
+        right: '0mm',
+        bottom: '0mm',
+        left: '0mm',
+      },
+      width: '50mm',
+      height: `30mm`,
+      preferCSSPageSize: true,
+    });
+
+    const orderLabel = getPdfUrl(
+      order.order_id,
+      getGeneralOrderLabelFileFileName(),
+    );
+
+    const outputPath = join(process.cwd(), '', orderLabel.fileName);
+    writeFileSync(outputPath, pdfBuffer);
+
+    urls.push(orderLabel.fileUrl);
+
+    await page.close();
 
     await browser.close();
 
