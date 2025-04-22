@@ -24,6 +24,7 @@ export class NullTransformInterceptor implements NestInterceptor {
       'branch_id',
       'express_delivery_charges',
       'express_delivery_hour',
+      'gst',
     ];
 
     const nullKeys = [
