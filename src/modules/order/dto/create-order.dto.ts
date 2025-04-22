@@ -98,6 +98,9 @@ export class CreateOrderDto {
 
   @IsOptional()
   confirm_date?: Date;
+
+  @IsOptional()
+  gstin: string;
 }
 
 export class OrderItemDto {
