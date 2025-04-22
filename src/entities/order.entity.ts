@@ -178,4 +178,8 @@ export class Order extends BaseEntity {
   @Column({ type: 'date', nullable: true })
   @IsOptional()
   confirm_date: Date;
+
+  @Column({ nullable: true })
+  @IsOptional()
+  gstin: string;
 }

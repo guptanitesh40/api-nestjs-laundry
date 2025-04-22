@@ -1674,6 +1674,7 @@ export class OrderService {
       .innerJoinAndSelect('order.user', 'user')
       .innerJoinAndSelect('order.address', 'address')
       .innerJoinAndSelect('order.branch', 'branch')
+      .innerJoinAndSelect('branch.branchManager', 'branchManager')
       .where(
         '(order.order_status != :excludedPickupStatus AND order.order_status != :excludedDeliveryStatus)',
         {
@@ -1711,6 +1712,12 @@ export class OrderService {
         'branch.branch_id',
         'branch.branch_name',
         'branch.branch_address',
+        'branch.branch_manager_id',
+        'branchManager.user_id',
+        'branchManager.first_name',
+        'branchManager.last_name',
+        'branchManager.mobile_number',
+        'branchManager.email',
       ])
       .addSelect(
         'order.total - order.paid_amount - order.kasar_amount',
