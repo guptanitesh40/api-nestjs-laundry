@@ -18,7 +18,6 @@
       text-align: center;
       border: 1px solid #000;
       font-size: 10px;
-      /* padding: 5px; */
     }
 
     .logo {
@@ -36,15 +35,14 @@
     .details {
       font-size: 10px;
       line-height: 1.4;
-      /* margin-top: 5px; */
     }
   </style>
 </head>
 
 <body>
-  <div class="label">
-    <img src="<%= logoUrl %>" alt="Company Logo" class="logo">
-    <div class="company-name">SIKKA CLEANERS</div>
+  <div class="label" >
+    <img style="margin-top: 3px;" src="<%= logoUrl %>" alt="Company Logo" class="logo">
+    <div class="company-name" >SIKKA CLEANERS</div>
     <% if (date) { %>
       <div class="details">Date: <%= date %></div>
     <% } %>

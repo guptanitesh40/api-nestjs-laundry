@@ -127,7 +127,12 @@ export class WorkshopService {
     const workshopManagerMappings = await this.workshopManagerRepository
       .createQueryBuilder('mapping')
       .leftJoinAndSelect('mapping.user', 'user')
-      .where('mapping.workshop_id IN (:...workshopIds)', { workshopIds })
+      .where(
+        workshopIds.length > 0
+          ? 'mapping.workshop_id IN (:...workshopIds)'
+          : '1=0',
+        { workshopIds },
+      )
       .andWhere('user.deleted_at IS NULL')
       .select([
         'mapping.workshop_id',
@@ -143,7 +148,7 @@ export class WorkshopService {
       { user_id: number; full_name: string }[]
     >();
 
-    workshopManagerMappings.forEach((mapping) => {
+    workshopManagerMappings?.forEach((mapping) => {
       const fullName =
         `${mapping.user?.first_name || ''} ${mapping.user?.last_name || ''}` ||
         '';
@@ -156,9 +161,9 @@ export class WorkshopService {
       });
     });
 
-    const workshopsWithMappings = workshops.map((workshop) => ({
+    const workshopsWithMappings = workshops?.map((workshop) => ({
       ...workshop,
-      workshop_managers: workshopManagerMap.get(workshop.workshop_id) || [],
+      workshop_managers: workshopManagerMap?.get(workshop?.workshop_id) || [],
     }));
 
     return {

@@ -91,19 +91,27 @@ export class NotificationService {
     title: string,
     body: string,
   ) {
-    const dateWithMilliseconds = new Date();
-    const unixTimeStampWithMilliseconds = dateWithMilliseconds.getTime();
     try {
-      const message = {
+      const message: any = {
         notification: { title, body },
         tokens: deviceTokens,
+        android: {
+          priority: 'high',
+        },
+        apns: {
+          headers: {
+            'apns-priority': '10',
+          },
+        },
         data: {
-          updatedAt: String(unixTimeStampWithMilliseconds),
+          updatedAt: String(new Date()),
           id: nanoid(10),
         },
       };
 
-      await app.messaging().sendEachForMulticast(message);
+      const response = await app.messaging().sendEachForMulticast(message);
+
+      return response;
     } catch (error) {
       console.error(
         'Error sending push notifications:',

@@ -1315,7 +1315,11 @@ export class OrderService {
 
     if (orderStatus === CustomerOrderStatuseLabel.COMPLETED) {
       queryBuilder.andWhere('order.order_status In (:...orderStatuses)', {
-        orderStatuses: [OrderStatus.DELIVERED],
+        orderStatuses: [
+          OrderStatus.DELIVERED,
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
       });
     }
 
