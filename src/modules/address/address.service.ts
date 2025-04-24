@@ -161,4 +161,16 @@ export class AddressService {
       data: address,
     };
   }
+
+  async getDefaultAddress(user_id: number) {
+    const address = await this.userAddressRepository.findOne({
+      where: {
+        is_default: true,
+        user_id: user_id,
+        deleted_at: null,
+      },
+    });
+
+    return address;
+  }
 }

@@ -22,12 +22,22 @@ export class RedisQueueService {
   }
 
   async addNotificationToQueue(data: any) {
-    await this.notificationQueue.add('sendNotification', data);
+    const job = await this.notificationQueue.add('sendNotification', data, {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 1000,
+      },
+    });
+    return job;
   }
 
+  private static isWorkerInitialized = false;
+
   private processQueue() {
-    const dateWithMilliseconds = new Date();
-    const unixTimeStampWithMilliseconds = dateWithMilliseconds.getTime();
+    if (RedisQueueService.isWorkerInitialized) return;
+    RedisQueueService.isWorkerInitialized = true;
+
     new Worker(
       'pushNotifications',
       async (job) => {
@@ -39,8 +49,16 @@ export class RedisQueueService {
           await app.messaging().send({
             notification: { title, body },
             token: deviceToken,
+            android: {
+              priority: 'high',
+            },
+            apns: {
+              headers: {
+                'apns-priority': '10',
+              },
+            },
             data: {
-              updatedAt: String(unixTimeStampWithMilliseconds),
+              updatedAt: String(Date.now()),
               id: nanoid(10),
             },
           });

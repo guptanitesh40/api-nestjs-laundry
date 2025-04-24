@@ -8,6 +8,7 @@ import {
   appendBaseUrlToImagesOrPdf,
 } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
+import { AddressService } from '../address/address.service';
 import { BranchService } from '../branch/branch.service';
 import { SettingService } from '../settings/setting.service';
 import { AddCartDto } from './dto/cart.dto';
@@ -20,6 +21,7 @@ export class CartService {
     private cartRepository: Repository<Cart>,
     private readonly settingService: SettingService,
     private readonly branchService: BranchService,
+    private readonly addressService: AddressService,
   ) {}
 
   async addToCart(addCartDto: AddCartDto, user_id: number): Promise<Response> {
@@ -203,6 +205,8 @@ export class CartService {
     const branches = (await this.branchService.getBranchList()).data;
     const total = subTotal + normalCharges;
 
+    const defaultAddress = await this.addressService.getDefaultAddress(user_id);
+
     return {
       statusCode: 200,
       message: 'Cart retrieved successfully',
@@ -215,6 +219,7 @@ export class CartService {
         expressCharges48,
         expressCharges72,
         total,
+        defaultAddress,
       },
     };
   }

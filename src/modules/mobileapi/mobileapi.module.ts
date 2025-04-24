@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { AddressModule } from '../address/address.module';
 import { BannerModule } from '../banner/banner.module';
 import { CartModule } from '../cart/cart.module';
 import { InvoiceModule } from '../invoice/invoice.module';
@@ -16,6 +17,7 @@ import { MobileApiController } from './mobileapi.controller';
     ServicesModule,
     PriceModule,
     CartModule,
+    AddressModule,
   ],
   controllers: [MobileApiController],
   providers: [ApiService],
