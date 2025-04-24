@@ -27,7 +27,7 @@ export class ApiService {
         (await this.bannerService.getAll(banner_type)).data,
         (await this.orderService.pendingDueAmount(user_id)).data,
         (await this.cartService.getAllCarts(user_id)).data,
-        await this.addressService.getDefaltAddress(user_id),
+        await this.addressService.getDefaultAddress(user_id),
       ],
     );
 
