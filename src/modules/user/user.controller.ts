@@ -63,12 +63,55 @@ export class UserController {
     return await this.userService.findOne(user.user_id);
   }
 
+  @Get('delivery-boy')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.DELIVERY_BOY_AND_PICKUP_BOY)
+  async getDeliveryBoy(@Request() req): Promise<Response> {
+    const user = req.user;
+    return await this.userService.findOne(user.user_id);
+  }
+
   @Put('customer')
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.CUSTOMER)
   @UseInterceptors(fileFieldsInterceptor())
   async update(
+    @Request() req,
+    @Body() updateUserDto: UpdateUserDto,
+    @UploadedFiles()
+    files: {
+      image?: Express.Multer.File[];
+      id_proof?: Express.Multer.File[];
+    },
+  ): Promise<Response> {
+    const user = req.user;
+
+    const imageFile = files?.image?.[0];
+    const idProofFile = files?.id_proof?.[0];
+
+    const imagePath = imageFile
+      ? FilePath.USER_IMAGES + '/' + imageFile.filename
+      : null;
+    const idProofPath = idProofFile
+      ? FilePath.USER_ID_PROOF + '/' + idProofFile.filename
+      : null;
+
+    return await this.userService.editUser(
+      user.user_id,
+      updateUserDto,
+      imagePath,
+      idProofPath,
+    );
+  }
+
+  @Put('delivery-boy')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.DELIVERY_BOY_AND_PICKUP_BOY)
+  @UseInterceptors(fileFieldsInterceptor())
+  async updateDeliveryBoy(
     @Request() req,
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFiles()
