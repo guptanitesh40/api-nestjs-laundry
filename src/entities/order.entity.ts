@@ -151,9 +151,13 @@ export class Order extends BaseEntity {
   @IsOptional()
   pickup_comment?: string;
 
-  @ManyToOne(() => Company, (company) => company.orders, { nullable: false })
+  @ManyToOne(() => Company, (company) => company.orders, { nullable: true })
   @JoinColumn({ name: 'company_id' })
   company: Company;
+
+  @Column({ nullable: true })
+  @IsOptional()
+  company_id?: number;
 
   @ManyToOne(() => Branch, (branch) => branch.orders, { nullable: false })
   @JoinColumn({ name: 'branch_id' })

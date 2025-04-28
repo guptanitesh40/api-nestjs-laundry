@@ -183,6 +183,7 @@ export class OrderService {
         data: { orderDetail },
       };
     }
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
 
@@ -345,6 +346,7 @@ export class OrderService {
         estimated_pickup_time,
         estimated_delivery_time: deliveryDaysToAdd,
         branch_id: createOrderDto.branch_id,
+        // company_id : createOrderDto.company_id,
         transaction_id: createOrderDto?.transaction_id,
       });
 

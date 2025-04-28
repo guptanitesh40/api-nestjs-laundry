@@ -31,6 +31,7 @@ export function appendBaseUrlToImagesOrPdf<
     id_proof?: string;
     logo?: string;
     contract_document?: string;
+    signature_image?: string;
   },
 >(items: T[]): T[] {
   const baseUrl = process.env.BASE_URL || '';
@@ -43,6 +44,9 @@ export function appendBaseUrlToImagesOrPdf<
     }
     if (item.logo) {
       item.logo = `${baseUrl}/${item.logo}`;
+    }
+    if (item.signature_image) {
+      item.signature_image = `${baseUrl}/${item.signature_image}`;
     }
     if (item.contract_document) {
       item.contract_document = `${baseUrl}/${item.contract_document}`;

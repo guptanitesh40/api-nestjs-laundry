@@ -100,7 +100,13 @@ export class CreateOrderDto {
   confirm_date?: Date;
 
   @IsOptional()
+  company_id: number;
+
+  @IsOptional()
   gstin: string;
+
+  @IsOptional()
+  company_name: string;
 }
 
 export class OrderItemDto {

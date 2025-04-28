@@ -6,6 +6,7 @@ export const FilePath = {
   NOTE_IMAGES: 'images/note',
   PDF_DIRECTORY: 'pdf',
   CONTRACT_DOCUMENT: 'pdf',
+  SIGNATURE_IMAGE: 'images/logo',
   USER_IMAGES: 'images/user',
   USER_ID_PROOF: 'images/user',
 };

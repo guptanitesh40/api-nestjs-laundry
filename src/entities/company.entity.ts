@@ -52,6 +52,15 @@ export class Company extends BaseEntity {
   @Column({ type: 'varchar', length: 20 })
   gstin: string;
 
+  @Column({ nullable: true })
+  gst_percentage: number;
+
+  @Column({ nullable: true })
+  hsn_sac_code: string;
+
+  @Column({ nullable: true })
+  signature_image: string;
+
   @Column({ type: 'int', nullable: true })
   company_ownedby: CompanyOwed;
 

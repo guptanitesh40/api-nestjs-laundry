@@ -37,10 +37,12 @@ export class CompanyController {
     files: {
       logo?: Express.Multer.File[];
       contract_document?: Express.Multer.File[];
+      signature_image?: Express.Multer.File[];
     },
   ): Promise<Response> {
     const logoFile = files?.logo?.[0];
     const contractFile = files?.contract_document?.[0];
+    const signatureFile = files?.signature_image?.[0];
 
     if (!logoFile && !contractFile) {
       throw new HttpException(
@@ -56,10 +58,15 @@ export class CompanyController {
       ? FilePath.CONTRACT_DOCUMENT + '/' + contractFile.filename
       : null;
 
+    const signatureImagePath = signatureFile
+      ? FilePath.SIGNATURE_IMAGE + '/' + signatureFile.filename
+      : null;
+
     return await this.companyService.create(
       createCompanyDto,
       logoPath,
       contractDocumentPath,
+      signatureImagePath,
     );
   }
 
@@ -84,10 +91,12 @@ export class CompanyController {
     files: {
       logo?: Express.Multer.File[];
       contract_document?: Express.Multer.File[];
+      signature_image?: Express.Multer.File[];
     },
   ): Promise<Response> {
     const logoFile = files?.logo?.[0];
     const contractFile = files?.contract_document?.[0];
+    const signatureImage = files?.signature_image?.[0];
 
     const logoPath = logoFile
       ? FilePath.COMPANY_LOGO + '/' + logoFile.filename
@@ -96,11 +105,16 @@ export class CompanyController {
       ? FilePath.CONTRACT_DOCUMENT + '/' + contractFile.filename
       : null;
 
+    const signatureImagePath = signatureImage
+      ? FilePath.SIGNATURE_IMAGE + '/' + signatureImage.filename
+      : null;
+
     return await this.companyService.update(
       id,
       updateCompanyDto,
       logoPath,
       contractDocumentPath,
+      signatureImagePath,
     );
   }
 
