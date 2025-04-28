@@ -19,11 +19,13 @@ export class CompanyService {
     createCompanyDto: CreateCompanyDto,
     logoPath: string,
     contractDocumentPath: string,
+    signatureImagePath?: string,
   ): Promise<Response> {
     const company = this.companyRepository.create({
       ...createCompanyDto,
       logo: logoPath,
       contract_document: contractDocumentPath,
+      signature_image: signatureImagePath,
     });
 
     const result = await this.companyRepository.save(company);
@@ -113,6 +115,7 @@ export class CompanyService {
     updateCompanyDto: UpdateCompanyDto,
     logoPath?: string,
     contractDocumentPath?: string,
+    signatureImagePath?: string,
   ): Promise<Response> {
     const updatedCompany = await this.companyRepository.findOne({
       where: { company_id: id, deleted_at: null },
@@ -136,6 +139,10 @@ export class CompanyService {
 
     if (contractDocumentPath) {
       updateData.contract_document = contractDocumentPath;
+    }
+
+    if (signatureImagePath) {
+      updateData.signature_image = signatureImagePath;
     }
 
     await this.companyRepository.update(id, updateData);

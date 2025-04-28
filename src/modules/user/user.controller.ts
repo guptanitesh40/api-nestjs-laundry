@@ -239,6 +239,15 @@ export class UserController {
     return await this.userService.deleteUser(user.user_id);
   }
 
+  @Delete('delivery-boy')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.DELIVERY_BOY_AND_PICKUP_BOY)
+  async removeDelivery(@Request() req): Promise<Response> {
+    const user = req.user;
+    return await this.userService.deleteUser(user.user_id);
+  }
+
   @Delete(':user_id')
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))

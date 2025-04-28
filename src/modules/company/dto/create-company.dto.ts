@@ -55,6 +55,15 @@ export class CreateCompanyDto {
   @IsString()
   gstin: string;
 
+  @IsOptional()
+  gst_percentage: number;
+
+  @IsOptional()
+  signature_image: string;
+
+  @IsOptional()
+  hsn_sac_code: string;
+
   @IsNumber()
   @Transform(({ value }) => parseInt(value))
   @IsEnum(CompanyOwed)

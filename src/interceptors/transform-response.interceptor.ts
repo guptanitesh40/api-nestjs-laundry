@@ -22,6 +22,7 @@ export class NullTransformInterceptor implements NestInterceptor {
       'delivery_by',
       'pickup_boy_id',
       'branch_id',
+      'company_id',
       'express_delivery_charges',
       'express_delivery_hour',
       'gst',

@@ -183,6 +183,7 @@ export class OrderService {
         data: { orderDetail },
       };
     }
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
 
@@ -2128,7 +2129,11 @@ export class OrderService {
       throw new NotFoundException('Order not found');
     }
 
-    order.payment_status = PaymentStatus.FULL_PAYMENT_RECEIVED;
+    if (amount < order.paid_amount) {
+      order.payment_status = PaymentStatus.PAYMENT_PENDING;
+    } else {
+      order.payment_status = PaymentStatus.FULL_PAYMENT_RECEIVED;
+    }
     order.paid_amount = amount;
 
     await this.orderRepository.save(order);

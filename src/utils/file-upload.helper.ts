@@ -14,6 +14,7 @@ export function fileFieldsInterceptor() {
       { name: 'contract_document', maxCount: 1 },
       { name: 'image', maxCount: 1 },
       { name: 'id_proof', maxCount: 1 },
+      { name: 'signature_image', maxCount: 1 },
     ],
     {
       storage: diskStorage({
@@ -27,6 +28,8 @@ export function fileFieldsInterceptor() {
             uploadPath = path.join(process.cwd(), FilePath.USER_IMAGES);
           } else if (file.fieldname === 'id_proof') {
             uploadPath = path.join(process.cwd(), FilePath.USER_ID_PROOF);
+          } else if (file.fieldname === 'signature_image') {
+            uploadPath = path.join(process.cwd(), FilePath.SIGNATURE_IMAGE);
           }
           fs.mkdirSync(uploadPath, { recursive: true });
           cb(null, uploadPath);
@@ -43,10 +46,11 @@ export function fileFieldsInterceptor() {
           pdfUpload(FilePath.CONTRACT_DOCUMENT).limits.fileSize,
           fileUpload(FilePath.USER_IMAGES).limits.fileSize,
           pdfUpload(FilePath.USER_ID_PROOF).limits.fileSize,
+          fileUpload(FilePath.SIGNATURE_IMAGE).limits.fileSize,
         ),
       },
       fileFilter: (req, file, cb) => {
-        let allowedMimeTypes;
+        let allowedMimeTypes: any;
         if (file.fieldname === 'logo') {
           allowedMimeTypes = ['image/jpeg', 'image/png'];
         } else if (file.fieldname === 'contract_document') {
@@ -61,6 +65,9 @@ export function fileFieldsInterceptor() {
             'image/jpeg',
             'image/png',
           ];
+        }
+        if (file.fieldname === 'signature_image') {
+          allowedMimeTypes = ['image/jpeg', 'image/png'];
         }
         if (!allowedMimeTypes.includes(file.mimetype)) {
           cb(

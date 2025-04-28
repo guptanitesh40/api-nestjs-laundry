@@ -15,6 +15,7 @@ import {
 import { UserAddress } from './address.entity';
 import { BaseEntity } from './base.entity';
 import { Branch } from './branch.entity';
+import { Company } from './company.entity';
 import { Feedback } from './feedback.entity';
 import { Note } from './note.entity';
 import { OrderItem } from './order-item.entity';
@@ -150,6 +151,14 @@ export class Order extends BaseEntity {
   @IsOptional()
   pickup_comment?: string;
 
+  @ManyToOne(() => Company, (company) => company.orders, { nullable: true })
+  @JoinColumn({ name: 'company_id' })
+  company: Company;
+
+  @Column({ nullable: true })
+  @IsOptional()
+  company_id?: number;
+
   @ManyToOne(() => Branch, (branch) => branch.orders, { nullable: false })
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
@@ -182,4 +191,7 @@ export class Order extends BaseEntity {
   @Column({ nullable: true })
   @IsOptional()
   gstin: string;
+
+  @Column({ nullable: true })
+  gst_company_name: string;
 }

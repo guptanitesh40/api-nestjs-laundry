@@ -2,6 +2,7 @@ import { CompanyOwed } from 'src/enum/company_owed.enum';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Branch } from './branch.entity';
+import { Order } from './order.entity';
 import { UserCompanyMapping } from './user-company-mapping.entity';
 
 @Entity({ name: 'companies' })
@@ -51,6 +52,15 @@ export class Company extends BaseEntity {
   @Column({ type: 'varchar', length: 20 })
   gstin: string;
 
+  @Column({ nullable: true })
+  gst_percentage: number;
+
+  @Column({ nullable: true })
+  hsn_sac_code: string;
+
+  @Column({ nullable: true })
+  signature_image: string;
+
   @Column({ type: 'int', nullable: true })
   company_ownedby: CompanyOwed;
 
@@ -65,4 +75,7 @@ export class Company extends BaseEntity {
     (userCompanyMapping) => userCompanyMapping.company,
   )
   userCompanyMappings: UserCompanyMapping[];
+
+  @OneToMany(() => Order, (order) => order.branch)
+  orders: Order[];
 }
