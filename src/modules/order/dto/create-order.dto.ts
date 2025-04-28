@@ -106,7 +106,7 @@ export class CreateOrderDto {
   gstin: string;
 
   @IsOptional()
-  company_name: string;
+  gst_company_name: string;
 }
 
 export class OrderItemDto {

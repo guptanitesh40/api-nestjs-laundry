@@ -193,5 +193,5 @@ export class Order extends BaseEntity {
   gstin: string;
 
   @Column({ nullable: true })
-  company_name: string;
+  gst_company_name: string;
 }
