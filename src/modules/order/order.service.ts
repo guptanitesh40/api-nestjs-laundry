@@ -2123,7 +2123,9 @@ export class OrderService {
     notes: string,
     user_id: number,
   ): Promise<Response> {
-    const order = await this.orderRepository.findOne({ where: { order_id } });
+    const order: any = await this.orderRepository.findOne({
+      where: { order_id },
+    });
 
     if (!order) {
       throw new NotFoundException('Order not found');
@@ -2135,6 +2137,9 @@ export class OrderService {
       order.payment_status = PaymentStatus.FULL_PAYMENT_RECEIVED;
     }
     order.paid_amount = amount;
+
+    order.remaining_amount =
+      order.total - order.paid_amount - order.kasar_amount;
 
     await this.orderRepository.save(order);
 
@@ -2184,6 +2189,10 @@ export class OrderService {
     if (status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
       order.confirm_date = new Date();
     }
+
+    order.remaining_amount =
+      order.total - order.paid_amount - order.kasar_amount;
+
     order.order_status_details = getOrderStatusDetails(order);
     await this.orderRepository.save(order);
 
