@@ -202,6 +202,12 @@ export class CartService {
 
     const expressCharges72 = Number(shippingCharge.express_delivery_72hrs);
 
+    const expressDeliveryCharges = [
+      { expressCharges24: expressCharges24, discount: expressCharges24 + '%' },
+      { expressCharges48: expressCharges48, discount: expressCharges48 + '%' },
+      { expressCharges72: expressCharges72, discount: expressCharges72 + '%' },
+    ];
+
     const branches = (await this.branchService.getBranchList()).data;
     const total = subTotal + normalCharges;
 
@@ -215,9 +221,7 @@ export class CartService {
         branches,
         subTotal,
         normalCharges,
-        expressCharges24,
-        expressCharges48,
-        expressCharges72,
+        expressDeliveryCharges,
         total,
         defaultAddress,
       },
