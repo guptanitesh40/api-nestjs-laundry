@@ -34,6 +34,7 @@ export class NullTransformInterceptor implements NestInterceptor {
       'data',
       'userBranchMappings',
       'note',
+      'defaultAddress',
     ];
 
     if (Array.isArray(data)) {
