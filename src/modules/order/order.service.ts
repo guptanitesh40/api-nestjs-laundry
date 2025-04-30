@@ -439,6 +439,11 @@ export class OrderService {
 
       await this.invoiceService.generateGeneralOrderLabel(orderDetail);
 
+      await this.invoiceService.generateAndSaveInvoicePdf(
+        orderDetail.order_id,
+        'true',
+      );
+
       return {
         statusCode: 200,
         message: 'Order details added successfully',
@@ -1172,11 +1177,13 @@ export class OrderService {
     const orderQuery = this.orderRepository
       .createQueryBuilder('order')
       .innerJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.address', 'address')
       .leftJoinAndSelect('order.items', 'items')
       .leftJoinAndSelect('items.category', 'category')
       .leftJoinAndSelect('items.product', 'product')
       .leftJoinAndSelect('items.service', 'service')
       .leftJoinAndSelect('order.branch', 'branch')
+      .leftJoinAndSelect('order.company', 'company')
       .where('order.order_id = :orderId', { orderId: order_id })
       .andWhere('order.deleted_at IS NULL')
       .select([
@@ -1197,6 +1204,18 @@ export class OrderService {
         'branch.branch_name',
         'branch.branch_phone_number',
         'branch.branch_email',
+        'company.company_id',
+        'company.company_name',
+        'company.email',
+        'company.phone_number',
+        'company.mobile_number',
+        'company.gst_percentage',
+        'company.signature_image',
+        'company.gstin',
+        'company.hsn_sac_code',
+        'company.msme_number',
+        'address.address_id',
+        'address.state',
       ])
       .groupBy(
         'order.order_id, items.item_id, category.category_id, product.product_id, service.service_id',

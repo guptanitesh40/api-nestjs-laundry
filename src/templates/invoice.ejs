@@ -3,346 +3,263 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice <%= invoice.invoiceNumber %>
-    </title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Atma:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Invoice</title>
     <style>
         body {
-            box-sizing: border-box;
-            font-family: "Arial", sans-serif;
-            margin: 20px;
-            padding: 0;
-            background-color: #f8f8f8;
-            color: #333;
-            border: 2px solid black;
-            padding-bottom: 5px;
-        }
-
-        .container {
-            display: flex;
-            align-items: center;
-            border-bottom: 2px solid black;
-            padding: 0;
-        }
-
-        h1,
-        h2,
-        h3 {
-            text-align: center;
-            color: #161F5F;
-            margin: 5px 0;
-        }
-
-        h1 {
-            font-size: 20px;
-        }
-
-        h2 {
-            font-size: 18px;
-        }
-
-        h3 {
-            font-size: 16px;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
         }
 
         table {
             width: 100%;
-            height: 30%;
             border-collapse: collapse;
-            /* margin-top: 5px; */
-        }
-
-        table,
-        th,
-        td {
-            border-top: hidden;
-            border: 1px solid #ccc;
+            table-layout: fixed;
         }
 
         th,
         td {
             padding: 4px;
+            border: 1px solid black;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .no-border {
+            border: none;
+        }
+
+        .center-text {
             text-align: center;
-            font-size: 12px;
         }
 
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-
-        .header-section {
-            flex-basis: 70%;
-            border-right: 2px solid black;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .header-section img {
-            display: inline-block;
-            height: auto;
-            width: 70px;
-            padding: 0 8px;
-        }
-
-        .box2 {
-            flex-basis: 30%;
-            margin-left: 2px;
-        }
-
-        .box11 {
-            flex-grow: 1;
-        }
-
-        .box11 h2 {
-            color: black;
-            text-align: left;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
-        .box11 .address {
-            padding-top: 10px;
-            font-size: 10px;
-            font-weight: bold;
-            ;
-        }
-
-        .box11 .gst {
-            font-size: 12px;
-        }
-
-        .box11 .genuine-text {
-            font-family: "Atma", serif;
-            font-weight: 300;
-            font-style: italic;
-            font-size: 10px;
-            border-bottom: 2px solid black;
-        }
-
-        .customer-details {
-            border-bottom: 2px solid black;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 8px;
-            font-size: 12px;
-        }
-
-        .summ-container {
-            display: flex;
-            align-items: start;
-            justify-content: space-between;
-            padding: 0 8px;
-        }
-
-        .totals {
-            margin-top: 5px;
-        }
-
-        .totals p {
-            display: flex;
-            justify-content: space-between;
-            margin: 2px;
-            font-size: 12px;
-        }
-
-        .totals span:first-child {
-            text-align: left;
-            width: 200%;
-            font-weight: bold;
-        }
-
-        .totals span:last-child {
+        .right-text {
             text-align: right;
-            width: 80%;
         }
 
-        .total-row {
+        .bold {
             font-weight: bold;
-            background-color: #e7f3fe;
         }
 
-        .note {
+        .signature {
+            margin-top: 10px;
+            text-align: right;
+            margin: 0;
+            padding: 0;
+        }
+
+        .thank-you {
+            margin-top: 10px;
+            text-align: center;
             font-style: italic;
-            margin-top: 10px;
-            text-align: center;
-            font-size: 12px;
-        }
-
-        .footer {
-            margin-top: 10px;
-            text-align: center;
-            font-size: 12px;
-        }
-
-        .footer span {
-            margin-right: 50px;
-        }
-
-        .description p {
-            font-size: 10px;
         }
     </style>
 </head>
 
 <body>
-    <div class="main-container"
-        style="display:contents; justify-content: center; align-items: center; border: 1px solid black; margin: 2px;">
-        <div class="container">
-            <div class="header-section">
-                <img src="<%= invoice.logoUrl %>" alt="Sikka Cleaners">
-                <div class="box11">
-                    <h2>Sikka Cleaners</h2>
-                    <p class="genuine-text">The Genuine Dry Cleaners</p>
-                    <p class="address">Address: XYZ, Near Subhash Chowk, Ahmedabad</p>
-                    <p class="gst">GSTIN: 24ACPPV3865Q1Z</p>
-                    <p style="font-weight: bold; font-style: italic; margin-left: 20px; margin-bottom: 1px; font-size: 12px;">RECEIPT/INVOICE</p>
+
+    <table class="no-border">
+        <tr>
+            <td colspan="2" class="center-text bold">TAX INVOICE</td>
+        </tr>
+        <tr>
+            <td colspan="2" class="center-text">
+                <div class="header-section">
+                    <img style="width: 100px; height: auto;" src="<%= invoice.logoUrl %>" alt="Sikka Cleaners">
                 </div>
-            </div>
-            <div class="box2">
-                <p style="font-size: 13px; font-weight:bold;">
-                    <%= invoice.branchName %>
-                </p>
-                <p style="font-size: 12px;"><span>Branch. : </span>
-                    <%= invoice.branchName %>
-                </p>
-                <p style="font-size: 12px;"><span>Mo. : </span><%= invoice.branchMobileNumber %>
-                </p>
-            </div>
-        </div>
-        <div class="customer-details">
-            <div class="detail-1" style="flex-basis: 55%;">
-                <p style="font-weight: bold;">Booking No: <%= invoice.invoiceNumber %>
-                </p>
-                <p>Customer Name: <%= invoice.customer.name %>
-                </p>
-                <p>Customer Contact: <%= invoice.customer.contact %>
-                </p>
-                <p>Customer Address: <%= invoice.customerAddress %>
-                </p>
-            </div>
-            <div class="detail-2">
-                <p>Collection Date & Time:<br>
-                    <%= invoice.collectionTime %>
-                </p>
-                <p>Delivery Date & Time:<br>
+            </td>
+        </tr>
+    </table>
+
+    <table border="1" cellspacing="0" cellpadding="5">
+        <tr>
+            <td><strong>Invoice Number:</strong>
+                <strong>
+                    <%= invoice.invoiceNumber %>
+                </strong>
+            </td>
+
+            <td rowspan="2" style="padding-top: 10px;">
+                <strong>Collection Date & Time:</strong>
+                <%= invoice.collectionTime %><br>
+                    <strong>Delivery Date & Time:</strong>
                     <%= invoice.deliveryTime %>
-                </p>
-            </div>
-        </div>
-        <div style="display: flex; justify-content: center; align-items: center;">
-            <table>
-                <thead>
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Date:</strong>
+                <strong>
+                    <%= invoice.date %>
+                </strong>
+            </td>
+        </tr>
+    </table>
+
+
+    <table>
+        <tr>
+            <td>
+                <strong>Bill To</strong><br>
+                <strong>Customer Name: </strong>
+                <strong>
+                    <%= invoice.customer.name %>
+                </strong><br>
+                <%= invoice.customerAddress %><br>
+                    <strong>Phone: </strong>
+                    <%= invoice.customer.contact %><br>
+                        <strong>Company: </strong>
+                        <%= invoice.customerCompanyName %><br>
+                            <strong>GSTIN: </strong>
+                            <%= invoice.custometGstIn %>
+            </td>
+            <td>
+                <strong>Bill From</strong><br>
+                <strong>
+                    <%= invoice.companyName %>
+                </strong><br>
+                <strong>Branch Name: </strong>
+                <%= invoice.branchName %><br>
+                    <strong>Address: </strong><br>
+                    <strong>Mo.: <%= invoice.branchMobileNumber %></strong> <br>
+                    <strong>GSTIN: <%= invoice.gstIn %></strong><br><strong>HSN Code: </strong>
+                    <%= invoice.hsnCode %><br>
+                        <strong>MSME Number: </strong>
+                        <%= invoice.companyMsmeNo %>
+            </td>
+        </tr>
+    </table>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="text-align: center;">Item Name</th>
+                <th style="text-align: center;">Service</th>
+                <th style="text-align: center;">Rate</th>
+                <th style="text-align: center;">QTY</th>
+                <th style="text-align: center;">Amount (INR)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% invoice.items.forEach(item=> { %>
+                <tr>
+                    <td>
+                        <%= item.product %>
+                            <%= item.category %>
+                    </td>
+                    <td style="text-align: center;">
+                        <%= item.service %>
+                    </td>
+                    <td style="text-align: center;">
+                        <%= item.rate %>
+                    </td>
+                    <td style="text-align: center;">
+                        <%= item.quantity %>
+                    </td>
+                    <td style="text-align: center;">
+                        <%= item.amount %>
+                    </td>
+                </tr>
+                <% }) %>
                     <tr>
-                        <th>Qty</th>
-                        <th>Item Name</th>
-                        <th>Service</th>
-                        <th>Rate</th>
-                        <th>Amount</th>
+                        <td colspan="3" class="bold">Sub Total</td>
+                        <td class="bold" style="text-align: center;">
+                            <%= invoice.totalQty %>
+                        </td>
+
+                        <td style="text-align: center;" class="bold">
+                            <%= invoice.itemsTotal.toFixed(2) %>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <% let totalQuantity=0; %>
-                        <% let totalAmount=0; %>
-                            <% invoice.items.forEach(item=> { %>
+                    <tr>
+                        <td colspan="4">Normal Delivery Charges</td>
+                        <td style="text-align: center;">
+                            <%= invoice.normalDeliveryCharges.toFixed(2) %>
+                        </td>
+                    </tr>
+                    <% if (invoice.expressDeliveryCharges> 0) { %>
+                        <tr>
+                            <td colspan="4">Express Delivery Charge:</td>
+                            <td style="text-align: center;">
+                                <%= invoice.expressDeliveryCharges.toFixed(2) %>
+                            </td>
+                        </tr>
+                        <% } %>
+                            <% if (invoice.discount> 0) { %>
                                 <tr>
-                                    <td>
-                                        <%= item.quantity %>
-                                    </td>
-                                    <td>
-                                        <%= item.product %>
-                                            <%= item.category %>
-                                    </td>
-                                    <td>
-                                        <%= item.service %>
-                                    </td>
-                                    <td>
-                                        <%= item.rate %>
-                                    </td>
-                                    <td>
-                                        <%= item.amount %>
+                                    <td colspan="4">Discount</td>
+                                    <td style="text-align: center;">
+                                        <%= invoice.discount.toFixed(2) %>
                                     </td>
                                 </tr>
-                                <% totalQuantity +=item.quantity; %>
-                                    <% totalAmount +=item.amount; %>
-                                        <% }) %>
-                                            <tr class="total-row">
-                                                <td>
-                                                    <%= totalQuantity %>
-                                                </td>
-                                                <td colspan="3" style="text-align: right;">Sub total</td>
-                                                <td>
-                                                    <%= invoice.itemsTotal.toFixed(2) %>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="5" style="text-align: left;  font-size: 10px;">In Words:
-                                                    <%= invoice.totalInWords %>
-                                                </td>
-                                            </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="summ-container">
-            <div class="description">
-                <p>Delivery will be made after 07:00 p.m.</p>
-                <p>Sunday Closed</p>
-                <p>Web: www.sikkacleaners.in</p>
-                <p>Thank You for Choosing SIKKA CLEANERS</p>
-            </div>
-            <div class="summary-section" style="width: 38%;">
-                <div class="totals">
-                    <% if (invoice.normalDeliveryCharges> 0) { %>
-                        <p style="font-size: 10px;"><span>Normal Delivery Charge:</span><span>+</span><span>
-                                <%= invoice.normalDeliveryCharges.toFixed(2) %>
-                            </span></p>
-                        <% } %>
-
-                            <% if (invoice.expressDeliveryCharges> 0) { %>
-                                <p style="font-size: 10px;"><span>Express Delivery Charge:</span><span>+</span><span>
-                                        <%= invoice.expressDeliveryCharges.toFixed(2) %>
-                                    </span></p>
                                 <% } %>
-
-
-                                    <% if (invoice.adjustmentCharges> 0) { %>
-                                        <p style="font-size: 10px;"><span>Kasar Amount:</span><span>
-                                                <%= invoice.adjustmentCharges.toFixed(2) %>
-                                            </span></p>
+                                    <tr>
+                                        <td colspan="4">Net Amount (Incl. GST)</td>
+                                        <td style="text-align: center;" class="bold">
+                                            <%= invoice.totalAmount.toFixed(2) %>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4">Taxable Value</td>
+                                        <td style="text-align: center;">
+                                            <%= invoice.gstAmount.toFixed(2) %>
+                                        </td>
+                                    </tr>
+                                    <% if (invoice.addressState=="gujarat" || invoice.addressState=="Gujarat" ) { %>
+                                        <tr>
+                                            <td colspan="4">
+                                                <%= invoice.inStateGst %>% CGST
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <%= invoice.cgstAmount.toFixed(2) %>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4">
+                                                <%= invoice.inStateGst %>% SGST
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <%= invoice.sgstAmount.toFixed(2) %>
+                                            </td>
+                                        </tr>
                                         <% } %>
-                                            <p style="font-size: 10px;"><span>Gst:</span><span>
-                                                    <%= invoice.Gst.toFixed(2) %>
-                                                </span></p>
 
-                                            <% if (invoice.discount> 0) { %>
-                                                <p style="font-size: 10px;"><span>Discount Amount:</span><span>-</span><span>
-                                                        <%= invoice.discount.toFixed(2) %>
-                                                    </span></p>
+                                            <% if (invoice.addressState !="gujarat" && invoice.addressState !="Gujarat"
+                                                ) { %>
+                                                <tr>
+                                                    <td colspan="4">
+                                                        <%= invoice.companyGstPercetage %>% IGST
+                                                    </td>
+                                                    <td style="text-align: center;">
+                                                        <%= invoice.igstAmount.toFixed(2) %>
+                                                    </td>
+                                                </tr>
                                                 <% } %>
-
-                                                    <p style="font-size: 10px;"><span>Current Bill Amount:</span><span>
+                                                    <tr>
+                                                        <td colspan="4" class="bold">Total Amount (Incl. GST)</td>
+                                                        <td style="text-align: center;" class="bold">
                                                             <%= invoice.totalAmount.toFixed(2) %>
-                                                        </span></p>
-                                                    <p style="font-size: 10px;"><span style="color: green;">Advance Paid
-                                                            Amount:</span><span>-</span><span style="color: green;">
-                                                            <%= invoice.paidAmount.toFixed(2) %>
-                                                        </span></p>
-                                                    <p style="font-size: 10px;"> <span style="color: red;">Previous Due
-                                                            Amount:</span><span>+</span><span style="color: red;">
-                                                            <%= invoice.totalPendingDue.toFixed(2) %>
-                                                        </span></p>
-                                                    <p style="font-size: 10px;"> <span>Total Amount:</span><span>
-                                                            <%= invoice.totalDue.toFixed(2) %>
-                                                        </span></p>
-                </div>
-            </div>
-        </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="5" style="text-align: center;">Total Amount In
+                                                            Words:
+                                                            <%= invoice.totalInWords %>
+                                                        </td>
+                                                    </tr>
+        </tbody>
+    </table>
+
+    <div class="signature">
+        <p>
+            <%= invoice.companyName %>
+        </p>
+        <img src="<%= invoice.signatureImage %>" alt="Signature" style="width: 100px; height: 30px;" />
+        <p>Authorized Signatory</p>
     </div>
+
+    <div class="thank-you">
+        <p>Thank You for choosing Sikka Cleaners!!</p>
+    </div>
+
 </body>
 
 </html>

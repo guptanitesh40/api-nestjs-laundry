@@ -78,4 +78,7 @@ export class Company extends BaseEntity {
 
   @OneToMany(() => Order, (order) => order.branch)
   orders: Order[];
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  msme_number: string;
 }

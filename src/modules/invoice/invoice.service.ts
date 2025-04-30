@@ -10,7 +10,6 @@ import * as fs from 'fs';
 import { writeFileSync } from 'fs';
 import path, { join } from 'path';
 import puppeteer, { Browser } from 'puppeteer';
-import { OrderStatus } from 'src/enum/order-status.eum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { customerApp } from 'src/firebase.config';
 import numberToWords from 'src/utils/numberToWords';
@@ -39,11 +38,14 @@ export class InvoiceService {
     private readonly notificationService: NotificationService,
   ) {}
 
-  async generateAndSaveInvoicePdf(order_id: number): Promise<any> {
+  async generateAndSaveInvoicePdf(
+    order_id: number,
+    regenerate: string,
+  ): Promise<any> {
     const order_invoice = getPdfUrl(order_id, getOrderInvoiceFileFileName());
     const file = fs.existsSync(order_invoice.fileName);
 
-    if (file) {
+    if (file && regenerate !== 'true') {
       return { url: order_invoice.fileUrl };
     }
 
@@ -108,12 +110,6 @@ export class InvoiceService {
     const order = await this.orderService.getOrderDetail(order_id);
     const orderData = order.data;
 
-    if (orderData.order_status !== OrderStatus.DELIVERED) {
-      throw new BadRequestException(
-        `This order is not delivered yet. You cannot download the invoice.`,
-      );
-    }
-
     const deviceTokenCustomer = await this.userService.getDeviceToken(
       orderData.user_id,
     );
@@ -132,18 +128,40 @@ export class InvoiceService {
       '..',
       '..',
       '..',
-      'src/logo/logo.png',
+      'src/logo/SC-logo.png',
     );
     const logoBase64 = fs.readFileSync(logoPath, 'base64');
     const logoUrl = `data:image/png;base64,${logoBase64}`;
 
     const branchName = orderData.branch?.branch_name;
 
+    const date = orderData.created_at.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    const companyName = orderData?.company?.company_name || '';
+
+    const gstIn = orderData.company?.gstin || '';
+
+    const hsnCode = orderData?.company?.hsn_sac_code || '';
+
+    const customerCompanyName = orderData?.gst_company_name || '';
+
+    const custometGstIn = orderData?.gstin || '';
+
+    const companyMsmeNo = orderData?.company?.msme_number || '';
+
+    const signatureImage =
+      process.env.BASE_URL + '/' + orderData?.company?.signature_image || '';
+
     const branchMobileNumber = orderData.branch?.branch_phone_number;
     let itemsTotal = 0;
+    let quantity = 0;
     const items =
       orderData.items?.map((item) => {
-        const quantity = item.quantity || 1;
+        quantity = item.quantity || 1;
         const rate = item.price || 0;
         const amount = (quantity * rate).toFixed(2);
         itemsTotal += Number(amount);
@@ -158,6 +176,31 @@ export class InvoiceService {
           itemsTotal,
         };
       }) || [];
+
+    const totalQty = quantity + quantity;
+
+    const companyGstPercetage = orderData.company?.gst_percentage;
+
+    const inStateGst = companyGstPercetage / 2;
+
+    const addressState = orderData.address.state;
+
+    let cgstPercetage = 0;
+    let sgstPercetage = 0;
+    let gstPercetage = 0;
+    let igstPercetage = 0;
+
+    if (companyGstPercetage === 18) {
+      gstPercetage = 1.18;
+      cgstPercetage = 0.09;
+      sgstPercetage = 0.09;
+      igstPercetage = 0.18;
+    } else if (companyGstPercetage === 6) {
+      gstPercetage = 1.06;
+      cgstPercetage = 0.03;
+      sgstPercetage = 0.03;
+      igstPercetage = 0.06;
+    }
 
     const totalAmount = orderData.total
       ? parseFloat(orderData.total.toString())
@@ -183,6 +226,12 @@ export class InvoiceService {
     const paidAmount = orderData.paid_amount
       ? parseFloat(orderData.paid_amount.toString())
       : 0;
+
+    const gstAmount = totalAmount / gstPercetage;
+    const cgstAmount = gstAmount * cgstPercetage;
+    const sgstAmount = gstAmount * sgstPercetage;
+
+    const igstAmount = gstAmount * igstPercetage;
 
     const pendingDueAmount =
       orderData.total -
@@ -215,7 +264,6 @@ export class InvoiceService {
         : 'N/A',
 
       customerAddress: orderData.address_details || 'N/A',
-
       items,
       itemsTotal,
       subTotal: subTotal,
@@ -227,12 +275,31 @@ export class InvoiceService {
       pendingDueAmount,
       adjustmentCharges,
       totalAmount,
+      companyName,
+      gstIn,
+      hsnCode,
       branchName,
+      date,
       branchMobileNumber,
       totalInWords: numberToWords(totalAmount),
       logoUrl,
       totalPendingDue,
       totalDue,
+      gstAmount,
+      cgstAmount,
+      sgstAmount,
+      igstAmount,
+      customerCompanyName,
+      custometGstIn,
+      addressState,
+      signatureImage,
+      totalQty,
+      companyMsmeNo,
+      cgstPercetage,
+      sgstPercetage,
+      gstPercetage,
+      inStateGst,
+      companyGstPercetage,
     };
 
     return ejs.render(html, { invoice: invoiceData });

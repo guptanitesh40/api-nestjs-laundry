@@ -36,4 +36,7 @@ export class Coupon extends BaseEntity {
 
   @Column({ type: 'int', nullable: true })
   coupon_type: CouponType;
+
+  @Column({ type: 'int', nullable: true })
+  min_cart_value: number;
 }
