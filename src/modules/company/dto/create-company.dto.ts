@@ -64,6 +64,9 @@ export class CreateCompanyDto {
   @IsOptional()
   hsn_sac_code: string;
 
+  @IsOptional()
+  msme_number: string;
+
   @IsNumber()
   @Transform(({ value }) => parseInt(value))
   @IsEnum(CompanyOwed)

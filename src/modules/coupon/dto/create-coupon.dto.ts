@@ -50,4 +50,7 @@ export class CreateCouponDto {
   @IsNotEmpty()
   @IsEnum(CouponType)
   coupon_type: number;
+
+  @IsOptional()
+  min_cart_value: number;
 }

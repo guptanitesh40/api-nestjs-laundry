@@ -292,6 +292,12 @@ export class CouponService {
       throw new BadRequestException('Coupon usage limit reached');
     }
 
+    if (order_Total < coupon.min_cart_value) {
+      throw new BadRequestException(
+        'This coupon is not valid for the current cart value.',
+      );
+    }
+
     const userCouponUsedCount = await this.orderService.countOrdersByCondition({
       user_id,
       coupon_code,
