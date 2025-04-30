@@ -61,9 +61,9 @@ export class InvoiceService {
     const populatedHtml = await this.populateTemplate(html, order_id);
 
     const pdfBuffer = await this.createPdfBuffer(populatedHtml);
-    const fileUrl = await this.savePdfToFile(order_id, pdfBuffer);
+    await this.savePdfToFile(order_id, pdfBuffer);
 
-    return { url: fileUrl };
+    return { statuCode: 200, message: 'Invoice Generate Successfully' };
   }
 
   private async createPdfBuffer(html: string): Promise<Buffer> {

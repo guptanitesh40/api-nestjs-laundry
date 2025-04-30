@@ -791,6 +791,7 @@ export class OrderService {
       .leftJoinAndSelect('order.branch', 'branch')
       .leftJoinAndSelect('order.notes', 'notes')
       .leftJoinAndSelect('notes.user', 'note_user')
+      .leftJoinAndSelect('order.company', 'company')
       .leftJoin('order.pickup_boy', 'pickupBoy')
       .addSelect([
         'pickupBoy.user_id',
@@ -838,6 +839,16 @@ export class OrderService {
         'deliveryBoy.user_id',
         'deliveryBoy.first_name',
         'deliveryBoy.last_name',
+        'company.company_id',
+        'company.company_name',
+        'company.email',
+        'company.phone_number',
+        'company.mobile_number',
+        'company.gst_percentage',
+        'company.signature_image',
+        'company.gstin',
+        'company.hsn_sac_code',
+        'company.msme_number',
       ]);
 
     const orders: any = await queryBuilder.getOne();
@@ -2150,10 +2161,17 @@ export class OrderService {
       throw new NotFoundException('Order not found');
     }
 
-    if (amount < order.paid_amount) {
-      order.payment_status = PaymentStatus.PAYMENT_PENDING;
-    } else {
+    const pending_amount =
+      order.total - order.paid_amount - order.kasar_amount || 0;
+
+    if (amount > pending_amount) {
+      throw new BadRequestException('Cannot Pay More Than Pending Amount');
+    }
+
+    if (amount === pending_amount) {
       order.payment_status = PaymentStatus.FULL_PAYMENT_RECEIVED;
+    } else {
+      order.payment_status = PaymentStatus.PAYMENT_PENDING;
     }
     order.paid_amount = amount;
 
