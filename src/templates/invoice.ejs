@@ -106,10 +106,16 @@
                 <%= invoice.customerAddress %><br>
                     <strong>Phone: </strong>
                     <%= invoice.customer.contact %><br>
-                        <strong>Company: </strong>
-                        <%= invoice.customerCompanyName %><br>
-                            <strong>GSTIN: </strong>
-                            <%= invoice.custometGstIn %>
+
+                        <% if(invoice.customerCompanyName){ %>
+                            <strong>Company: </strong>
+                            <%= invoice.customerCompanyName %><br>
+                                <% } %>
+
+                                    <% if(invoice.custometGstIn) { %>
+                                        <strong>GSTIN: </strong>
+                                        <%= invoice.custometGstIn %>
+                                            <% } %>
             </td>
             <td>
                 <strong>Bill From</strong><br>
