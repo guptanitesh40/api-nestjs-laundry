@@ -134,9 +134,6 @@ export class Order extends BaseEntity {
   @IsOptional()
   estimated_pickup_time?: Date;
 
-  @Column('float', { nullable: true })
-  gst: number;
-
   @Column({ type: 'float', nullable: true, default: 0 })
   refund_amount: number;
 

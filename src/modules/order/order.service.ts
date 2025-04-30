@@ -108,7 +108,6 @@ export class OrderService {
         'estimate_pickup_normal_hour',
         'estimate_pickup_express_hour',
         'estimate_delivery_normal_day',
-        'gst_percentage',
       ];
       const settingsResponse = await this.settingService.findAll(settingKeys);
       const settings = settingsResponse.data;
@@ -959,19 +958,12 @@ export class OrderService {
       order.branch_id = updateOrderDto.branch_id;
     }
 
-    const settingKeys = ['gst_percentage'];
-    const settingsResponse = await this.settingService.findAll(settingKeys);
-    const settings = settingsResponse.data;
-    const gst_percentage = parseFloat(settings['gst_percentage'] || 0);
-
     const sub_total = updateOrderDto.sub_total;
-    const gst_amount = (sub_total * gst_percentage) / 100;
     const total =
       sub_total +
       (updateOrderDto.normal_delivery_charges || 0) +
       (updateOrderDto.express_delivery_charges || 0);
     order.sub_total = sub_total;
-    order.gst = gst_amount;
     order.total = total;
     order.branch_id;
     Object.assign(order, orderUpdates);

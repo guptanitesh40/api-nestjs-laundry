@@ -25,7 +25,6 @@ export class NullTransformInterceptor implements NestInterceptor {
       'company_id',
       'express_delivery_charges',
       'express_delivery_hour',
-      'gst',
       'pincode',
       'gst_percentage',
     ];
