@@ -215,7 +215,6 @@ export class OrderService {
         'estimate_pickup_normal_hour',
         'estimate_pickup_express_hour',
         'estimate_delivery_normal_day',
-        'gst_percentage',
       ];
       const settingsResponse = await this.settingService.findAll(settingKeys);
       const settings = settingsResponse.data;
@@ -223,8 +222,6 @@ export class OrderService {
       let coupon_discount = 0;
       const coupon_code = createOrderDto.coupon_code;
 
-      const gst_percentage = parseFloat(settings['gst_percentage'] || 0);
-      const gst_amount = (createOrderDto.sub_total * gst_percentage) / 100;
       const total =
         createOrderDto.sub_total +
         (createOrderDto.normal_delivery_charges || 0) +
@@ -334,7 +331,6 @@ export class OrderService {
         normal_delivery_charges: createOrderDto.normal_delivery_charges || 0,
         sub_total: calculatedSubTotal,
         user_id: user_id | createOrderDto.user_id,
-        gst: gst_amount,
         total,
         coupon_code,
         coupon_discount,

@@ -126,7 +126,8 @@
                 <%= invoice.branchName %><br>
                     <strong>Address: </strong><br>
                     <strong>Mo.: <%= invoice.branchMobileNumber %></strong> <br>
-                    <strong>GSTIN: <%= invoice.gstIn %></strong><br><strong>HSN Code: </strong>
+                    <strong>GSTIN: <%= invoice.gstIn %></strong><br>
+                    <strong>HSN Code: </strong>
                     <%= invoice.hsnCode %><br>
                         <strong>MSME Number: </strong>
                         <%= invoice.companyMsmeNo %>
@@ -175,82 +176,92 @@
                             <%= invoice.itemsTotal.toFixed(2) %>
                         </td>
                     </tr>
-                    <tr>
-                        <td colspan="4">Normal Delivery Charges</td>
-                        <td style="text-align: center;">
-                            <%= invoice.normalDeliveryCharges.toFixed(2) %>
-                        </td>
-                    </tr>
-                    <% if (invoice.expressDeliveryCharges> 0) { %>
+                    <% if(invoice.normalDeliveryCharges){ %>
                         <tr>
-                            <td colspan="4">Express Delivery Charge:</td>
+                            <td colspan="4">Normal Delivery Charges</td>
                             <td style="text-align: center;">
-                                <%= invoice.expressDeliveryCharges.toFixed(2) %>
+                                <%= invoice.normalDeliveryCharges.toFixed(2) %>
                             </td>
                         </tr>
                         <% } %>
-                            <% if (invoice.discount> 0) { %>
+                            <% if (invoice.expressDeliveryCharges> 0) { %>
                                 <tr>
-                                    <td colspan="4">Discount</td>
+                                    <td colspan="4">Express Delivery Charge:</td>
                                     <td style="text-align: center;">
-                                        <%= invoice.discount.toFixed(2) %>
+                                        <%= invoice.expressDeliveryCharges.toFixed(2) %>
                                     </td>
                                 </tr>
                                 <% } %>
-                                    <tr>
-                                        <td colspan="4">Net Amount (Incl. GST)</td>
-                                        <td style="text-align: center;" class="bold">
-                                            <%= invoice.totalAmount.toFixed(2) %>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="4">Taxable Value</td>
-                                        <td style="text-align: center;">
-                                            <%= invoice.gstAmount.toFixed(2) %>
-                                        </td>
-                                    </tr>
-                                    <% if (invoice.addressState=="gujarat" || invoice.addressState=="Gujarat" ) { %>
+                                    <% if (invoice.discount> 0) { %>
                                         <tr>
-                                            <td colspan="4">
-                                                <%= invoice.inStateGst %>% CGST
-                                            </td>
+                                            <td colspan="4">Discount</td>
                                             <td style="text-align: center;">
-                                                <%= invoice.cgstAmount.toFixed(2) %>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="4">
-                                                <%= invoice.inStateGst %>% SGST
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <%= invoice.sgstAmount.toFixed(2) %>
+                                                <%= invoice.discount.toFixed(2) %>
                                             </td>
                                         </tr>
                                         <% } %>
+                                            <tr>
+                                                <td colspan="4">Net Amount (Incl. GST)</td>
+                                                <td style="text-align: center;" class="bold">
+                                                    <%= invoice.totalAmount.toFixed(2) %>
+                                                </td>
+                                            </tr>
 
-                                            <% if (invoice.addressState !="gujarat" && invoice.addressState !="Gujarat"
-                                                ) { %>
+                                            <% if(invoice.companyGstPercetage){ %>
+
                                                 <tr>
-                                                    <td colspan="4">
-                                                        <%= invoice.companyGstPercetage %>% IGST
-                                                    </td>
+                                                    <td colspan="4">Taxable Value</td>
                                                     <td style="text-align: center;">
-                                                        <%= invoice.igstAmount.toFixed(2) %>
+                                                        <%= invoice.gstAmount.toFixed(2) %>
                                                     </td>
                                                 </tr>
-                                                <% } %>
+                                                <% if (invoice.addressState=="gujarat" ||
+                                                    invoice.addressState=="Gujarat" ) { %>
                                                     <tr>
-                                                        <td colspan="4" class="bold">Total Amount (Incl. GST)</td>
-                                                        <td style="text-align: center;" class="bold">
-                                                            <%= invoice.totalAmount.toFixed(2) %>
+                                                        <td colspan="4">
+                                                            <%= invoice.inStateGst %>% CGST
+                                                        </td>
+                                                        <td style="text-align: center;">
+                                                            <%= invoice.cgstAmount.toFixed(2) %>
                                                         </td>
                                                     </tr>
                                                     <tr>
-                                                        <td colspan="5" style="text-align: center;">Total Amount In
-                                                            Words:
-                                                            <%= invoice.totalInWords %>
+                                                        <td colspan="4">
+                                                            <%= invoice.inStateGst %>% SGST
+                                                        </td>
+                                                        <td style="text-align: center;">
+                                                            <%= invoice.sgstAmount.toFixed(2) %>
                                                         </td>
                                                     </tr>
+                                                    <% } %>
+
+                                                        <% if (invoice.addressState !="gujarat" && invoice.addressState
+                                                            !="Gujarat" ) { %>
+                                                            <tr>
+                                                                <td colspan="4">
+                                                                    <%= invoice.companyGstPercetage %>% IGST
+                                                                </td>
+                                                                <td style="text-align: center;">
+                                                                    <%= invoice.igstAmount.toFixed(2) %>
+                                                                </td>
+                                                            </tr>
+                                                            <% } %>
+
+                                                                <% }%>
+                                                                    <tr>
+                                                                        <td colspan="4" class="bold">Total Amount (Incl.
+                                                                            GST)</td>
+                                                                        <td style="text-align: center;" class="bold">
+                                                                            <%= invoice.totalAmount.toFixed(2) %>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td colspan="5" style="text-align: center;">
+                                                                            Total Amount In
+                                                                            Words:
+                                                                            <%= invoice.totalInWords %>
+                                                                        </td>
+                                                                    </tr>
         </tbody>
     </table>
 
@@ -258,8 +269,10 @@
         <p>
             <%= invoice.companyName %>
         </p>
-        <img src="<%= invoice.signatureImage %>" alt="Signature" style="width: 100px; height: 30px;" />
-        <p>Authorized Signatory</p>
+        <% if(invoice.signatureImage){ %>
+            <img src="<%= invoice.signatureImage %>" alt="Signature" style="width: 100px; height: 30px;" />
+            <% } %>
+                <p>Authorized Signatory</p>
     </div>
 
     <div class="thank-you">

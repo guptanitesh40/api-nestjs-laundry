@@ -153,8 +153,13 @@ export class InvoiceService {
 
     const companyMsmeNo = orderData?.company?.msme_number || '';
 
-    const signatureImage =
-      process.env.BASE_URL + '/' + orderData?.company?.signature_image || '';
+    const signImg = orderData?.company?.signature_image || '';
+
+    let signatureImage = '';
+
+    if (signImg) {
+      signatureImage = process.env.BASE_URL + '/' + signImg || '';
+    }
 
     const branchMobileNumber = orderData.branch?.branch_phone_number;
     let itemsTotal = 0;
@@ -179,7 +184,7 @@ export class InvoiceService {
 
     const totalQty = quantity + quantity;
 
-    const companyGstPercetage = orderData.company?.gst_percentage;
+    const companyGstPercetage = orderData.company?.gst_percentage || 6;
 
     const inStateGst = companyGstPercetage / 2;
 
@@ -213,12 +218,15 @@ export class InvoiceService {
     const normalDeliveryCharges = orderData.normal_delivery_charges
       ? parseFloat(orderData.normal_delivery_charges.toString())
       : 0;
+
     const expressDeliveryCharges = orderData.express_delivery_charges
       ? parseFloat(orderData.express_delivery_charges.toString())
       : 0;
+
     const discount = orderData.coupon_discount
       ? parseFloat(orderData.coupon_discount.toString())
       : 0;
+
     const adjustmentCharges = orderData.kasar_amount
       ? parseFloat(orderData.kasar_amount.toString())
       : 0;
