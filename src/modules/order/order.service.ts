@@ -1712,6 +1712,7 @@ export class OrderService {
           OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
         ],
       })
+      .andWhere('order.deleted_at IS NULL')
       .select([
         'order.order_id',
         'order.delivery_boy_id',
@@ -1801,10 +1802,10 @@ export class OrderService {
       .innerJoinAndSelect('order.address', 'address')
       .innerJoinAndSelect('order.branch', 'branch')
       .where(
-        '(order.order_status != :excludedPickupStatus AND order.order_status != :excludedDeliveryStatus)',
+        '(order.order_status != :excludedCancelledByAdmin) AND order.order_status != :excludedCancelledByCustomer',
         {
-          excludedPickupStatus: OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
-          excludedDeliveryStatus: OrderStatus.DELIVERED,
+          excludedCancelledByAdmin: OrderStatus.CANCELLED_BY_ADMIN,
+          excludedCancelledByCustomer: OrderStatus.CANCELLED_BY_CUSTOMER,
         },
       )
       .andWhere(
@@ -1818,6 +1819,7 @@ export class OrderService {
           OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
         ],
       })
+      .andWhere('order.deleted_at IS NULL')
       .select([
         'order.order_id',
         'order.delivery_boy_id',
@@ -2161,20 +2163,22 @@ export class OrderService {
     } else {
       order.payment_status = PaymentStatus.PAYMENT_PENDING;
     }
-    order.paid_amount = amount;
+    order.paid_amount += amount;
 
     order.remaining_amount =
       order.total - order.paid_amount - order.kasar_amount;
 
     await this.orderRepository.save(order);
 
-    const noteDto: CreateNoteDto = {
-      user_id,
-      order_id,
-      text_note: notes,
-    };
+    if (notes) {
+      const noteDto: CreateNoteDto = {
+        user_id,
+        order_id,
+        text_note: notes,
+      };
 
-    await this.notesService.create(noteDto);
+      await this.notesService.create(noteDto);
+    }
 
     const deviceToken = await this.userService.getDeviceToken(order.user_id);
 
