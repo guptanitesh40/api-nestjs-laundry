@@ -24,12 +24,14 @@ export class MobileApiController {
     @Request() req,
     @Query('category_id') category_id: number,
     @Query('service_id') service_id: number,
+    @Query('search') search?: string,
   ): Promise<Response> {
     const user = req.user;
     return await this.apiService.getProductsByCategoryAndService(
       category_id,
       service_id,
       user.user_id,
+      search,
     );
   }
 

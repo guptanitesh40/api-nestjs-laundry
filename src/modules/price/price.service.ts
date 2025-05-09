@@ -95,6 +95,7 @@ export class PriceService {
     category_id: number,
     service_id: number,
     user_id?: number,
+    search?: string,
   ) {
     const prices = this.priceRepository
       .createQueryBuilder('price')
@@ -126,6 +127,12 @@ export class PriceService {
       );
     } else {
       prices.addSelect('NULL AS cart');
+    }
+
+    console.log('search', search);
+
+    if (search) {
+      prices.andWhere('product.name LIKE :search', { search: `%${search}%` });
     }
 
     const result = await prices.getMany();
