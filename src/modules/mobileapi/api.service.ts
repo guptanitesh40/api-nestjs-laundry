@@ -60,11 +60,13 @@ export class ApiService {
     category_id: number,
     service_id: number,
     user_id?: number,
+    search?: string,
   ): Promise<Response> {
     const prices = await this.priceService.getPricesByCategoryAndService(
       category_id,
       service_id,
       user_id,
+      search,
     );
 
     return {
