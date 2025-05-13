@@ -52,6 +52,12 @@ export class FeedbackService {
       .groupBy('feedbacks.feedback_id')
       .take(15);
 
+    if (Number(status) === IsPublish.WEBSITE) {
+      feedbacks.orWhere('feedbacks.is_publish IN (:...statuses)', {
+        statuses: [IsPublish.WEBSITE, IsPublish.BOTH],
+      });
+    }
+
     const feedback = await feedbacks.getMany();
 
     return {

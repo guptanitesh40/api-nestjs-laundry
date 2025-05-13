@@ -129,8 +129,6 @@ export class PriceService {
       prices.addSelect('NULL AS cart');
     }
 
-    console.log('search', search);
-
     if (search) {
       prices.andWhere('product.name LIKE :search', { search: `%${search}%` });
     }

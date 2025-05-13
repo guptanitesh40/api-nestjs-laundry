@@ -99,6 +99,73 @@ export class ReportService {
     return result;
   }
 
+  async getTotalOrderExcelReport(
+    startDate?: string,
+    endDate?: string,
+    user_id?: number | number[],
+  ): Promise<any> {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(startDate, endDate);
+
+    let queryBuilder = this.orderRepository
+      .createQueryBuilder('orders')
+      .leftJoinAndSelect('orders.user', 'customer')
+      .leftJoinAndSelect('orders.branch', 'branch')
+      .leftJoinAndSelect('orders.company', 'company')
+      .select([
+        'orders.order_id AS order_id',
+        'company.company_name AS company',
+        'branch.branch_name AS branch',
+        'customer.user_id AS customer_id',
+        "CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name",
+        'orders.gst_company_name AS customer_company_name',
+        'orders.gstin AS customer_gstin',
+        'DATE_FORMAT(orders.created_at, "%Y-%m-%d") AS booking_date',
+        'DATE_FORMAT(orders.estimated_pickup_time, "%Y-%m-%d") AS pickup_date',
+        'DATE_FORMAT(orders.estimated_delivery_time, "%Y-%m-%d") AS delivery_date',
+        'orders.total AS total_amount',
+        'orders.address_details AS address_details',
+        'orders.payment_status AS payment_status',
+        '(orders.total - orders.paid_amount - orders.kasar_amount - orders.refund_amount) AS pending_amount',
+        'orders.payment_type AS payment_type',
+        'orders.kasar_amount AS kasar_amount',
+      ])
+      .where('orders.deleted_at IS NULL')
+      .andWhere('customer.deleted_at IS NULL')
+      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.refund_status != :excludeRefundStatus', {
+        excludeRefundStatus: RefundStatus.FULL,
+      });
+
+    if (user_id) {
+      queryBuilder.andWhere('orders.user_id In (:...userId)', {
+        userId: user_id,
+      });
+    }
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    } else {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at >= NOW() - INTERVAL 6 MONTH',
+      );
+    }
+
+    const result = await queryBuilder
+      .orderBy('orders.created_at', 'ASC')
+      .getRawMany();
+
+    return result;
+  }
+
   async getDeliveryCompletedReport(
     startDate?: string,
     endDate?: string,
@@ -374,6 +441,62 @@ export class ReportService {
     return result;
   }
 
+  async getRefundExcelReport(
+    startDate?: string,
+    endDate?: string,
+  ): Promise<any> {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(startDate, endDate);
+
+    let queryBuilder = this.orderRepository
+      .createQueryBuilder('orders')
+      .leftJoinAndSelect('orders.user', 'customer')
+      .leftJoinAndSelect('orders.branch', 'branch')
+      .leftJoinAndSelect('orders.company', 'company')
+      .select([
+        'orders.order_id AS order_id',
+        'company.company_name AS company',
+        'branch.branch_name AS branch',
+        'customer.user_id AS customer_id',
+        "CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name",
+        'orders.gst_company_name AS customer_company_name',
+        'orders.gstin AS customer_gstin',
+        'DATE_FORMAT(orders.created_at, "%Y-%m-%d") AS booking_date',
+        'DATE_FORMAT(orders.estimated_pickup_time, "%Y-%m-%d") AS pickup_date',
+        'DATE_FORMAT(orders.estimated_delivery_time, "%Y-%m-%d") AS delivery_date',
+        'orders.total AS total_amount',
+        'orders.address_details AS address_details',
+        'orders.refund_amount AS refund_amount',
+        'orders.updated_at AS refund_date',
+      ])
+      .where('orders.deleted_at IS NULL')
+      .andWhere('customer.deleted_at IS NULL')
+      .andWhere('orders.refund_amount > 0')
+      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      });
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    } else {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at >= NOW() - INTERVAL 6 MONTH',
+      );
+    }
+
+    const result = await queryBuilder
+      .orderBy('orders.created_at', 'ASC')
+      .getRawMany();
+
+    return result;
+  }
+
   async getKasarReport(startDate?: string, endDate?: string): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       this.convertDateParameters(startDate, endDate);
@@ -456,6 +579,68 @@ export class ReportService {
     result.forEach((c) => {
       c.not_active_count = Number(c.not_active_count);
     });
+
+    return result;
+  }
+
+  async getNotActiveCustomerExcelReport(
+    startDate?: string,
+    endDate?: string,
+  ): Promise<any> {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(startDate, endDate);
+
+    const twoMonthsAgo = new Date();
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+    const formattedTwoMonthsAgo = twoMonthsAgo.toISOString().split('T')[0];
+
+    let queryBuilder = this.userRespository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.orders', 'order')
+      .leftJoinAndSelect('order.branch', 'branch')
+      .leftJoinAndSelect('order.company', 'company')
+      .select([
+        'order.gst_company_name AS customer_company_name',
+        'company.company_name AS company',
+        'branch.branch_name AS branch',
+        'order.address_details AS address_details',
+        "CONCAT(user.first_name, ' ', user.last_name) AS customer_name",
+        'order.gstin AS customer_gstin',
+      ])
+      .addSelect(
+        `(SELECT DATE_FORMAT(MAX(o.created_at), '%d-%m-%y') 
+          FROM orders o 
+          WHERE o.user_id = user.user_id 
+            AND o.deleted_at IS NULL
+        ) AS last_order_date`,
+      )
+      .where('user.role_id = :customerRoleId', {
+        customerRoleId: Role.CUSTOMER,
+      })
+      .andWhere('user.created_at <= :twoMonthsAgo', {
+        twoMonthsAgo: formattedTwoMonthsAgo,
+      })
+      .andWhere('user.deleted_at IS NULL')
+      .andWhere(
+        `user.user_id NOT IN (
+          SELECT DISTINCT orders.user_id 
+          FROM orders 
+          WHERE orders.created_at >= :twoMonthsAgo 
+          AND orders.deleted_at IS NULL
+        )`,
+        { twoMonthsAgo: formattedTwoMonthsAgo },
+      );
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder = queryBuilder.andWhere(
+        'user.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    }
+
+    const result = await queryBuilder
+      .orderBy('user.created_at', 'ASC')
+      .getRawMany();
 
     return result;
   }
@@ -718,6 +903,260 @@ export class ReportService {
         num.total_transaction_amount.toFixed(2),
       );
     });
+
+    return result;
+  }
+
+  async getPaymentTransactionExcelReport(
+    startDate?: string,
+    endDate?: string,
+    user_id?: number | number[],
+  ): Promise<any> {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(startDate, endDate);
+
+    let queryBuilder = this.orderRepository
+      .createQueryBuilder('orders')
+      .leftJoinAndSelect('orders.user', 'customer')
+      .leftJoinAndSelect('orders.branch', 'branch')
+      .leftJoinAndSelect('orders.company', 'company')
+      .select([
+        'orders.order_id AS order_id',
+        'company.company_name AS company',
+        'branch.branch_name AS branch',
+        'customer.user_id AS customer_id',
+        "CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name",
+        'orders.gst_company_name AS customer_company_name',
+        'orders.total AS total_amount',
+        'orders.payment_status AS payment_status',
+        'orders.payment_type AS payment_type',
+        'orders.transaction_id AS transaction_id',
+      ])
+      .addSelect(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
+      .where('orders.deleted_at IS NULL')
+      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.payment_status = :paymentStatus', {
+        paymentStatus: PaymentStatus.FULL_PAYMENT_RECEIVED,
+      })
+
+      .andWhere('orders.refund_status != :refundStatus', {
+        refundStatus: RefundStatus.FULL,
+      });
+
+    if (user_id) {
+      queryBuilder.andWhere('orders.user_id In (:...userId)', {
+        userId: user_id,
+      });
+    }
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    } else {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at >= NOW() - INTERVAL 6 MONTH',
+      );
+    }
+
+    const result = await queryBuilder
+      .orderBy('orders.created_at', 'ASC')
+      .getRawMany();
+
+    return result;
+  }
+
+  async getGstExcelReport(
+    startDate?: string,
+    endDate?: string,
+    user_id?: number | number[],
+  ): Promise<any> {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(startDate, endDate);
+
+    let queryBuilder = this.orderRepository
+      .createQueryBuilder('orders')
+      .leftJoinAndSelect('orders.user', 'customer')
+      .leftJoinAndSelect('orders.branch', 'branch')
+      .leftJoinAndSelect('orders.company', 'company')
+      .select([
+        'orders.order_id AS order_id',
+        'company.company_name AS company',
+        'branch.branch_name AS branch',
+        "CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name",
+        'orders.address_details AS address_details',
+        'orders.gst_company_name AS customer_company_name',
+        'orders.gstin AS customer_gstin',
+      ])
+      .addSelect(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
+      .where('orders.deleted_at IS NULL')
+      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.payment_status = :paymentStatus', {
+        paymentStatus: PaymentStatus.FULL_PAYMENT_RECEIVED,
+      })
+
+      .andWhere('orders.refund_status != :refundStatus', {
+        refundStatus: RefundStatus.FULL,
+      });
+
+    if (user_id) {
+      queryBuilder.andWhere('orders.user_id In (:...userId)', {
+        userId: user_id,
+      });
+    }
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    } else {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at >= NOW() - INTERVAL 6 MONTH',
+      );
+    }
+
+    const result = await queryBuilder
+      .orderBy('orders.created_at', 'ASC')
+      .getRawMany();
+
+    return result;
+  }
+
+  async getPickupExcelReport(
+    startDate?: string,
+    endDate?: string,
+    user_id?: number | number[],
+  ): Promise<any> {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(startDate, endDate);
+
+    let queryBuilder = this.orderRepository
+      .createQueryBuilder('orders')
+      .leftJoinAndSelect('orders.user', 'customer')
+      .leftJoinAndSelect('orders.pickup_boy', 'pickup_boy')
+      .leftJoinAndSelect('orders.branch', 'branch')
+      .leftJoinAndSelect('orders.company', 'company')
+      .select([
+        'orders.order_id AS order_id',
+        'DATE_FORMAT(orders.estimated_pickup_time, "%Y-%m-%d") AS pickup_date',
+        "CONCAT(pickup_boy.first_name, ' ', pickup_boy.last_name) AS pickup_boy_name",
+        'company.company_name AS company',
+        'branch.branch_name AS branch',
+        "CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name",
+        'orders.address_details AS address_details',
+        'orders.gst_company_name AS customer_company_name',
+        'orders.gstin AS customer_gstin',
+      ])
+      .addSelect(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
+      .where('orders.deleted_at IS NULL')
+      .andWhere('orders.pickup_boy_id IS NOT NULL')
+      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.refund_status != :refundStatus', {
+        refundStatus: RefundStatus.FULL,
+      });
+
+    if (user_id) {
+      queryBuilder.andWhere('orders.user_id In (:...userId)', {
+        userId: user_id,
+      });
+    }
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    } else {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at >= NOW() - INTERVAL 6 MONTH',
+      );
+    }
+
+    const result = await queryBuilder
+      .orderBy('orders.created_at', 'ASC')
+      .getRawMany();
+
+    return result;
+  }
+
+  async getDeliveryExcelReport(
+    startDate?: string,
+    endDate?: string,
+    user_id?: number | number[],
+  ): Promise<any> {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      this.convertDateParameters(startDate, endDate);
+
+    let queryBuilder = this.orderRepository
+      .createQueryBuilder('orders')
+      .leftJoinAndSelect('orders.user', 'customer')
+      .leftJoin('orders.delivery_boy', 'deliveryBoy')
+      .leftJoinAndSelect('orders.branch', 'branch')
+      .leftJoinAndSelect('orders.company', 'company')
+      .select([
+        'orders.order_id AS order_id',
+        'DATE_FORMAT(orders.estimated_delivery_time, "%Y-%m-%d") AS delivery_date',
+        'company.company_name AS company',
+        'branch.branch_name AS branch',
+        "CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name",
+        'orders.address_details AS address_details',
+        'orders.gst_company_name AS customer_company_name',
+        'orders.gstin AS customer_gstin',
+      ])
+      .addSelect(
+        "CONCAT(deliveryBoy.first_name, ' ', deliveryBoy.last_name) AS delivery_boy_name",
+      )
+      .addSelect(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
+      .where('orders.deleted_at IS NULL')
+      .andWhere('orders.delivery_boy_id IS NOT NULL')
+      .andWhere('orders.order_status NOT IN (:...excludeOrderStatus)', {
+        excludeOrderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+
+      .andWhere('orders.refund_status != :refundStatus', {
+        refundStatus: RefundStatus.FULL,
+      });
+
+    if (user_id) {
+      queryBuilder.andWhere('orders.user_id In (:...userId)', {
+        userId: user_id,
+      });
+    }
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    } else {
+      queryBuilder = queryBuilder.andWhere(
+        'orders.created_at >= NOW() - INTERVAL 6 MONTH',
+      );
+    }
+
+    const result = await queryBuilder
+      .orderBy('orders.created_at', 'ASC')
+      .getRawMany();
 
     return result;
   }
