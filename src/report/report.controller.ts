@@ -101,7 +101,7 @@ export class ReportController {
       return { url: fileUrl };
     }
 
-    return this.reportService.getRefundExcelReport(startDate, endDate);
+    return this.reportService.getRefundReport(startDate, endDate);
   }
 
   @Get('kasar-report')
@@ -117,11 +117,18 @@ export class ReportController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('format') format?: string,
+    @Query('user_id') user_id?: number | number[],
   ) {
+    const userIds = Array.isArray(user_id)
+      ? user_id.map(Number)
+      : user_id
+        ? String(user_id).split(',').map(Number)
+        : undefined;
     if (format === 'excel') {
       const data = await this.reportService.getNotActiveCustomerExcelReport(
         startDate,
         endDate,
+        userIds,
       );
       const fileUrl = await exportNotActiveCutomerExcel(data);
 
