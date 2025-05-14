@@ -586,6 +586,7 @@ export class ReportService {
   async getNotActiveCustomerExcelReport(
     startDate?: string,
     endDate?: string,
+    user_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       this.convertDateParameters(startDate, endDate);
@@ -596,11 +597,12 @@ export class ReportService {
 
     let queryBuilder = this.userRespository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.orders', 'order')
+      .innerJoinAndSelect('user.orders', 'order')
       .leftJoinAndSelect('order.branch', 'branch')
       .leftJoinAndSelect('order.company', 'company')
       .select([
         'order.gst_company_name AS customer_company_name',
+        'user.user_id AS user_id',
         'company.company_name AS company',
         'branch.branch_name AS branch',
         'order.address_details AS address_details',
@@ -631,6 +633,12 @@ export class ReportService {
         { twoMonthsAgo: formattedTwoMonthsAgo },
       );
 
+    if (user_id) {
+      queryBuilder.andWhere('user.user_id In (:...userId)', {
+        userId: user_id,
+      });
+    }
+
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
         'user.created_at BETWEEN :startDate AND :endDate',
@@ -642,7 +650,14 @@ export class ReportService {
       .orderBy('user.created_at', 'ASC')
       .getRawMany();
 
-    return result;
+    const uniqueResults = result.reduce((acc, item) => {
+      if (!acc.find((i) => i.user_id === item.user_id)) {
+        acc.push(item);
+      }
+      return acc;
+    }, []);
+
+    return uniqueResults;
   }
 
   async getNewCustomerAcquisitionReport(
