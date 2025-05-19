@@ -18,6 +18,8 @@ import { ContactUsModule } from './modules/contact-us/contact-us.module';
 import { CouponModule } from './modules/coupon/coupon.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
+import { LabelManagementModule } from './modules/label-management/label-managment.module';
+import { LanguageModule } from './modules/language/language.module';
 import { MobileApiModule } from './modules/mobileapi/mobileapi.module';
 import { ModulesModule } from './modules/module/module.module';
 import { NotesModule } from './modules/notes/note.module';
@@ -73,6 +75,8 @@ import { ReportModule } from './report/report.module';
     RoleModule,
     RolePermissionModule,
     HttpModule,
+    LanguageModule,
+    LabelManagementModule,
   ],
   controllers: [AppController],
   providers: [
