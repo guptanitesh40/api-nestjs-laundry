@@ -33,7 +33,7 @@ export class LanguageService {
       .replace(/\s+/g, '_');
 
     await this.dataSource.query(
-      `ALTER TABLE label_management ADD COLUMN \`${sanitizedColumnName}\` VARCHAR(255)`,
+      `ALTER TABLE labels ADD COLUMN \`${sanitizedColumnName}\` VARCHAR(255)`,
     );
 
     return {
