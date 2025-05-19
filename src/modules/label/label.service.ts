@@ -34,9 +34,7 @@ export class LabelService {
   }
 
   async getAll(): Promise<any> {
-    const result = await this.dataSource.query(
-      'SELECT * FROM label_management',
-    );
+    const result = await this.dataSource.query('SELECT * FROM labels');
     return result;
   }
 
