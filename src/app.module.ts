@@ -18,7 +18,7 @@ import { ContactUsModule } from './modules/contact-us/contact-us.module';
 import { CouponModule } from './modules/coupon/coupon.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
-import { LabelManagementModule } from './modules/label-management/label-managment.module';
+import { LabelModule } from './modules/label/label.module';
 import { LanguageModule } from './modules/language/language.module';
 import { MobileApiModule } from './modules/mobileapi/mobileapi.module';
 import { ModulesModule } from './modules/module/module.module';
@@ -76,7 +76,7 @@ import { ReportModule } from './report/report.module';
     RolePermissionModule,
     HttpModule,
     LanguageModule,
-    LabelManagementModule,
+    LabelModule,
   ],
   controllers: [AppController],
   providers: [

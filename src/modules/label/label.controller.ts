@@ -3,13 +3,13 @@ import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'src/dto/response.dto';
 import { RolesGuard } from 'src/modules/auth/guard/role.guard';
 import { CreateLabelDto } from './dto/create-label.dto';
-import { LabelManagementService } from './label-management.service';
+import { LabelService } from './label.service';
 
-@Controller('label-management')
+@Controller('label')
 @UseGuards(RolesGuard)
 @UseGuards(AuthGuard('jwt'))
-export class LabelManagementController {
-  constructor(private readonly labelManagmentService: LabelManagementService) {}
+export class LabelController {
+  constructor(private readonly labelManagmentService: LabelService) {}
 
   @Post()
   async create(@Body() createLabelDto: CreateLabelDto): Promise<Response> {

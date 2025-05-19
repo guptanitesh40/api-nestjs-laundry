@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
-@Entity('language')
+@Entity('languages')
 export class Language extends BaseEntity {
   @PrimaryGeneratedColumn()
   language_id: number;

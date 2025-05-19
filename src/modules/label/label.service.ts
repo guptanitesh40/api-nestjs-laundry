@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
-import { LabelManagement } from 'src/entities/label-management.entity';
+import { Label } from 'src/entities/label.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateLabelDto } from './dto/create-label.dto';
 
 @Injectable()
-export class LabelManagementService {
+export class LabelService {
   constructor(
-    @InjectRepository(LabelManagement)
-    private labelManagementRepository: Repository<LabelManagement>,
+    @InjectRepository(Label)
+    private labelManagementRepository: Repository<Label>,
     private dataSource: DataSource,
   ) {}
 
