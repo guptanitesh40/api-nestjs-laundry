@@ -52,7 +52,7 @@ export class LabelService {
       const setClause = columns.map((col) => `\`${col}\` = ?`).join(', ');
 
       return this.dataSource.query(
-        `UPDATE label_management SET ${setClause} WHERE label_management_id = ?`,
+        `UPDATE labels SET ${setClause} WHERE label_id = ?`,
         [...values, label_managment_id],
       );
     });
