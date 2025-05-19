@@ -4,6 +4,7 @@ import admin from 'firebase-admin';
 import { nanoid } from 'nanoid';
 import { firstValueFrom } from 'rxjs';
 import { Order } from 'src/entities/order.entity';
+import { OrderStatus } from 'src/enum/order-status.eum';
 import { getCustomerOrderStatusLabel } from 'src/utils/order-status.helper';
 import { RedisQueueService } from '../../redis.config';
 
@@ -44,7 +45,18 @@ export class NotificationService {
       },
     );
 
-    return `Dear ${order.user.first_name} ${order.user.last_name}, your booking has been confirmed with Booking No: SCONLINE/${order.order_id} on ${formattedDate}. Total clothes: ${order.items.length}, Total Amount: ₹${order.total}. Please check your bill here: www.sikkacleaners.in/sikka-billing/customer-login.`;
+    if (order.order_status === OrderStatus.DELIVERED) {
+      return `Dear ${order.user.first_name} ${order.user.last_name}, your order : SCONLINE/${order.order_id} has been successfully delivered. We hope you're happy with our service! Thank you for choosing Sikka Cleaners!.`;
+    }
+
+    if (
+      order.order_status ===
+      OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
+    ) {
+      return `Dear ${order.user.first_name} ${order.user.last_name}, your Booking No: SCONLINE/${order.order_id} has been assigned to delivery boy and ready for delivery. Thank you for choosing Sikka Cleaners!.`;
+    }
+
+    return `Dear ${order.user.first_name} ${order.user.last_name}, your booking has been confirmed with Booking No: SCONLINE/${order.order_id} on ${formattedDate}. Total clothes: ${order.items.length}, Total Amount: ₹${order.total}.Thank you for choosing Sikka Cleaners!.`;
   }
 
   async sendOrderStatusNotification(order: any): Promise<any> {

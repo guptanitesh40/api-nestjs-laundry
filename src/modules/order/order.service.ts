@@ -417,6 +417,8 @@ export class OrderService {
         },
       };
 
+      await this.notificationService?.sendOrderNotification(orderDetail);
+
       const deviceToken = await this.userService?.getDeviceToken(user?.user_id);
 
       if (deviceToken) {
@@ -2014,6 +2016,10 @@ export class OrderService {
 
     await Promise.all(
       orders.map(async (order) => {
+        const orderDetails = (await this.getOrderDetail(order.order_id)).data;
+
+        await this.notificationService.sendOrderNotification(orderDetails);
+
         const deviceToken = deviceTokensMap.find(
           (token) => token.user_id === order.user_id,
         )?.device_token;
@@ -2238,7 +2244,10 @@ export class OrderService {
       }
     }
 
+    const orderDetails = (await this.getOrderDetail(order_id)).data;
+
     if (order.order_status === OrderStatus.DELIVERED) {
+      await this.notificationService?.sendOrderNotification(orderDetails);
       if (deviceToken) {
         await this.notificationService.sendPushNotification(
           customerApp,
