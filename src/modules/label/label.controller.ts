@@ -1,7 +1,16 @@
-import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'src/dto/response.dto';
 import { RolesGuard } from 'src/modules/auth/guard/role.guard';
+import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { CreateLabelDto } from './dto/create-label.dto';
 import { LabelService } from './label.service';
 
@@ -17,8 +26,10 @@ export class LabelController {
   }
 
   @Get()
-  async getAll(): Promise<any> {
-    return this.labelService.getAll();
+  async getAll(
+    @Query() paginationQueryDto: PaginationQueryDto,
+  ): Promise<Response> {
+    return await this.labelService.getAll(paginationQueryDto);
   }
 
   @Patch()

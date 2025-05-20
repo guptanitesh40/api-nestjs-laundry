@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Label } from 'src/entities/label.entity';
 import { DataSource, Repository } from 'typeorm';
+import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { CreateLabelDto } from './dto/create-label.dto';
 
 @Injectable()
@@ -33,9 +34,49 @@ export class LabelService {
     };
   }
 
-  async getAll(): Promise<any> {
-    const result = await this.dataSource.query('SELECT * FROM labels');
-    return result;
+  async getAll(paginationQueryDto: PaginationQueryDto): Promise<any> {
+    const { per_page, page_number, search, sort_by, order } =
+      paginationQueryDto;
+
+    const pageNumber = page_number ?? 1;
+    const perPage = per_page ?? 10;
+    const skip = (pageNumber - 1) * perPage;
+
+    let query = 'SELECT * FROM labels';
+    const params: any[] = [];
+
+    if (search) {
+      query += ' WHERE label_name LIKE ?';
+      params.push(`%${search}%`);
+    }
+
+    const sortBy =
+      sort_by && /^[a-zA-Z0-9_]+$/.test(sort_by) ? sort_by : 'label_id';
+
+    const sortOrder = order?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    query += ` ORDER BY ${sortBy} ${sortOrder}`;
+
+    query += ' LIMIT ? OFFSET ?';
+    params.push(perPage, skip);
+
+    const result = await this.dataSource.query(query, params);
+
+    let countQuery = 'SELECT COUNT(*) as total FROM labels';
+    const countParams: any[] = [];
+
+    if (search) {
+      countQuery += ' WHERE label_name LIKE ?';
+      countParams.push(`%${search}%`);
+    }
+
+    const countResult = await this.dataSource.query(countQuery, countParams);
+
+    return {
+      data: result,
+      page_number: pageNumber,
+      per_page: perPage,
+      count: Number(countResult[0]?.total) || 0,
+    };
   }
 
   async update(labels: Array<Record<string, any>>): Promise<any> {
