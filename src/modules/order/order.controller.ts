@@ -60,12 +60,14 @@ export class OrderController {
   @Roles(Role.DELIVERY_BOY_AND_PICKUP_BOY)
   async getDeliverAndPickupOrder(
     @Request() req,
+    @Query('assignTo') assignTo: AssignTo,
     @Query() paginationQuery: PaginationQueryDto,
   ): Promise<any> {
     const user = req.user;
 
     return await this.orderService.getDeliverAndPickupOrder(
       user.user_id,
+      assignTo,
       paginationQuery,
     );
   }

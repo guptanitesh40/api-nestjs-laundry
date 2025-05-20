@@ -1787,6 +1787,7 @@ export class OrderService {
 
   async getDeliverAndPickupOrder(
     assign_id: number,
+    assignTo: AssignTo,
     paginationQueryDto: PaginationQueryDto,
   ): Promise<any> {
     const { start_date, end_date, per_page, page_number, customer_name } =
@@ -1809,10 +1810,6 @@ export class OrderService {
           excludedCancelledByAdmin: OrderStatus.CANCELLED_BY_ADMIN,
           excludedCancelledByCustomer: OrderStatus.CANCELLED_BY_CUSTOMER,
         },
-      )
-      .andWhere(
-        'order.delivery_boy_id = :deliveryId OR order.pickup_boy_id = :deliveryId',
-        { deliveryId: assign_id },
       )
       .andWhere('order.order_status IN(:...deliveredStatus)', {
         deliveredStatus: [
@@ -1855,10 +1852,27 @@ export class OrderService {
       .take(perPage)
       .skip(skip);
 
+    if (assignTo === AssignTo.DELIVERY) {
+      queryBuilder.andWhere('order.delivery_boy_id = :deliveryBoyId', {
+        deliveryBoyId: assign_id,
+      });
+    }
+
+    if (assignTo === AssignTo.PICKUP) {
+      queryBuilder.andWhere('order.pickup_boy_id = :pickupBoyId', {
+        pickupBoyId: assign_id,
+      });
+    }
+
     if (start_date && end_date) {
       queryBuilder.andWhere(
         'order.created_at BETWEEN :startDate AND :endDate',
         { startDate: start_date, endDate: end_date },
+      );
+    } else {
+      queryBuilder.andWhere(
+        '(order.delivery_boy_id = :assignId OR order.pickup_boy_id = :assignId)',
+        { assignId: assign_id },
       );
     }
 
