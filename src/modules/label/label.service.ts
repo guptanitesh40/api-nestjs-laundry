@@ -9,7 +9,7 @@ import { CreateLabelDto } from './dto/create-label.dto';
 export class LabelService {
   constructor(
     @InjectRepository(Label)
-    private labelManagementRepository: Repository<Label>,
+    private labelRepository: Repository<Label>,
     private dataSource: DataSource,
   ) {}
 
@@ -22,9 +22,9 @@ export class LabelService {
       createLanguageDto.label_name,
     );
 
-    const language = this.labelManagementRepository.create(createLanguageDto);
+    const language = this.labelRepository.create(createLanguageDto);
 
-    const result = await this.labelManagementRepository.save(language);
+    const result = await this.labelRepository.save(language);
 
     return {
       statusCode: 201,
@@ -40,12 +40,12 @@ export class LabelService {
 
   async update(labels: Array<Record<string, any>>): Promise<any> {
     const updatePromises = labels.map(async (label) => {
-      const { label_managment_id, ...fieldsToUpdate } = label;
+      const { label_id, ...fieldsToUpdate } = label;
 
       const columns = Object.keys(fieldsToUpdate);
       const values = Object.values(fieldsToUpdate);
 
-      if (!label_managment_id || columns.length === 0) {
+      if (!label_id || columns.length === 0) {
         throw new Error('Missing ID or fields in one of the records');
       }
 
@@ -53,7 +53,7 @@ export class LabelService {
 
       return this.dataSource.query(
         `UPDATE labels SET ${setClause} WHERE label_id = ?`,
-        [...values, label_managment_id],
+        [...values, label_id],
       );
     });
 

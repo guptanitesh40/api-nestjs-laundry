@@ -2160,11 +2160,11 @@ export class OrderService {
     const pending_amount =
       order.total - order.paid_amount - order.kasar_amount || 0;
 
-    if (amount > pending_amount) {
+    if (Number(amount) > pending_amount) {
       throw new BadRequestException('Cannot Pay More Than Pending Amount');
     }
 
-    if (amount === pending_amount) {
+    if (Number(amount) === pending_amount) {
       order.payment_status = PaymentStatus.FULL_PAYMENT_RECEIVED;
     } else {
       order.payment_status = PaymentStatus.PAYMENT_PENDING;
