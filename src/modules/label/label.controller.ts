@@ -9,22 +9,20 @@ import { LabelService } from './label.service';
 @UseGuards(RolesGuard)
 @UseGuards(AuthGuard('jwt'))
 export class LabelController {
-  constructor(private readonly labelManagmentService: LabelService) {}
+  constructor(private readonly labelService: LabelService) {}
 
   @Post()
   async create(@Body() createLabelDto: CreateLabelDto): Promise<Response> {
-    return this.labelManagmentService.create(createLabelDto);
+    return this.labelService.create(createLabelDto);
   }
 
   @Get()
   async getAll(): Promise<any> {
-    return this.labelManagmentService.getAll();
+    return this.labelService.getAll();
   }
 
   @Patch()
-  async bulkUpdate(
-    @Body() labelUpdates: Array<Record<string, any>>,
-  ): Promise<any> {
-    return this.labelManagmentService.update(labelUpdates);
+  async update(@Body() labelUpdates: Array<Record<string, any>>): Promise<any> {
+    return this.labelService.update(labelUpdates);
   }
 }
