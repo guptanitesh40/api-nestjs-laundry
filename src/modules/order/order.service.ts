@@ -187,6 +187,7 @@ export class OrderService {
     await queryRunner.connect();
 
     await queryRunner.startTransaction();
+    let orderDetail;
 
     try {
       const address = await queryRunner.manager.findOne(UserAddress, {
@@ -400,12 +401,14 @@ export class OrderService {
       }
       await this.cartService.removeCartByUser(user.user_id);
 
-      const orderDetail = {
+      orderDetail = {
         order_id: savedOrder.order_id,
         total: savedOrder.total,
         created_at: savedOrder.created_at,
         address_details: savedOrder.address_details,
         total_items: orderItems.length,
+        order_status: savedOrder.order_status,
+        user_id: savedOrder.user_id,
         branch_id: savedOrder.branch_id,
         transaction_id: savedOrder.transaction_id || '',
         confirm_date: createOrderDto.confirm_date,
@@ -417,8 +420,6 @@ export class OrderService {
         },
       };
 
-      await this.notificationService?.sendOrderNotification(orderDetail);
-
       const deviceToken = await this.userService?.getDeviceToken(user?.user_id);
 
       if (deviceToken) {
@@ -429,31 +430,33 @@ export class OrderService {
           `Your order #${order.order_id} has been placed successfully!`,
         );
       }
-
-      await queryRunner.commitTransaction();
-
-      await this.invoiceService.generateOrderLabels(orderDetail.order_id);
-
-      await this.invoiceService.generateGeneralOrderLabel(orderDetail);
-
-      await this.invoiceService.generateAndSaveInvoicePdf(
-        orderDetail.order_id,
-        'true',
-      );
-
-      return {
-        statusCode: 200,
-        message: 'Order details added successfully',
-        data: {
-          orderDetail,
-        },
-      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new Error(`Transaction failed: ${error.message}`);
     } finally {
       await queryRunner.release();
     }
+
+    try {
+      await this.notificationService?.sendOrderNotification(orderDetail);
+
+      await this.invoiceService.generateOrderLabels(orderDetail.order_id);
+      await this.invoiceService.generateGeneralOrderLabel(orderDetail);
+      await this.invoiceService.generateAndSaveInvoicePdf(
+        orderDetail.order_id,
+        'true',
+      );
+    } catch (e) {
+      console.error('Post-transaction operations failed', e.message);
+    }
+
+    return {
+      statusCode: 200,
+      message: 'Order details added successfully',
+      data: {
+        orderDetail,
+      },
+    };
   }
 
   async createAdminOrder(
@@ -1815,7 +1818,14 @@ export class OrderService {
         deliveredStatus: [
           OrderStatus.ASSIGNED_PICKUP_BOY,
           OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+          OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
+          OrderStatus.WORKSHOP_ASSIGNED,
+          OrderStatus.WORKSHOP_RECEIVED_ITEMS,
+          OrderStatus.WORKSHOP_WORK_IN_PROGRESS,
+          OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
+          OrderStatus.ORDER_COMPLETED_AND_RECEIVED_AT_BRANCH,
           OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+          OrderStatus.DELIVERED,
         ],
       })
       .andWhere('order.deleted_at IS NULL')
@@ -1862,13 +1872,6 @@ export class OrderService {
       queryBuilder.andWhere('order.pickup_boy_id = :pickupBoyId', {
         pickupBoyId: assign_id,
       });
-    }
-
-    if (start_date && end_date) {
-      queryBuilder.andWhere(
-        'order.created_at BETWEEN :startDate AND :endDate',
-        { startDate: start_date, endDate: end_date },
-      );
     } else {
       queryBuilder.andWhere(
         '(order.delivery_boy_id = :assignId OR order.pickup_boy_id = :assignId)',
@@ -1876,10 +1879,18 @@ export class OrderService {
       );
     }
 
+    if (start_date && end_date) {
+      queryBuilder.andWhere(
+        'order.created_at BETWEEN :startDate AND :endDate',
+        { startDate: start_date, endDate: end_date },
+      );
+    }
+
     queryBuilder.orderBy('order.created_at', 'DESC');
 
     const [ordersWithAssignedDeliveryBoys, total] =
       await queryBuilder.getManyAndCount();
+
     const result = ordersWithAssignedDeliveryBoys.map((order) => ({
       ...order,
       pending_amount: order.total - order.paid_amount - order.kasar_amount,

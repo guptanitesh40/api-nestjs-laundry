@@ -8,7 +8,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
+import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from 'src/modules/auth/guard/role.guard';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { CreateLabelDto } from './dto/create-label.dto';
@@ -35,5 +37,11 @@ export class LabelController {
   @Patch()
   async update(@Body() labelUpdates: Array<Record<string, any>>): Promise<any> {
     return this.labelService.update(labelUpdates);
+  }
+
+  @Get('mobile-content')
+  @Roles(Role.CUSTOMER)
+  getLabelsByLanguage(@Query('language_code') language_code: string) {
+    return this.labelService.getLabelsByLanguage(language_code);
   }
 }

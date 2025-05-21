@@ -18,6 +18,7 @@ import { Branch } from './branch.entity';
 import { Company } from './company.entity';
 import { Feedback } from './feedback.entity';
 import { Note } from './note.entity';
+import { Notification } from './notification.entity';
 import { OrderItem } from './order-item.entity';
 import { User } from './user.entity';
 import { Workshop } from './workshop.entity';
@@ -105,6 +106,9 @@ export class Order extends BaseEntity {
 
   @OneToMany(() => Note, (note) => note.order)
   notes: Note[];
+
+  @OneToMany(() => Notification, (notification) => notification.order)
+  notifications: Note[];
 
   @OneToOne(() => Feedback, (feedback) => feedback.order)
   feedback: Feedback;

@@ -11,6 +11,12 @@ export class Service extends BaseEntity {
   @Column()
   name: string;
 
+  @Column({ nullable: true })
+  name_hindi: string;
+
+  @Column({ nullable: true })
+  name_gujarati: string;
+
   @Column()
   image: string;
 

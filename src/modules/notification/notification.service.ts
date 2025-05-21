@@ -1,11 +1,15 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import admin from 'firebase-admin';
 import { nanoid } from 'nanoid';
 import { firstValueFrom } from 'rxjs';
+import { Response } from 'src/dto/response.dto';
+import { Notification } from 'src/entities/notification.entity';
 import { Order } from 'src/entities/order.entity';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { getCustomerOrderStatusLabel } from 'src/utils/order-status.helper';
+import { Repository } from 'typeorm';
 import { RedisQueueService } from '../../redis.config';
 
 @Injectable()
@@ -15,6 +19,8 @@ export class NotificationService {
   constructor(
     private readonly httpService: HttpService,
     private readonly redisQueueService: RedisQueueService,
+    @InjectRepository(Notification)
+    private readonly notificationRepository: Repository<Notification>,
   ) {}
 
   async sendOrderNotification(order: any): Promise<void> {
@@ -33,6 +39,14 @@ export class NotificationService {
     if (response.status !== 200) {
       throw new Error('Failed to send WhatsApp notification');
     }
+
+    const notification = this.notificationRepository.create({
+      order_id: order.order_id,
+      user_id: order.user_id,
+      order_status: order.order_status,
+    });
+
+    await this.notificationRepository.save(notification);
   }
 
   private prepareMessage(order: Order): string {
@@ -46,17 +60,17 @@ export class NotificationService {
     );
 
     if (order.order_status === OrderStatus.DELIVERED) {
-      return `Dear ${order.user.first_name} ${order.user.last_name}, your order : SCONLINE/${order.order_id} has been successfully delivered. We hope you're happy with our service! Thank you for choosing Sikka Cleaners!.`;
+      return `Dear ${order.user.first_name} ${order.user.last_name}, your order (Booking No: SCONLINE/${order.order_id}) has been successfully delivered. We hope you are satisfied with our service. Thank you for choosing Sikka Cleaners!`;
     }
 
     if (
       order.order_status ===
       OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
     ) {
-      return `Dear ${order.user.first_name} ${order.user.last_name}, your Booking No: SCONLINE/${order.order_id} has been assigned to delivery boy and ready for delivery. Thank you for choosing Sikka Cleaners!.`;
+      return `Dear ${order.user.first_name} ${order.user.last_name}, your order (Booking No: SCONLINE/${order.order_id}) has been assigned to a delivery boy and is ready for delivery. Thank you for choosing Sikka Cleaners!`;
     }
 
-    return `Dear ${order.user.first_name} ${order.user.last_name}, your booking has been confirmed with Booking No: SCONLINE/${order.order_id} on ${formattedDate}. Total clothes: ${order.items.length}, Total Amount: ₹${order.total}.Thank you for choosing Sikka Cleaners!.`;
+    return `Dear ${order.user.first_name} ${order.user.last_name}, your order has been confirmed with Booking No: SCONLINE/${order.order_id} on ${formattedDate}. Total clothes: ${order.items.length}, Total Amount: ₹${order.total}. Thank you for choosing Sikka Cleaners!`;
   }
 
   async sendOrderStatusNotification(order: any): Promise<any> {
@@ -130,5 +144,17 @@ export class NotificationService {
         error?.errorInfo || error,
       );
     }
+  }
+
+  async getAll(user_id: number): Promise<Response> {
+    const notification = await this.notificationRepository.find({
+      where: { user_id: user_id, deleted_at: null },
+    });
+
+    return {
+      statusCode: 200,
+      message: 'Notification list retrived successfully',
+      data: notification,
+    };
   }
 }
