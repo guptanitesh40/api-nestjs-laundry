@@ -15,6 +15,7 @@ import { Cart } from './cart.entity';
 import { DeviceUser } from './device-user.entity';
 import { LoginHistory } from './login-history.entity';
 import { Note } from './note.entity';
+import { Notification } from './notification.entity';
 import { Order } from './order.entity';
 import { RazorpayTransactions } from './razorpay.entity';
 import { Role } from './role.entity';
@@ -110,6 +111,9 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Note, (note) => note.user)
   notes: Note[];
+
+  @OneToMany(() => Notification, (notification) => notification.user)
+  notifications: Notification[];
 
   @OneToMany(() => Order, (orderDetail) => orderDetail.delivery_boy)
   ordersAsDeliveryBoy: Order[];

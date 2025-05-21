@@ -10,6 +10,12 @@ export class Category extends BaseEntity {
   @Column()
   name: string;
 
+  @Column({ nullable: true })
+  name_hindi: string;
+
+  @Column({ nullable: true })
+  name_gujarati: string;
+
   @OneToMany(() => Cart, (carts) => carts.category)
   carts: Cart[];
 }

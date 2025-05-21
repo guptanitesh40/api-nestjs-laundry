@@ -5,6 +5,12 @@ export class UpdateServiceDto {
   name: string;
 
   @IsOptional()
+  name_hindi: string;
+
+  @IsOptional()
+  name_gujarati: string;
+
+  @IsOptional()
   image: string;
 
   @IsOptional()

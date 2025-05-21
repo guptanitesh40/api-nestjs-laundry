@@ -105,4 +105,34 @@ export class LabelService {
       message: 'Labels updated successfully',
     };
   }
+
+  async getLabelsByLanguage(language_code: string): Promise<Response> {
+    const columns: any[] = await this.dataSource.query(
+      `SHOW COLUMNS FROM labels LIKE ?`,
+      [language_code],
+    );
+
+    if (columns.length === 0) {
+      return {
+        statusCode: 400,
+        message: 'Invalid language code. Column does not exist.',
+        data: null,
+      };
+    }
+
+    const results = await this.dataSource.query(
+      `SELECT label_name, \`${language_code}\` as label_value FROM labels`,
+    );
+
+    const responseObj = {};
+    results.forEach((row) => {
+      responseObj[row.label_name] = row.label_value;
+    });
+
+    return {
+      statusCode: 200,
+      message: 'Labels fetched successfully',
+      data: responseObj,
+    };
+  }
 }
