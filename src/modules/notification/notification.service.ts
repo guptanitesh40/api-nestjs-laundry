@@ -9,7 +9,7 @@ import { Notification } from 'src/entities/notification.entity';
 import { Order } from 'src/entities/order.entity';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { getCustomerOrderStatusLabel } from 'src/utils/order-status.helper';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { RedisQueueService } from '../../redis.config';
 
 @Injectable()
@@ -44,6 +44,7 @@ export class NotificationService {
       order_id: order.order_id,
       user_id: order.user_id,
       order_status: order.order_status,
+      notification_message: message,
     });
 
     await this.notificationRepository.save(notification);
@@ -155,6 +156,36 @@ export class NotificationService {
       statusCode: 200,
       message: 'Notification list retrived successfully',
       data: notification,
+    };
+  }
+
+  async delete(notification_ids: number[], user_id: number): Promise<Response> {
+    const notification = await this.notificationRepository.find({
+      where: {
+        notification_id: In(notification_ids),
+        user_id: user_id,
+        deleted_at: null,
+      },
+    });
+
+    if (!notification.length) {
+      return {
+        statusCode: 404,
+        message: 'Notification not found',
+        data: null,
+      };
+    }
+
+    notification.map((n) => {
+      n.deleted_at = new Date();
+    });
+
+    await this.notificationRepository.save(notification);
+
+    return {
+      statusCode: 200,
+      message: 'Notification Deleted Successfully',
+      data: null,
     };
   }
 }

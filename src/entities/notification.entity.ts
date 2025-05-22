@@ -30,4 +30,7 @@ export class Notification extends BaseEntity {
 
   @Column()
   order_status: number;
+
+  @Column()
+  notification_message: string;
 }
