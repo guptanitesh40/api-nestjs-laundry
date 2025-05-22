@@ -269,16 +269,19 @@ export class OrderService {
 
       for (const item of createOrderDto.items) {
         const key = `${item.category_id}_${item.product_id}_${item.service_id}`;
-        const prices = pricesResponse.data[key];
 
-        if (!prices) {
-          mismatchedPrices.push(
-            `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}`,
-          );
-        } else if (item.price !== prices) {
-          mismatchedPrices.push(
-            `Price mismatch for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${prices}, Received: ${item.price}`,
-          );
+        if (!createOrderDto.created_by_user_id) {
+          const prices = pricesResponse.data[key];
+
+          if (!prices) {
+            mismatchedPrices.push(
+              `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}`,
+            );
+          } else if (item.price !== prices) {
+            mismatchedPrices.push(
+              `Price mismatch for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${prices}, Received: ${item.price}`,
+            );
+          }
         }
 
         if (orderItemsMap.has(key)) {

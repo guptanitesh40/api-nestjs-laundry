@@ -203,6 +203,8 @@ export async function exportDeliveryExcel(data: any[]): Promise<string> {
     { header: 'Company', key: 'company' },
     { header: 'Branch', key: 'branch' },
     { header: 'Customer Name', key: 'customer_name' },
+    { header: 'Order Number', key: 'order_id' },
+    { header: 'Payment Collected', key: 'paid_amount' },
     { header: 'Customer Company Name', key: 'customer_company_name' },
     { header: 'Customer Address', key: 'address_details' },
     { header: 'Customer GSTIN', key: 'customer_gstin' },

@@ -1134,6 +1134,7 @@ export class ReportService {
         'orders.address_details AS address_details',
         'orders.gst_company_name AS customer_company_name',
         'orders.gstin AS customer_gstin',
+        'orders.paid_amount AS paid_amount',
       ])
       .addSelect(
         "CONCAT(deliveryBoy.first_name, ' ', deliveryBoy.last_name) AS delivery_boy_name",
