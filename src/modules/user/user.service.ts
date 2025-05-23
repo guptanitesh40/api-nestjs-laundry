@@ -128,6 +128,8 @@ export class UserService {
       message: 'Your username and password do not match with our records',
     };
 
+    appendBaseUrlToImagesOrPdf([user])[0];
+
     if (!user) {
       return loginErrrorMessage;
     }
