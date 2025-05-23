@@ -992,10 +992,6 @@ export class OrderService {
           throw new Error(
             `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}`,
           );
-        } else if (item.price !== price) {
-          throw new Error(
-            `Price not available for category: ${item.category_id}, product: ${item.product_id}, service: ${item.service_id}. Expected: ${price}, Received: ${item.price}`,
-          );
         }
 
         if (orderItemsMap.has(key)) {
@@ -1396,9 +1392,6 @@ export class OrderService {
       .andWhere('order.total > order.paid_amount + order.kasar_amount')
       .andWhere('order.refund_status !=:refundStatus', {
         refundStatus: RefundStatus.FULL,
-      })
-      .andWhere('order.order_status= :status', {
-        status: OrderStatus.DELIVERED,
       })
       .select([
         'order.order_id as order_id',

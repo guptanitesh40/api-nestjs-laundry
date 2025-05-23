@@ -128,10 +128,12 @@ export class UserService {
       message: 'Your username and password do not match with our records',
     };
 
-    appendBaseUrlToImagesOrPdf([user])[0];
-
     if (!user) {
       return loginErrrorMessage;
+    }
+
+    if (user.image || user.id_proof) {
+      appendBaseUrlToImagesOrPdf([user])[0];
     }
     const pass = await bcrypt.compare(password, user.password);
 

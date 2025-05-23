@@ -32,11 +32,22 @@ export class ReportService {
     startDate?: string,
     endDate?: string,
   ): { startDate: Date | undefined; endDate: Date | undefined } {
+    let start: Date | undefined;
+    let end: Date | undefined;
+
+    if (startDate) {
+      start = new Date(this.formattedDateToSQL(startDate));
+      start.setHours(0, 0, 0, 0);
+    }
+
+    if (endDate) {
+      end = new Date(this.formattedDateToSQL(endDate));
+      end.setHours(23, 59, 59, 999);
+    }
+
     return {
-      startDate: startDate
-        ? new Date(this.formattedDateToSQL(startDate))
-        : undefined,
-      endDate: endDate ? new Date(this.formattedDateToSQL(endDate)) : undefined,
+      startDate: start,
+      endDate: end,
     };
   }
 
