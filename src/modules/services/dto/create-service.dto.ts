@@ -14,4 +14,7 @@ export class CreateServiceDto {
 
   @IsOptional()
   description: string;
+
+  @IsOptional()
+  is_visible: boolean;
 }

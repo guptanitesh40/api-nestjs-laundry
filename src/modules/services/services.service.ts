@@ -17,7 +17,7 @@ export class ServicesService {
 
   async getAll(): Promise<Response> {
     const services = await this.serviceRepository.find({
-      where: { deleted_at: null },
+      where: { deleted_at: null, is_visible: true },
     });
 
     const service = appendBaseUrlToImagesOrPdf(services);
