@@ -175,6 +175,9 @@ export class CouponService {
         'user_usage_count',
       )
       .where('coupon.deleted_at IS NULL')
+      .andWhere('coupon.coupon_type  != :exclude', {
+        exclude: CouponType.OFFLINE_SHOP,
+      })
       .andWhere('coupon.start_time <= :currentDate', { currentDate })
       .andWhere('coupon.end_time >= :currentDate', { currentDate })
       .having(
