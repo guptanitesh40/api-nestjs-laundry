@@ -24,6 +24,10 @@ export class Service extends BaseEntity {
   @IsOptional()
   description?: string;
 
+  @Column({ default: true })
+  @IsOptional()
+  is_visible?: boolean;
+
   @OneToMany(() => Cart, (cart) => cart.service)
   carts: Cart[];
 }

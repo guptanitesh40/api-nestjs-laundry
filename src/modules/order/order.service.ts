@@ -1882,10 +1882,18 @@ export class OrderService {
       );
     }
 
+    console.log(new Date());
+
     if (start_date && end_date) {
+      const start = new Date(start_date);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(end_date);
+      end.setHours(23, 59, 59, 999);
+
       queryBuilder.andWhere(
         'order.created_at BETWEEN :startDate AND :endDate',
-        { startDate: start_date, endDate: end_date },
+        { startDate: start.toISOString(), endDate: end.toISOString() },
       );
     }
 

@@ -15,4 +15,7 @@ export class UpdateServiceDto {
 
   @IsOptional()
   description: string;
+
+  @IsOptional()
+  is_visible: boolean;
 }
