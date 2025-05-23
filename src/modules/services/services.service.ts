@@ -92,8 +92,12 @@ export class ServicesService {
     createServiceDto: CreateServiceDto,
     imagePath: string,
   ): Promise<Response> {
+    const isVisible =
+      String(createServiceDto.is_visible) === 'true' ? true : false;
+
     const service = this.serviceRepository.create({
       ...createServiceDto,
+      is_visible: isVisible,
       image: imagePath,
     });
 
