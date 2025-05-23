@@ -1882,8 +1882,6 @@ export class OrderService {
       );
     }
 
-    console.log(new Date());
-
     if (start_date && end_date) {
       const start = new Date(start_date);
       start.setHours(0, 0, 0, 0);
