@@ -127,6 +127,14 @@ export class ServicesService {
         data: null,
       };
     }
+
+    const isVisible =
+      String(updateServicetDto.is_visible) === 'true' ? true : false;
+
+    if (updateServicetDto.is_visible) {
+      updateServicetDto.is_visible = isVisible;
+    }
+
     const updatedata = {
       ...updateServicetDto,
     };
