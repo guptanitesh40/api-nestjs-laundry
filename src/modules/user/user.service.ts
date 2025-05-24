@@ -304,30 +304,31 @@ export class UserService {
     if (workshopMappings.length > 0) {
       await this.workshopManagerMappingRepository.save(workshopMappings);
     }
+    if (!createUserDto.password) {
+      const formattedMobileNumber = `91${String(createUserDto.mobile_number).replace(/^0+/, '')}`;
 
-    const formattedMobileNumber = `91${String(createUserDto.mobile_number).replace(/^0+/, '')}`;
+      const full_name = `${createUserDto.first_name} ${createUserDto.last_name}`;
 
-    const full_name = `${createUserDto.first_name} ${createUserDto.last_name}`;
+      const message = `Dear ${full_name}, Welcome to Sikka Cleaners! Your account has been successfully created , Your Password Is: ${password}. For security reasons, please do not share your password with anyone.`;
 
-    const message = `Dear ${full_name}, Welcome to Sikka Cleaners! Your account has been successfully created , Your Password Is: ${password}. For security reasons, please do not share your password with anyone.`;
+      const baseUrl = process.env.VISION360_BASE_URL;
+      const apiKey = process.env.VISION360_API_KEY;
+      const senderId = process.env.VISION360_SENDER_ID;
 
-    const baseUrl = process.env.VISION360_BASE_URL;
-    const apiKey = process.env.VISION360_API_KEY;
-    const senderId = process.env.VISION360_SENDER_ID;
+      const smsUrl = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${vision360_template_id_password_send}`;
 
-    const smsUrl = `${baseUrl}?authkey=${apiKey}&mobiles=${formattedMobileNumber}&message=${encodeURIComponent(message)}&sender=${senderId}&DLT_TE_ID=${vision360_template_id_password_send}`;
+      try {
+        const response = await axios.get(smsUrl);
 
-    try {
-      const response = await axios.get(smsUrl);
-
-      if (response.status !== 200) {
-        throw new Error('Failed to send OTP');
+        if (response.status !== 200) {
+          throw new Error('Failed to send OTP');
+        }
+      } catch (error) {
+        console.error(
+          'SMS Sending Failed:',
+          error.response?.data || error.message,
+        );
       }
-    } catch (error) {
-      console.error(
-        'SMS Sending Failed:',
-        error.response?.data || error.message,
-      );
     }
 
     return {
@@ -431,7 +432,7 @@ export class UserService {
       if (workshop_ids) {
         await this.workshopManagerMappingRepository.delete({ user_id });
         workshopMappings = await this.workshopManagerMappingRepository.save(
-          workshop_ids.map((workshopId) =>
+          workshop_ids?.map((workshopId) =>
             this.workshopManagerMappingRepository.create({
               user_id,
               workshop_id: workshopId,
@@ -439,7 +440,7 @@ export class UserService {
           ),
         );
       } else {
-        workshopMappings = await this.workshopManagerMappingRepository.find({
+        workshopMappings = await this.workshopManagerMappingRepository?.find({
           where: { user_id },
           select: ['workshop_id'],
         });
@@ -459,7 +460,7 @@ export class UserService {
         company_ids: companyMappings.map((mapping) => mapping.company_id) || [],
         branch_ids: branchMappings.map((mapping) => mapping.branch_id) || [],
         workshop_ids:
-          workshopMappings.map((mapping) => mapping.workshop_id) || [],
+          workshopMappings?.map((mapping) => mapping?.workshop_id) || [],
       },
     };
   }
@@ -598,12 +599,13 @@ export class UserService {
       company_ids: user.UserCompanyMappings.map(
         (company) => company.company_id,
       ),
-      workshops: user.workshopManagerMappings.map(
-        (workshop) => workshop.workshop.workshop_name,
-      ),
-      workshop_ids: user.workshopManagerMappings.map(
-        (workshop) => workshop.workshop_id,
-      ),
+      workshops: user.workshopManagerMappings
+        .filter((mapping) => mapping.workshop)
+        .map((mapping) => mapping.workshop.workshop_name),
+
+      workshop_ids: user.workshopManagerMappings
+        .filter((mapping) => mapping.workshop)
+        .map((mapping) => mapping.workshop_id),
     };
 
     return {
