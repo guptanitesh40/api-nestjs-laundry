@@ -8,7 +8,6 @@ import { Response } from 'src/dto/response.dto';
 import { Notification } from 'src/entities/notification.entity';
 import { Order } from 'src/entities/order.entity';
 import { OrderStatus } from 'src/enum/order-status.eum';
-import { getCustomerOrderStatusLabel } from 'src/utils/order-status.helper';
 import { In, Repository } from 'typeorm';
 import { RedisQueueService } from '../../redis.config';
 
@@ -51,47 +50,31 @@ export class NotificationService {
   }
 
   private prepareMessage(order: Order): string {
-    const formattedDate = new Date(order.created_at).toLocaleDateString(
-      'en-GB',
-      {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      },
-    );
+    const createdDate = new Date(order.created_at);
+
+    const formattedDate = `${String(createdDate.getDate()).padStart(2, '0')}/${String(
+      createdDate.getMonth() + 1,
+    ).padStart(2, '0')}/${createdDate.getFullYear()}`;
+
+    const deliveryDate = new Date(order.estimated_delivery_time);
+
+    const formattedDelivryDate = `${String(deliveryDate.getDate()).padStart(2, '0')}/${String(
+      deliveryDate.getMonth() + 1,
+    ).padStart(2, '0')}/${deliveryDate.getFullYear()}`;
 
     if (order.order_status === OrderStatus.DELIVERED) {
-      return `Dear ${order.user.first_name} ${order.user.last_name}, your order (Booking No: SCONLINE/${order.order_id}) has been successfully delivered. We hope you are satisfied with our service. Thank you for choosing Sikka Cleaners!`;
+      return `Dear ${order.user.first_name} ${order.user.last_name}, your order (Booking No: SCONLINE/${order.order_id}) has been successfully delivered. Received an amount ${order.paid_amount}. We hope you are satisfied with our service. If, any issue contact management team immediately. Thank you for choosing Sikka Cleaners.`;
     }
 
     if (
       order.order_status ===
       OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
     ) {
-      return `Dear ${order.user.first_name} ${order.user.last_name}, your order (Booking No: SCONLINE/${order.order_id}) has been assigned to a delivery boy and is ready for delivery. Thank you for choosing Sikka Cleaners!`;
+      return `Dear ${order.user.first_name} ${order.user.last_name},your clothes for dry clean/steam press, (Booking No: SCONLINE/${order.order_id}) are ready. Thank You. Sikka Cleaners.
+`;
     }
 
-    return `Dear ${order.user.first_name} ${order.user.last_name}, your order has been confirmed with Booking No: SCONLINE/${order.order_id} on ${formattedDate}. Total clothes: ${order.items.length}, Total Amount: ₹${order.total}. Thank you for choosing Sikka Cleaners!`;
-  }
-
-  async sendOrderStatusNotification(order: any): Promise<any> {
-    if (!order) {
-      throw new NotFoundException(`Order with Id ${order.order_id} not found.`);
-    }
-
-    const orderStatus = getCustomerOrderStatusLabel(order.order_status);
-
-    const message = `Dear ${order.user?.first_name} ${order.user?.last_name}, we are delighted to inform you that your order #${order.order_id} is now ${orderStatus}. Thank you for choosing us!`;
-
-    const encodedMessage = encodeURIComponent(message);
-
-    const finalUrl = `${this.apiUrl}?token=${process.env.VISION360_WHATSAPP_API_TOKEN}&phone=91${order.user?.mobile_number}&message=${encodedMessage}`;
-
-    const response = await firstValueFrom(this.httpService.post(finalUrl, {}));
-
-    if (response.status !== 200) {
-      throw new Error('Failed to send WhatsApp notification');
-    }
+    return `Dear ${order.user.first_name} ${order.user.last_name}, your order has been confirmed with Booking No:  SCONLINE/${order.order_id} on Dated ${formattedDate}. Total clothes: ${order.items.length}, Total Amount: ₹${order.total}. Delivery Date ${formattedDelivryDate}. Thank you for choosing Sikka Cleaners.`;
   }
 
   async sendPushNotification(

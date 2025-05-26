@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import bodyParser from 'body-parser';
 import { useContainer, ValidationError } from 'class-validator';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -34,6 +35,9 @@ async function bootstrap() {
     prefix: '/images',
   });
   app.use(cors({ origin: '*' }));
+
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const port = process.env.PORT;
