@@ -414,6 +414,7 @@ export class OrderService {
         user_id: savedOrder.user_id,
         branch_id: savedOrder.branch_id,
         transaction_id: savedOrder.transaction_id || '',
+        estimated_delivery_time: savedOrder.estimated_delivery_time,
         confirm_date: createOrderDto.confirm_date,
         items: orderItems,
         user: {
@@ -429,7 +430,7 @@ export class OrderService {
         await this.notificationService.sendPushNotification(
           customerApp,
           deviceToken,
-          'New Order Created',
+          'New Laundry Order Created',
           `Your order #${order.order_id} has been placed successfully!`,
         );
       }
@@ -1122,6 +1123,16 @@ export class OrderService {
     const deviceTokens = await this.userService.getDeviceTokens(userIds);
 
     const notifications = orders.map(async (order) => {
+      if (
+        order_status === OrderStatus.DELIVERED ||
+        order_status ===
+          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
+      ) {
+        const orderDetails = (await this.getOrderDetail(order.order_id)).data;
+
+        await this.notificationService.sendOrderNotification(orderDetails);
+      }
+
       if (order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
         await this.invoiceService.generateOrderLabels(order.order_id);
       }
@@ -1134,8 +1145,8 @@ export class OrderService {
         return this.notificationService.sendPushNotification(
           customerApp,
           deviceToken,
-          'Order Received at Branch',
-          `Great news! Your order #${order.order_id} has arrived at our branch and is being processed. We'll update you soon!`,
+          'Laundry Order Received at Branch',
+          `Your order #${order.order_id} has arrived at our branch and is being processed. We'll update you soon!`,
         );
       }
 
@@ -1143,8 +1154,8 @@ export class OrderService {
         return this.notificationService.sendPushNotification(
           customerApp,
           deviceToken,
-          'Your Order Has Been Delivered!',
-          `Great news! Your order #${order.order_id} has been successfully delivered. Thank you for choosing Sikka Cleaners!`,
+          'Your Laundry Order Has Been Delivered!',
+          `Your order #${order.order_id} has been successfully delivered. Thank you for choosing Sikka Cleaners!`,
         );
       }
     });
@@ -1988,8 +1999,8 @@ export class OrderService {
         await this.notificationService.sendPushNotification(
           customerApp,
           deviceToken,
-          'Your Order Has Been Assigned to a Workshop',
-          `Great news! Your order #${order.order_id} has been assigned to a workshop for processing. We'll keep you updated on its progress.`,
+          'Your Laundry Order Has Been Assigned to a Workshop',
+          `Your order #${order.order_id} has been assigned to a workshop for processing. We'll keep you updated on its progress.`,
         );
       }),
     );
@@ -2040,7 +2051,7 @@ export class OrderService {
         driverApp,
         deliveryBoyDeviceToken,
         'New Delivery Assigned',
-        `You have been assigned ${orders.length} new order(s) for delivery.`,
+        `You have been assigned ${orders.length} new order(s) for delivery`,
       );
     }
 
@@ -2062,8 +2073,8 @@ export class OrderService {
         await this.notificationService.sendPushNotification(
           customerApp,
           deviceToken,
-          'Your Order is Out for Delivery!',
-          `Good news! Your order #${order.order_id} is on its way.`,
+          'Your Laundry Order is Out for Delivery!',
+          `Your order #${order.order_id} is on its way. Delivery made within 3 working hours.`,
         );
       }),
     );
@@ -2114,7 +2125,7 @@ export class OrderService {
         driverApp,
         pickupBoyDeviceToken,
         'New Pickup Assigned',
-        `You have been assigned ${orders.length} new pickup(s).`,
+        `You have been assigned ${orders.length} new order(s) for pickup`,
       );
     }
 
@@ -2132,7 +2143,7 @@ export class OrderService {
         await this.notificationService.sendPushNotification(
           customerApp,
           deviceToken,
-          'Assigned Pickup Boy',
+          'Assigned Pickup person',
           `Your order #${order.order_id} has been assigned to a pickup boy.`,
         );
       }),
@@ -2171,7 +2182,7 @@ export class OrderService {
       user_id,
       deliveryNote,
       imagePaths,
-      OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
+      OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
       'Order Pickup Confirmed successfully',
     );
   }
@@ -2225,8 +2236,8 @@ export class OrderService {
       await this.notificationService.sendPushNotification(
         customerApp,
         deviceToken,
-        'Payment Received - Order Delivered',
-        `Thanks for your payment! Your order #${order.order_id} has been successfully delivered and marked as received. We hope you enjoy our service!`,
+        'Laundry Order Delivered - Payment Received',
+        `Your order #${order.order_id} has been successfully delivered and received an amount ${amount}. Thanks for your payment. We hope you enjoy our service! `,
       );
     }
 
@@ -2254,7 +2265,7 @@ export class OrderService {
     }
 
     order.order_status = status;
-    if (status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
+    if (status === OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY) {
       order.confirm_date = new Date();
     }
 
@@ -2265,7 +2276,7 @@ export class OrderService {
     await this.orderRepository.save(order);
 
     const deviceToken = await this.userService.getDeviceToken(order.user_id);
-    if (order.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
+    if (order.order_status === OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY) {
       await this.invoiceService.generateOrderLabels(order_id);
       if (deviceToken) {
         await this.notificationService.sendPushNotification(
@@ -2772,8 +2783,8 @@ export class OrderService {
       await this.notificationService.sendPushNotification(
         customerApp,
         deviceTokenCustomer,
-        'Order Cancelled',
-        `We're sorry! Your order #${order.order_id} has been cancelled by the admin. Please contact support for further assistance.`,
+        'Laundry Order Cancelled',
+        `Your order #${order.order_id} has been cancelled. Please contact support for further assistance.`,
       );
     }
 

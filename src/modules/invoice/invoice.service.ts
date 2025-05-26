@@ -118,8 +118,8 @@ export class InvoiceService {
       await this.notificationService.sendPushNotification(
         customerApp,
         deviceTokenCustomer,
-        'Your Order Receipt is Ready!',
-        `Good news! The receipt for your order #${orderData.order_id} has been generated successfully. You can view it in your account.`,
+        'Your Laundry Order Receipt is Ready!',
+        `The receipt for your order #${orderData.order_id} has been generated successfully. You can view it in your account`,
       );
     }
 
