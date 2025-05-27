@@ -41,8 +41,12 @@ export class CouponController {
   }
 
   @Get('admin/valid-coupons')
-  async findValidCoupons(@Query('user_id') user_id: number): Promise<Response> {
-    return this.couponService.getAll(user_id);
+  async findValidCoupons(
+    @Query('user_id') user_id: number,
+    @Request() req,
+  ): Promise<Response> {
+    const user = req.user;
+    return this.couponService.getAll(user_id, user.role_id);
   }
 
   @Get('customer/coupon')
@@ -52,7 +56,7 @@ export class CouponController {
     @Query('coupon_type') coupon_type: CouponType,
   ): Promise<Response> {
     const user = req.user;
-    return this.couponService.getAll(user.user_id, coupon_type);
+    return this.couponService.getAll(user.user_id, user.role_id, coupon_type);
   }
 
   @Post('coupon/apply')
