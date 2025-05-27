@@ -11,6 +11,7 @@ import { Response } from 'src/dto/response.dto';
 import { Coupon } from 'src/entities/coupon.entity';
 import { Order } from 'src/entities/order.entity';
 import { CouponType, DiscountType } from 'src/enum/coupon_type.enum';
+import { Role } from 'src/enum/role.enum';
 import { customerApp } from 'src/firebase.config';
 import { Repository } from 'typeorm';
 import { CouponFiltrerDto } from '../dto/coupon-filter.dto';
@@ -148,7 +149,11 @@ export class CouponService {
     };
   }
 
-  async getAll(user_id: number, coupon_type?: CouponType): Promise<Response> {
+  async getAll(
+    user_id: number,
+    role_id?: number,
+    coupon_type?: CouponType,
+  ): Promise<Response> {
     const currentDate = new Date();
 
     const queryBuilder = this.couponRepository
@@ -175,15 +180,18 @@ export class CouponService {
         'user_usage_count',
       )
       .where('coupon.deleted_at IS NULL')
-      .andWhere('coupon.coupon_type  != :exclude', {
-        exclude: CouponType.OFFLINE_SHOP,
-      })
       .andWhere('coupon.start_time <= :currentDate', { currentDate })
       .andWhere('coupon.end_time >= :currentDate', { currentDate })
       .having(
         'usage_count < coupon.total_usage_count AND user_usage_count < coupon.maximum_usage_count_per_user',
       )
       .orderBy('coupon_id', 'DESC');
+
+    if (role_id === Role.CUSTOMER) {
+      queryBuilder.andWhere('coupon.coupon_type  != :exclude', {
+        exclude: CouponType.OFFLINE_SHOP,
+      });
+    }
 
     if (Number(coupon_type) === CouponType.APP) {
       queryBuilder.andWhere('coupon.coupon_type IN (:...couponType)', {

@@ -864,7 +864,7 @@ export class ReportService {
       .addGroupBy('branch.branch_name')
       .addGroupBy('month')
       .addOrderBy('MIN(orders.created_at)', 'ASC')
-      .orderBy('total_sales', 'ASC');
+      .addOrderBy('total_sales', 'ASC');
 
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
