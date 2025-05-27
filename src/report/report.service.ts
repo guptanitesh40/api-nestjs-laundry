@@ -8,6 +8,7 @@ import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
+import { convertDateParameters } from 'src/utils/date-formatted.helper';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -23,33 +24,33 @@ export class ReportService {
     private readonly razorpayRepository: Repository<RazorpayTransactions>,
   ) {}
 
-  private formattedDateToSQL(dateStr: string): string {
-    const [day, month, year] = dateStr.split('-');
-    return `${year}-${month}-${day}`;
-  }
+  // private formattedDateToSQL(dateStr: string): string {
+  //   const [day, month, year] = dateStr.split('-');
+  //   return `${year}-${month}-${day}`;
+  // }
 
-  private convertDateParameters(
-    startDate?: string,
-    endDate?: string,
-  ): { startDate: Date | undefined; endDate: Date | undefined } {
-    let start: Date | undefined;
-    let end: Date | undefined;
+  // private convertDateParameters(
+  //   startDate?: string,
+  //   endDate?: string,
+  // ): { startDate: Date | undefined; endDate: Date | undefined } {
+  //   let start: Date | undefined;
+  //   let end: Date | undefined;
 
-    if (startDate) {
-      start = new Date(this.formattedDateToSQL(startDate));
-      start.setHours(0, 0, 0, 0);
-    }
+  //   if (startDate) {
+  //     start = new Date(this.formattedDateToSQL(startDate));
+  //     start.setHours(0, 0, 0, 0);
+  //   }
 
-    if (endDate) {
-      end = new Date(this.formattedDateToSQL(endDate));
-      end.setHours(23, 59, 59, 999);
-    }
+  //   if (endDate) {
+  //     end = new Date(this.formattedDateToSQL(endDate));
+  //     end.setHours(23, 59, 59, 999);
+  //   }
 
-    return {
-      startDate: start,
-      endDate: end,
-    };
-  }
+  //   return {
+  //     startDate: start,
+  //     endDate: end,
+  //   };
+  // }
 
   private convertCountToNumber(arr) {
     return arr.map((c) => {
@@ -63,7 +64,7 @@ export class ReportService {
     endDate?: string,
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -116,7 +117,7 @@ export class ReportService {
     user_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -182,7 +183,7 @@ export class ReportService {
     endDate?: string,
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -233,7 +234,7 @@ export class ReportService {
     endDate?: string,
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     const queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -273,7 +274,7 @@ export class ReportService {
 
   async getDeliveryReport(startDate?: string, endDate?: string): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     const queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -322,7 +323,7 @@ export class ReportService {
 
   async getPaymentReport(startDate?: string, endDate?: string): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -364,7 +365,7 @@ export class ReportService {
     endDate?: string,
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formatedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
       .select(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
@@ -417,7 +418,7 @@ export class ReportService {
 
   async getRefundReport(startDate?: string, endDate?: string): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -457,7 +458,7 @@ export class ReportService {
     endDate?: string,
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -510,7 +511,7 @@ export class ReportService {
 
   async getKasarReport(startDate?: string, endDate?: string): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -548,7 +549,7 @@ export class ReportService {
     endDate?: string,
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     const twoMonthsAgo = new Date();
     twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
@@ -600,7 +601,7 @@ export class ReportService {
     user_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     const twoMonthsAgo = new Date();
     twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
@@ -676,7 +677,7 @@ export class ReportService {
     endDate?: string,
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
     let queryBuilder = this.userRespository
       .createQueryBuilder('user')
       .select("DATE_FORMAT(user.created_at, '%b-%Y')", 'month')
@@ -713,7 +714,7 @@ export class ReportService {
     endDate?: string,
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.userRespository
       .createQueryBuilder('user')
@@ -752,7 +753,7 @@ export class ReportService {
     endDate?: string,
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -800,7 +801,7 @@ export class ReportService {
 
   async getFeedbackTrends(startDate?: string, endDate?: string): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.feedbackRepository
       .createQueryBuilder('feedback')
@@ -835,7 +836,7 @@ export class ReportService {
     branch_id?: number,
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -891,7 +892,7 @@ export class ReportService {
     endDate?: string,
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -939,7 +940,7 @@ export class ReportService {
     user_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -1004,7 +1005,7 @@ export class ReportService {
     user_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -1066,7 +1067,7 @@ export class ReportService {
     user_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
@@ -1128,7 +1129,7 @@ export class ReportService {
     user_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
-      this.convertDateParameters(startDate, endDate);
+      convertDateParameters(startDate, endDate);
 
     let queryBuilder = this.orderRepository
       .createQueryBuilder('orders')
