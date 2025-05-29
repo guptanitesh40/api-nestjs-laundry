@@ -281,4 +281,12 @@ export class ReportController {
 
     return { url: fileUrl };
   }
+
+  @Get('branch-wise-summary')
+  async getBranchWiseOrderSummary(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportService.getBranchWiseOrderSummary(startDate, endDate);
+  }
 }
