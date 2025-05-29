@@ -1160,4 +1160,59 @@ export class ReportService {
 
     return result;
   }
+
+  async getBranchWiseOrderSummary(
+    startDate?: string,
+    endDate?: string,
+  ): Promise<any> {
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      convertDateParameters(startDate, endDate);
+
+    const queryBuider = this.orderRepository
+      .createQueryBuilder('orders')
+      .innerJoin('orders.branch', 'branch')
+      .select('branch.branch_id', 'branch_id')
+      .addSelect('branch.branch_name', 'branch_name')
+      .addSelect('COUNT(orders.order_id)', 'order_count')
+      .addSelect('SUM(orders.total)', 'total_amount')
+      .addSelect(
+        `SUM(CASE WHEN orders.order_status = :status THEN orders.paid_amount ELSE 0 END)`,
+        'delivery_amounts',
+      )
+      .addSelect(
+        `SUM(CASE WHEN orders.order_status = :status THEN 1 ELSE 0 END)`,
+        'delivery_count',
+      )
+      .setParameter('status', OrderStatus.DELIVERED)
+      .where('orders.deleted_at IS NULL')
+      .andWhere('branch.deleted_at IS NULL')
+      .andWhere('orders.order_status NOT IN (:...orderStatus)', {
+        orderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('orders.refund_status != :excludeRefund', {
+        excludeRefund: RefundStatus.FULL,
+      });
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuider.andWhere(
+        'orders.created_at BETWEEN :startDate AND :endDate',
+        { startDate: formattedStartDate, endDate: formattedEndDate },
+      );
+    }
+
+    const result = await queryBuider
+      .groupBy('branch.branch_id')
+      .addGroupBy('branch.branch_name')
+      .getRawMany();
+
+    result.map((b) => {
+      b.order_count = Number(b.order_count);
+      b.delivery_count = Number(b.delivery_count);
+    });
+
+    return result;
+  }
 }
