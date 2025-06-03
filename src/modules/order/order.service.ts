@@ -21,6 +21,7 @@ import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import { customerApp, driverApp } from 'src/firebase.config';
+import { convertDateParameters } from 'src/utils/date-formatted.helper';
 import {
   appendBaseUrlToArrayImages,
   appendBaseUrlToImagesOrPdf,
@@ -500,6 +501,8 @@ export class OrderService {
       delivery_boy_ids,
       payment_types,
       payment_statuses,
+      start_date,
+      end_date,
     } = orderFilterDto;
 
     const pageNumber = page_number ?? 1;
@@ -731,6 +734,37 @@ export class OrderService {
       queryBuilder.andWhere('order.branch_id IN (:...branchIds)', {
         branchIds,
       });
+    }
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      convertDateParameters(start_date, end_date);
+
+    if (orderFilterDto.start_date || orderFilterDto.end_date) {
+      let dateColumn = 'order.created_at';
+
+      switch (orderList) {
+        case 'pickup_order':
+          dateColumn = 'order.pickup_date';
+          break;
+        case 'confirm_order':
+          dateColumn = 'order.confirm_date';
+          break;
+        case 'ready_for_delivery':
+          dateColumn = 'order.ready_delivery_date';
+          break;
+        case 'delivered_order':
+          dateColumn = 'order.delivery_date';
+          break;
+        case '':
+        default:
+          dateColumn = 'order.created_at';
+      }
+
+      if (formattedStartDate && formattedEndDate) {
+        queryBuilder.andWhere(`${dateColumn} BETWEEN :startDate AND :endDate`, {
+          startDate: formattedStartDate,
+          endDate: formattedEndDate,
+        });
+      }
     }
 
     queryBuilder.orderBy(sortColumn, sortOrder);
@@ -1114,6 +1148,21 @@ export class OrderService {
 
       if (order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
         order.confirm_date = new Date();
+      }
+      if (order_status === OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY) {
+        order.pickup_date = new Date();
+      }
+      if (order_status === OrderStatus.WORKSHOP_ASSIGNED) {
+        order.workshop_date = new Date();
+      }
+      if (
+        order_status ===
+        OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
+      ) {
+        order.ready_delivery_date = new Date();
+      }
+      if (order_status === OrderStatus.DELIVERED) {
+        order.delivery_date = new Date();
       }
     }
 
@@ -1983,6 +2032,7 @@ export class OrderService {
       {
         workshop_id: workshop_id,
         order_status: OrderStatus.WORKSHOP_ASSIGNED,
+        workshop_date: new Date(),
       },
     );
 
@@ -2039,6 +2089,7 @@ export class OrderService {
       {
         delivery_boy_id: deliveryBoy.user_id,
         order_status: OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+        ready_delivery_date: new Date(),
       },
     );
 
@@ -2266,7 +2317,11 @@ export class OrderService {
 
     order.order_status = status;
     if (status === OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY) {
-      order.confirm_date = new Date();
+      order.pickup_date = new Date();
+    }
+
+    if (status === OrderStatus.DELIVERED) {
+      order.delivery_date = new Date();
     }
 
     order.remaining_amount =
@@ -2358,6 +2413,8 @@ export class OrderService {
       payment_statuses,
       workshop_ids,
       workshop_manager_ids,
+      start_date,
+      end_date,
     } = orderFilterDto;
 
     const pageNumber = page_number ?? 1;
@@ -2481,6 +2538,19 @@ export class OrderService {
 
     if (order) {
       sortOrder = order;
+    }
+
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      convertDateParameters(start_date, end_date);
+
+    if (formattedStartDate && formattedEndDate) {
+      queryBuilder.andWhere(
+        'order.workshop_date BETWEEN :startDate AND :endDate',
+        {
+          startDate: formattedStartDate,
+          endDate: formattedEndDate,
+        },
+      );
     }
 
     if (user.role_id === Role.WORKSHOP_MANAGER) {

@@ -185,9 +185,25 @@ export class Order extends BaseEntity {
   @IsOptional()
   delivery_by: DeliveryBy;
 
-  @Column({ type: 'date', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
+  @IsOptional()
+  pickup_date: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
   @IsOptional()
   confirm_date: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  @IsOptional()
+  workshop_date: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  @IsOptional()
+  ready_delivery_date: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  @IsOptional()
+  delivery_date: Date;
 
   @Column({ nullable: true })
   @IsOptional()
