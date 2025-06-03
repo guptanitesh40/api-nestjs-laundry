@@ -97,7 +97,19 @@ export class CreateOrderDto {
   delivery_by?: DeliveryBy;
 
   @IsOptional()
+  pickup_date: Date;
+
+  @IsOptional()
   confirm_date?: Date;
+
+  @IsOptional()
+  workshop_date?: Date;
+
+  @IsOptional()
+  ready_delivery_date: Date;
+
+  @IsOptional()
+  delivery_date: Date;
 
   @IsOptional()
   company_id: number;

@@ -1,3 +1,4 @@
+import { IsOptional } from 'class-validator';
 import { applyNumberArrayValidation } from 'src/utils/validation-helper';
 import { PaginationQueryDto } from './pagination-query.dto';
 
@@ -28,4 +29,10 @@ export class OrderFilterDto extends PaginationQueryDto {
 
   @applyNumberArrayValidation()
   workshop_manager_ids?: number[];
+
+  @IsOptional()
+  start_date?: string;
+
+  @IsOptional()
+  end_date?: string;
 }
