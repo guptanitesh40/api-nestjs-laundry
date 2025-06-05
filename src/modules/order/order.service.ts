@@ -3047,7 +3047,7 @@ export class OrderService {
     );
 
     const totalPickupCount = orders.filter(
-      (o) => o.order_status === OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+      (o) => o.order_status >= OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
     ).length;
 
     const totalDeliveryCount = orders.filter(
