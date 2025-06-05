@@ -2990,7 +2990,6 @@ export class OrderService {
       )
       .andWhere('order.order_status IN(:...deliveredStatus)', {
         deliveredStatus: [
-          OrderStatus.ASSIGNED_PICKUP_BOY,
           OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
           OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
           OrderStatus.WORKSHOP_ASSIGNED,
@@ -3025,9 +3024,15 @@ export class OrderService {
     }
 
     if (start_date && end_date) {
-      query.andWhere('order.created_at BETWEEN :start AND :end', {
-        start: start_date,
-        end: end_date,
+      const start = new Date(start_date);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(end_date);
+      end.setHours(23, 59, 59, 999);
+
+      query.andWhere('order.created_at BETWEEN :startDate AND :endDate', {
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
       });
     }
 
@@ -3047,11 +3052,15 @@ export class OrderService {
     );
 
     const totalPickupCount = orders.filter(
-      (o) => o.order_status >= OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+      (o) =>
+        o.order_status >= OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY &&
+        o.pickup_boy_id === user_id,
     ).length;
 
     const totalDeliveryCount = orders.filter(
-      (o) => o.order_status === OrderStatus.DELIVERED,
+      (o) =>
+        o.order_status === OrderStatus.DELIVERED &&
+        o.delivery_boy_id === user_id,
     ).length;
 
     const orderStatusBreakdown = {
