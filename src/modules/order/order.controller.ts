@@ -72,6 +72,17 @@ export class OrderController {
     );
   }
 
+  @Roles(Role.DELIVERY_BOY_AND_PICKUP_BOY)
+  @Get('orders/driver-reports')
+  async getDriverReport(
+    @Query() filter: PaginationQueryDto,
+    @Request() req,
+    @Query('assignTo') assignTo: AssignTo,
+  ) {
+    const user = req.user;
+    return this.orderService.getDriverReport(filter, user.user_id, assignTo);
+  }
+
   @Get('orders/invoice-list')
   @Roles(Role.CUSTOMER)
   async getOrderInvoiceList(

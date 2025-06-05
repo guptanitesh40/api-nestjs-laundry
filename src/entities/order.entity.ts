@@ -211,4 +211,7 @@ export class Order extends BaseEntity {
 
   @Column({ nullable: true })
   gst_company_name: string;
+
+  @Column({ nullable: true, default: 0 })
+  delivery_collect_amount: number;
 }

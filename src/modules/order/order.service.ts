@@ -2265,6 +2265,7 @@ export class OrderService {
       order.payment_status = PaymentStatus.PAYMENT_PENDING;
     }
     order.paid_amount += amount;
+    order.delivery_collect_amount += amount;
 
     order.remaining_amount =
       order.total - order.paid_amount - order.kasar_amount;
@@ -2959,5 +2960,119 @@ export class OrderService {
     const [orders, total] = await ordersQuery.getManyAndCount();
 
     return { orders, limit: perPage, page_number: pageNumber, count: total };
+  }
+
+  async getDriverReport(
+    filter: PaginationQueryDto,
+    user_id?: number,
+    assignTo?: AssignTo,
+  ) {
+    const {
+      start_date,
+      end_date,
+      customer_name,
+      order_status,
+      per_page,
+      page_number,
+    } = filter;
+
+    const pageNumber = page_number ?? 1;
+
+    const perPage = per_page ?? 10;
+    const skip = (pageNumber - 1) * perPage;
+
+    const query = this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoinAndSelect('order.branch', 'branch')
+      .where(
+        '(order.delivery_boy_id = :driverId OR order.pickup_boy_id = :driverId)',
+        { driverId: user_id },
+      )
+      .andWhere('order.order_status IN(:...deliveredStatus)', {
+        deliveredStatus: [
+          OrderStatus.ASSIGNED_PICKUP_BOY,
+          OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+          OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
+          OrderStatus.WORKSHOP_ASSIGNED,
+          OrderStatus.WORKSHOP_RECEIVED_ITEMS,
+          OrderStatus.WORKSHOP_WORK_IN_PROGRESS,
+          OrderStatus.WORKSHOP_WORK_IS_COMPLETED,
+          OrderStatus.ORDER_COMPLETED_AND_RECEIVED_AT_BRANCH,
+          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+          OrderStatus.DELIVERED,
+        ],
+      })
+      .andWhere('order.deleted_at IS NULL')
+      .select([
+        'order',
+        'branch.branch_id',
+        'branch.branch_name',
+        'branch.branch_address',
+      ])
+      .take(perPage)
+      .skip(skip);
+
+    if (assignTo === AssignTo.PICKUP) {
+      query.andWhere('order.pickup_boy_id = :pickupBoyId', {
+        pickupBoyId: user_id,
+      });
+    }
+
+    if (assignTo === AssignTo.DELIVERY) {
+      query.andWhere('order.delivery_boy_id = :deliveryBoyId', {
+        deliveryBoyId: user_id,
+      });
+    }
+
+    if (start_date && end_date) {
+      query.andWhere('order.created_at BETWEEN :start AND :end', {
+        start: start_date,
+        end: end_date,
+      });
+    }
+
+    if (order_status) {
+      query.andWhere('order.order_status = :status', {
+        status: order_status,
+      });
+    }
+
+    query.orderBy('order.created_at', 'DESC');
+
+    const [orders, total] = await query.getManyAndCount();
+
+    const totalPaymentCollection = orders.reduce(
+      (sum, order) => sum + Number(order.delivery_collect_amount || 0),
+      0,
+    );
+
+    const totalPickupCount = orders.filter(
+      (o) => o.order_status >= OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+    ).length;
+
+    const totalDeliveryCount = orders.filter(
+      (o) => o.order_status === OrderStatus.DELIVERED,
+    ).length;
+
+    const orderStatusBreakdown = {
+      Pickup: totalPickupCount,
+      Delivered: totalDeliveryCount,
+    };
+
+    const user = await (
+      await this.userService.getAllUsersByRole(Role.CUSTOMER, customer_name)
+    ).data;
+
+    return {
+      totalPaymentCollection,
+      totalPickupCount,
+      totalDeliveryCount,
+      orderStatusBreakdown,
+      orderDetails: orders,
+      limit: perPage,
+      page_number: pageNumber,
+      count: total,
+      user,
+    };
   }
 }

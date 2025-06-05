@@ -32,4 +32,7 @@ export class PaginationQueryDto {
 
   @IsOptional()
   customer_name?: string;
+
+  @IsOptional()
+  order_status?: number;
 }
