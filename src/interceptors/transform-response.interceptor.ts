@@ -38,6 +38,15 @@ export class NullTransformInterceptor implements NestInterceptor {
       'order_notes',
       'defaultAddress',
       'workshopOrders',
+      'UserCompanyMappings',
+      'userBranchMappings',
+      'orders',
+      'workshopManagerMappings',
+      'companies',
+      'branches',
+      'workshops',
+      'result',
+      'carts',
     ];
 
     if (Array.isArray(data)) {
