@@ -128,7 +128,7 @@ export class InvoiceService {
       '..',
       '..',
       '..',
-      'src/logo/SC-logo.png',
+      'src/logo/SC-invoice-logo.png',
     );
     const logoBase64 = fs.readFileSync(logoPath, 'base64');
     const logoUrl = `data:image/png;base64,${logoBase64}`;
