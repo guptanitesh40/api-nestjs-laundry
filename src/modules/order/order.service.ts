@@ -2613,7 +2613,30 @@ export class OrderService {
       );
 
       order.order_status_details = getOrderStatusDetails(order);
+
+      let total_qty = 0;
+      order.items.map((item) => {
+        return (total_qty += Number(item.quantity));
+      });
+
+      order.total_quantity = total_qty;
     });
+    const totalsQuery = queryBuilder.clone();
+
+    totalsQuery.skip(undefined).take(undefined);
+
+    const allOrders = await totalsQuery.getMany();
+
+    let totalAmount = 0;
+    let totalQuantity = 0;
+
+    for (const order of allOrders) {
+      totalAmount += Number(order.total || 0);
+
+      for (const item of order.items || []) {
+        totalQuantity += Number(item.quantity || 0);
+      }
+    }
 
     return {
       statusCode: 200,
@@ -2623,6 +2646,8 @@ export class OrderService {
         limit: perPage,
         page_number: pageNumber,
         count: total,
+        total_amount: totalAmount,
+        total_quantity: totalQuantity,
       },
     };
   }
