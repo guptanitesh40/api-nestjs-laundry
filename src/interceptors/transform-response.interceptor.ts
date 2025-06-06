@@ -34,8 +34,10 @@ export class NullTransformInterceptor implements NestInterceptor {
       'feedback',
       'data',
       'userBranchMappings',
+      'notes',
       'order_notes',
       'defaultAddress',
+      'workshopOrders',
     ];
 
     if (Array.isArray(data)) {
@@ -44,7 +46,11 @@ export class NullTransformInterceptor implements NestInterceptor {
       const transformed: any = {};
 
       for (const key in data) {
-        if (data[key] === null || data[key].length === 0) {
+        if (
+          data[key] === null ||
+          (typeof data[key] === 'string' && data[key].length === 0) ||
+          (Array.isArray(data[key]) && data[key].length === 0)
+        ) {
           transformed[key] = numericKeys.includes(key)
             ? 0
             : nullKeys.includes(key)
