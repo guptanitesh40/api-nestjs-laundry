@@ -56,18 +56,11 @@ export class NotesController {
   }
 
   @Put(':id')
-  @UseInterceptors(
-    FilesInterceptor('images', 10, fileUpload(FilePath.NOTE_IMAGES)),
-  )
   async update(
     @Param('id') id: number,
     @Body() updateNoteDto: UpdateNoteDto,
-    @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Response> {
-    const imagePaths = files.map(
-      (file) => `${FilePath.NOTE_IMAGES}/${file.filename}`,
-    );
-    return await this.notesService.update(id, updateNoteDto, imagePaths);
+    return await this.notesService.update(id, updateNoteDto);
   }
 
   @Delete(':id')

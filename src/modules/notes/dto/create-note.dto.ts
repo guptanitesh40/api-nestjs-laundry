@@ -11,6 +11,9 @@ export class CreateNoteDto {
   @IsOptional()
   text_note: string;
 
+  @IsOptional()
+  is_visible?: boolean;
+
   @IsArray()
   @IsString({ each: true })
   images?: string[] = [];
