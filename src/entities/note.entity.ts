@@ -32,6 +32,9 @@ export class Note extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   text_note: string;
 
+  @Column({ nullable: true, default: false })
+  is_visible: boolean;
+
   @Column({ type: 'simple-array', nullable: true })
   @IsOptional()
   @IsString({ each: true })

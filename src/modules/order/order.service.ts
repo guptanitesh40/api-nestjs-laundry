@@ -801,7 +801,35 @@ export class OrderService {
       const file = fs.existsSync(order_invoice.fileName);
 
       order.order_invoice = file ? order_invoice : '';
+
+      let total_qty = 0;
+      order.items.map((item) => {
+        return (total_qty += Number(item.quantity));
+      });
+
+      order.total_quantity = total_qty;
     });
+
+    const totalsQuery = queryBuilder.clone();
+
+    totalsQuery.skip(undefined).take(undefined);
+
+    const allOrders = await totalsQuery.getMany();
+
+    let totalAmount = 0;
+    let totalPaidAmount = 0;
+    let totalKasarAmount = 0;
+    let totalQuantity = 0;
+
+    for (const order of allOrders) {
+      totalAmount += Number(order.total || 0);
+      totalPaidAmount += Number(order.paid_amount || 0);
+      totalKasarAmount += Number(order.kasar_amount || 0);
+
+      for (const item of order.items || []) {
+        totalQuantity += Number(item.quantity || 0);
+      }
+    }
 
     return {
       statusCode: 200,
@@ -811,6 +839,10 @@ export class OrderService {
         limit: perPage,
         page_number: pageNumber,
         count: total,
+        total_amount: totalAmount,
+        paid_amount: totalPaidAmount,
+        kasar_amount: totalKasarAmount,
+        total_quantity: totalQuantity,
       },
     };
   }
@@ -1287,6 +1319,8 @@ export class OrderService {
     const order: any = await orderQuery.getOne();
 
     order.order_statuses = getOrderStatusList(order.order_status);
+
+    order.order_notes = (await this.notesService.getVisibleNote(order_id)).data;
 
     if (!order) {
       throw new NotFoundException('Order not found');

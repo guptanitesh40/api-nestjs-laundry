@@ -18,9 +18,16 @@ export class NotesService {
     createNoteDto: CreateNoteDto,
     imagePaths?: string[],
   ): Promise<Response> {
+    const isVisible =
+      String(createNoteDto.is_visible) === 'true' ? true : false;
+
+    if (createNoteDto.is_visible) {
+      createNoteDto.is_visible = isVisible;
+    }
     const note = this.notesRepository.create({
       ...createNoteDto,
       images: imagePaths,
+      is_visible: isVisible,
     });
 
     const result = await this.notesRepository.save(note);
@@ -47,6 +54,26 @@ export class NotesService {
     };
   }
 
+  async getVisibleNote(order_id: number): Promise<Response> {
+    const note = await this.notesRepository.find({
+      where: { order_id, deleted_at: null, is_visible: true },
+    });
+    if (!note) {
+      return {
+        statusCode: 404,
+        message: 'Note not found',
+        data: null,
+      };
+    }
+    const notes = appendBaseUrlToArrayImages(note);
+
+    return {
+      statusCode: 200,
+      message: 'Note retrived successfully',
+      data: notes,
+    };
+  }
+
   async findOne(note_id: number): Promise<Response> {
     const note = await this.notesRepository.findOne({
       where: { note_id, deleted_at: null },
@@ -70,7 +97,6 @@ export class NotesService {
   async update(
     note_id: number,
     updateNoteDto: UpdateNoteDto,
-    imagePath?: string[],
   ): Promise<Response> {
     const update_note = await this.notesRepository.findOne({
       where: { note_id, deleted_at: null },
@@ -82,12 +108,10 @@ export class NotesService {
         data: null,
       };
     }
+
     const updatedata = {
       ...updateNoteDto,
     };
-    if (imagePath) {
-      updatedata.images = imagePath;
-    }
 
     await this.notesRepository.update(note_id, updatedata);
 

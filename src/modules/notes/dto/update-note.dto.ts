@@ -1,4 +1,4 @@
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateNoteDto {
   @IsOptional()
@@ -6,7 +6,5 @@ export class UpdateNoteDto {
   text_note?: string;
 
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  images?: string[] = [];
+  is_visible?: boolean;
 }
