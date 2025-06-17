@@ -560,7 +560,8 @@ export class OrderService {
           'user.first_name LIKE :search OR ' +
           'user.last_name LIKE :search OR ' +
           'user.email LIKE :search OR ' +
-          'user.mobile_number LIKE :search)',
+          'user.mobile_number LIKE :search OR ' +
+          'order.order_id LIKE :search)',
         { search: `%${search}%` },
       );
     }
@@ -2493,7 +2494,8 @@ export class OrderService {
           'user.last_name LIKE :search OR ' +
           'user.email LIKE :search OR ' +
           'user.mobile_number LIKE :search OR ' +
-          'workshop.workshop_name LIKE :search)',
+          'workshop.workshop_name LIKE :search OR ' +
+          'order.order_id LIKE :search )',
         { search: `%${search}%` },
       );
     }
