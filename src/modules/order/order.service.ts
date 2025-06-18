@@ -3134,15 +3134,19 @@ export class OrderService {
     ).data;
 
     return {
-      totalPaymentCollection,
-      totalPickupCount,
-      totalDeliveryCount,
-      orderStatusBreakdown,
-      orderDetails: orders,
-      limit: perPage,
-      page_number: pageNumber,
-      count: total,
-      user,
+      statusCode: 200,
+      message: 'driver reports retrived successfully',
+      data: {
+        totalPaymentCollection,
+        totalPickupCount,
+        totalDeliveryCount,
+        orderStatusBreakdown,
+        orderDetails: orders,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+        user,
+      },
     };
   }
 }
