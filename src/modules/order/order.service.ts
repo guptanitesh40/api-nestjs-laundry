@@ -1807,12 +1807,6 @@ export class OrderService {
           excludedDeliveryStatus: OrderStatus.DELIVERED,
         },
       )
-      .andWhere('order.order_status IN(:...deliveredStatus)', {
-        deliveredStatus: [
-          OrderStatus.ASSIGNED_PICKUP_BOY,
-          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
-        ],
-      })
       .andWhere('order.deleted_at IS NULL')
       .select([
         'order.order_id',
@@ -1851,12 +1845,20 @@ export class OrderService {
       .groupBy('order.order_id,items.item_id, user.user_id');
 
     if (assignTo === AssignTo.DELIVERY) {
+      queryBuilder.andWhere('order.order_status IN(:...deliveredStatus)', {
+        deliveredStatus: [
+          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
+        ],
+      });
       queryBuilder.andWhere('order.delivery_boy_id = :deliveryBoyId', {
         deliveryBoyId: assign_id,
       });
     }
 
     if (assignTo === AssignTo.PICKUP) {
+      queryBuilder.andWhere('order.order_status IN(:...deliveredStatus)', {
+        deliveredStatus: [OrderStatus.ASSIGNED_PICKUP_BOY],
+      });
       queryBuilder.andWhere('order.pickup_boy_id = :pickupBoyId', {
         pickupBoyId: assign_id,
       });
