@@ -1810,7 +1810,6 @@ export class OrderService {
       .andWhere('order.order_status IN(:...deliveredStatus)', {
         deliveredStatus: [
           OrderStatus.ASSIGNED_PICKUP_BOY,
-          OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
           OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY,
         ],
       })
@@ -1913,7 +1912,6 @@ export class OrderService {
       )
       .andWhere('order.order_status IN(:...deliveredStatus)', {
         deliveredStatus: [
-          OrderStatus.ASSIGNED_PICKUP_BOY,
           OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
           OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
           OrderStatus.WORKSHOP_ASSIGNED,
