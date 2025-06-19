@@ -3045,6 +3045,8 @@ export class OrderService {
     const query = this.orderRepository
       .createQueryBuilder('order')
       .innerJoinAndSelect('order.branch', 'branch')
+      .innerJoinAndSelect('order.user', 'user')
+      .innerJoinAndSelect('branch.branchManager', 'branchManager')
       .where(
         '(order.delivery_boy_id = :driverId OR order.pickup_boy_id = :driverId)',
         { driverId: user_id },
@@ -3068,6 +3070,15 @@ export class OrderService {
         'branch.branch_id',
         'branch.branch_name',
         'branch.branch_address',
+        'user.user_id',
+        'user.first_name',
+        'user.last_name',
+        'user.mobile_number',
+        'branchManager.user_id',
+        'branchManager.first_name',
+        'branchManager.last_name',
+        'branchManager.mobile_number',
+        'branchManager.email',
       ])
       .take(perPage)
       .skip(skip);
