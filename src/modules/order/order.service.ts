@@ -1959,6 +1959,13 @@ export class OrderService {
       .take(perPage)
       .skip(skip);
 
+    if (customer_name) {
+      queryBuilder.andWhere(
+        `(user.first_name LIKE :search OR user.last_name LIKE :search OR user.email LIKE :search OR user.mobile_number LIKE :search OR CONCAT(user.first_name , ' ', user.last_name) LIKE :search )`,
+        { search: `%${customer_name}%` },
+      );
+    }
+
     if (assignTo === AssignTo.DELIVERY) {
       queryBuilder.andWhere('order.delivery_boy_id = :deliveryBoyId', {
         deliveryBoyId: assign_id,
@@ -2000,7 +2007,7 @@ export class OrderService {
     }));
 
     const user = await (
-      await this.userService.getAllUsersByRole(Role.CUSTOMER, customer_name)
+      await this.userService.getAllUsersByRole(Role.CUSTOMER)
     ).data;
 
     return {
@@ -3083,14 +3090,21 @@ export class OrderService {
       .take(perPage)
       .skip(skip);
 
+    if (customer_name) {
+      query.andWhere(
+        `(user.first_name LIKE :search OR user.last_name LIKE :search OR user.email LIKE :search OR user.mobile_number LIKE :search OR CONCAT(user.first_name , ' ', user.last_name) LIKE :search )`,
+        { search: `%${customer_name}%` },
+      );
+    }
+
     if (assignTo === AssignTo.PICKUP) {
-      query.andWhere('order.pickup_boy_id = :pickupBoyId', {
+      query.where('order.pickup_boy_id = :pickupBoyId', {
         pickupBoyId: user_id,
       });
     }
 
     if (assignTo === AssignTo.DELIVERY) {
-      query.andWhere('order.delivery_boy_id = :deliveryBoyId', {
+      query.where('order.delivery_boy_id = :deliveryBoyId', {
         deliveryBoyId: user_id,
       });
     }
@@ -3141,7 +3155,7 @@ export class OrderService {
     };
 
     const user = await (
-      await this.userService.getAllUsersByRole(Role.CUSTOMER, customer_name)
+      await this.userService.getAllUsersByRole(Role.CUSTOMER)
     ).data;
 
     return {
