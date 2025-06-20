@@ -3054,11 +3054,7 @@ export class OrderService {
       .innerJoinAndSelect('order.branch', 'branch')
       .innerJoinAndSelect('order.user', 'user')
       .innerJoinAndSelect('branch.branchManager', 'branchManager')
-      .where(
-        '(order.delivery_boy_id = :driverId OR order.pickup_boy_id = :driverId)',
-        { driverId: user_id },
-      )
-      .andWhere('order.order_status IN(:...deliveredStatus)', {
+      .where('order.order_status IN(:...deliveredStatus)', {
         deliveredStatus: [
           OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
           OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
@@ -3098,15 +3094,20 @@ export class OrderService {
     }
 
     if (assignTo === AssignTo.PICKUP) {
-      query.where('order.pickup_boy_id = :pickupBoyId', {
+      query.andWhere('order.pickup_boy_id = :pickupBoyId', {
         pickupBoyId: user_id,
       });
-    }
-
-    if (assignTo === AssignTo.DELIVERY) {
-      query.where('order.delivery_boy_id = :deliveryBoyId', {
+    } else if (assignTo === AssignTo.DELIVERY) {
+      query.andWhere('order.delivery_boy_id = :deliveryBoyId', {
         deliveryBoyId: user_id,
       });
+    } else {
+      query.andWhere(
+        '(order.delivery_boy_id = :driverId OR order.pickup_boy_id = :driverId)',
+        {
+          driverId: user_id,
+        },
+      );
     }
 
     if (start_date && end_date) {
@@ -3160,7 +3161,8 @@ export class OrderService {
 
     return {
       statusCode: 200,
-      message: 'driver reports retrived successfully',
+      message: 'Driver report retrieved successfully',
+
       data: {
         totalPaymentCollection,
         totalPickupCount,
