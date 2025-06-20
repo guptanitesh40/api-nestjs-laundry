@@ -1959,6 +1959,13 @@ export class OrderService {
       .take(perPage)
       .skip(skip);
 
+    if (customer_name) {
+      queryBuilder.andWhere(
+        `(user.first_name LIKE :search OR user.last_name LIKE :search OR user.email LIKE :search OR user.mobile_number LIKE :search OR CONCAT(user.first_name , ' ', user.last_name) LIKE :search )`,
+        { search: `%${customer_name}%` },
+      );
+    }
+
     if (assignTo === AssignTo.DELIVERY) {
       queryBuilder.andWhere('order.delivery_boy_id = :deliveryBoyId', {
         deliveryBoyId: assign_id,
@@ -2000,7 +2007,7 @@ export class OrderService {
     }));
 
     const user = await (
-      await this.userService.getAllUsersByRole(Role.CUSTOMER, customer_name)
+      await this.userService.getAllUsersByRole(Role.CUSTOMER)
     ).data;
 
     return {
@@ -3047,11 +3054,7 @@ export class OrderService {
       .innerJoinAndSelect('order.branch', 'branch')
       .innerJoinAndSelect('order.user', 'user')
       .innerJoinAndSelect('branch.branchManager', 'branchManager')
-      .where(
-        '(order.delivery_boy_id = :driverId OR order.pickup_boy_id = :driverId)',
-        { driverId: user_id },
-      )
-      .andWhere('order.order_status IN(:...deliveredStatus)', {
+      .where('order.order_status IN(:...deliveredStatus)', {
         deliveredStatus: [
           OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
           OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
@@ -3083,16 +3086,28 @@ export class OrderService {
       .take(perPage)
       .skip(skip);
 
+    if (customer_name) {
+      query.andWhere(
+        `(user.first_name LIKE :search OR user.last_name LIKE :search OR user.email LIKE :search OR user.mobile_number LIKE :search OR CONCAT(user.first_name , ' ', user.last_name) LIKE :search )`,
+        { search: `%${customer_name}%` },
+      );
+    }
+
     if (assignTo === AssignTo.PICKUP) {
       query.andWhere('order.pickup_boy_id = :pickupBoyId', {
         pickupBoyId: user_id,
       });
-    }
-
-    if (assignTo === AssignTo.DELIVERY) {
+    } else if (assignTo === AssignTo.DELIVERY) {
       query.andWhere('order.delivery_boy_id = :deliveryBoyId', {
         deliveryBoyId: user_id,
       });
+    } else {
+      query.andWhere(
+        '(order.delivery_boy_id = :driverId OR order.pickup_boy_id = :driverId)',
+        {
+          driverId: user_id,
+        },
+      );
     }
 
     if (start_date && end_date) {
@@ -3141,12 +3156,13 @@ export class OrderService {
     };
 
     const user = await (
-      await this.userService.getAllUsersByRole(Role.CUSTOMER, customer_name)
+      await this.userService.getAllUsersByRole(Role.CUSTOMER)
     ).data;
 
     return {
       statusCode: 200,
-      message: 'driver reports retrived successfully',
+      message: 'Driver report retrieved successfully',
+
       data: {
         totalPaymentCollection,
         totalPickupCount,
