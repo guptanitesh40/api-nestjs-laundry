@@ -60,6 +60,11 @@ export function appendBaseUrlToBannerAndPdf(name: string) {
   return `${baseUrl}/${name}`;
 }
 
+export function appendBaseUrl(name: string) {
+  const baseUrl = process.env.BASE_URL || '';
+  return `${baseUrl}${name}`;
+}
+
 export function appendWebIp(name: string) {
   const webIp = process.env.WEBSITE_IP || '';
   return `${webIp}${name}`;
