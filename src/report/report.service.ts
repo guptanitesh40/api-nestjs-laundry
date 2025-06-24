@@ -1176,7 +1176,7 @@ export class ReportService {
       .addSelect('COUNT(orders.order_id)', 'order_count')
       .addSelect('SUM(orders.total)', 'total_amount')
       .addSelect(
-        `SUM(CASE WHEN orders.order_status = :status THEN orders.paid_amount ELSE 0 END)`,
+        `SUM(CASE WHEN orders.order_status = :status THEN orders.delivery_collect_amount ELSE 0 END)`,
         'delivery_amounts',
       )
       .addSelect(

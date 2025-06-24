@@ -1991,7 +1991,7 @@ export class OrderService {
       end.setHours(23, 59, 59, 999);
 
       queryBuilder.andWhere(
-        'order.created_at BETWEEN :startDate AND :endDate',
+        'order.pickup_date BETWEEN :startDate AND :endDate',
         { startDate: start.toISOString(), endDate: end.toISOString() },
       );
     }
@@ -3117,7 +3117,7 @@ export class OrderService {
       const end = new Date(end_date);
       end.setHours(23, 59, 59, 999);
 
-      query.andWhere('order.created_at BETWEEN :startDate AND :endDate', {
+      query.andWhere('order.pickup_date BETWEEN :startDate AND :endDate', {
         startDate: start.toISOString(),
         endDate: end.toISOString(),
       });
@@ -3131,7 +3131,11 @@ export class OrderService {
 
     query.orderBy('order.created_at', 'DESC');
 
-    const [orders, total] = await query.getManyAndCount();
+    const [orders, total]: any = await query.getManyAndCount();
+
+    orders.map((order) => {
+      order.current_order_status = getOrderStatusDetails(order).admin_label;
+    });
 
     const totalPaymentCollection = orders.reduce(
       (sum, order) => sum + Number(order.delivery_collect_amount || 0),
