@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { Setting } from 'src/entities/setting.entity';
 import {
+  appendBaseUrl,
   appendBaseUrlToBannerAndPdf,
   appendWebIp,
 } from 'src/utils/image-path.helper';
@@ -134,8 +135,14 @@ export class SettingService {
         'about-us',
       ];
 
+      const webHtmlKeys = ['terms-condition', 'privacy-policy'];
+
       if (webIpKeys.includes(element.setting_key)) {
         result[element.setting_key] = appendWebIp(element.setting_value);
+      }
+
+      if (webHtmlKeys.includes(element.setting_key)) {
+        result[element.setting_key] = appendBaseUrl(element.setting_value);
       }
     });
 

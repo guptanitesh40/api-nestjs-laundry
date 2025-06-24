@@ -4,6 +4,7 @@ import {
   Get,
   Put,
   Query,
+  Render,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -58,5 +59,17 @@ export class SettingController {
   @Get('settings')
   async getAll(@Query('keys') keys?: string[]): Promise<Response> {
     return await this.settingService.findAll(keys);
+  }
+
+  @Get('terms-condition')
+  @Render('terms-condition')
+  renderTerms() {
+    return {};
+  }
+
+  @Get('privacy-policy')
+  @Render('privacy-policy')
+  getPrivacyPage() {
+    return {};
   }
 }
