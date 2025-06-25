@@ -11,11 +11,14 @@ import {
   Put,
   Query,
   Request,
+  UploadedFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { FileInterceptor } from '@nestjs/platform-express';
+import multer from 'multer';
 import { FilePath } from 'src/constants/FilePath';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
@@ -271,5 +274,11 @@ export class UserController {
     } else {
       throw new HttpException('Invalid OTP', HttpStatus.BAD_REQUEST);
     }
+  }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file', { storage: multer.memoryStorage() }))
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    return await this.userService.importFromCsv(file.buffer);
   }
 }

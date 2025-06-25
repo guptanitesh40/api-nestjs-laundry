@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import csvParser from 'csv-parser';
 import { firstValueFrom } from 'rxjs';
 import {
   vision360_template_id_otp_send,
@@ -32,6 +33,7 @@ import { LoginDto } from 'src/modules/auth/dto/login.dto';
 import { SignupDto } from 'src/modules/auth/dto/signup.dto';
 import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { getOrderStatusDetails } from 'src/utils/order-status.helper';
+import { Readable } from 'stream';
 import { In, MoreThan, Repository } from 'typeorm';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { UserFilterDto } from '../dto/users-filter.dto';
@@ -215,7 +217,7 @@ export class UserService {
   ): Promise<Response> {
     let password = '';
     if (!createUserDto.password) {
-      password = crypto.randomBytes(4).toString('hex');
+      password = String(createUserDto.mobile_number);
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -1221,5 +1223,38 @@ export class UserService {
         count: total,
       },
     };
+  }
+
+  async importFromCsv(buffer: Buffer): Promise<any> {
+    const rawRows = [];
+    const stream = Readable.from(buffer);
+
+    return new Promise((resolve, reject) => {
+      stream
+        .pipe(csvParser())
+        .on('data', (row) => rawRows.push(row))
+        .on('end', async () => {
+          const customers = [];
+
+          for (const row of rawRows) {
+            const hashedPassword = await bcrypt.hash(row.password, 10);
+
+            customers.push({
+              first_name: row.first_name,
+              last_name: row.last_name,
+              mobile_number: row.mobile_number,
+              password: hashedPassword,
+              role_id: 5,
+            });
+          }
+
+          await this.userRepository.save(customers);
+          resolve({
+            message: 'Imported successfully',
+            count: customers.length,
+          });
+        })
+        .on('error', reject);
+    });
   }
 }
