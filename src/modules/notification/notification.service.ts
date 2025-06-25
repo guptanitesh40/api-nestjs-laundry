@@ -63,18 +63,18 @@ export class NotificationService {
     ).padStart(2, '0')}/${deliveryDate.getFullYear()}`;
 
     if (order.order_status === OrderStatus.DELIVERED) {
-      return `Dear ${order.user.first_name} ${order.user.last_name}, your order (Booking No: SCONLINE/${order.order_id}) has been successfully delivered. Received an amount ${order.paid_amount}. We hope you are satisfied with our service. If, any issue contact management team immediately. Thank you for choosing Sikka Cleaners.`;
+      return `Dear ${order.user.first_name} ${order.user.last_name}, your order (Booking No: SCONLINE/${order.order_id}) has been successfully delivered. Received an amount ${order.paid_amount}. We hope you are satisfied with our service. If, any issue contact management team immediately. Thank you for choosing Sikka Cleaners. ${process.env.WEBSITE_IP}`;
     }
 
     if (
       order.order_status ===
       OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
     ) {
-      return `Dear ${order.user.first_name} ${order.user.last_name},your clothes for dry clean/steam press, (Booking No: SCONLINE/${order.order_id}) are ready. Thank You. Sikka Cleaners.
+      return `Dear ${order.user.first_name} ${order.user.last_name},your clothes for dry clean/steam press, (Booking No: SCONLINE/${order.order_id}) are ready. Thank You. Sikka Cleaners. ${process.env.WEBSITE_IP}
 `;
     }
 
-    return `Dear ${order.user.first_name} ${order.user.last_name}, your order has been confirmed with Booking No:  SCONLINE/${order.order_id} on Dated ${formattedDate}. Total clothes: ${order.items.length}, Total Amount: ₹${order.total}. Delivery Date ${formattedDelivryDate}. Thank you for choosing Sikka Cleaners.`;
+    return `Dear ${order.user.first_name} ${order.user.last_name}, your order has been confirmed with Booking No:  SCONLINE/${order.order_id} on Dated ${formattedDate}. Total clothes: ${order.items.length}, Total Amount: ₹${order.total}. Delivery Date ${formattedDelivryDate}. Thank you for choosing Sikka Cleaners. ${process.env.WEBSITE_IP}`;
   }
 
   async sendPushNotification(
