@@ -3035,14 +3035,8 @@ export class OrderService {
     user_id?: number,
     assignTo?: AssignTo,
   ) {
-    const {
-      start_date,
-      end_date,
-      customer_name,
-      order_status,
-      per_page,
-      page_number,
-    } = filter;
+    const { start_date, end_date, customer_name, per_page, page_number } =
+      filter;
 
     const pageNumber = page_number ?? 1;
 
@@ -3123,18 +3117,45 @@ export class OrderService {
       });
     }
 
-    if (order_status) {
-      query.andWhere('order.order_status = :status', {
-        status: order_status,
-      });
-    }
-
     query.orderBy('order.created_at', 'DESC');
 
     const [orders, total]: any = await query.getManyAndCount();
 
     orders.map((order) => {
-      order.current_order_status = getOrderStatusDetails(order).admin_label;
+      if (
+        order.pickup_boy_id === user_id &&
+        order.delivery_boy_id !== user_id
+      ) {
+        order.current_order_status = 'Pickup Completed';
+      }
+      if (
+        order.delivery_boy_id === user_id &&
+        order.pickup_boy_id !== user_id
+      ) {
+        order.current_order_status = 'Delivery Completed';
+      }
+      if (
+        order.delivery_boy_id === user_id &&
+        order.pickup_boy_id === user_id &&
+        assignTo === AssignTo.PICKUP
+      ) {
+        order.current_order_status = 'Pickup Completed';
+      }
+      if (
+        order.delivery_boy_id === user_id &&
+        order.pickup_boy_id === user_id &&
+        assignTo === AssignTo.DELIVERY
+      ) {
+        order.current_order_status = 'Delivery Completed';
+      }
+      if (
+        order.delivery_boy_id === user_id &&
+        order.pickup_boy_id === user_id &&
+        assignTo !== AssignTo.PICKUP &&
+        assignTo !== AssignTo.DELIVERY
+      ) {
+        order.current_order_status = 'Delivery Completed';
+      }
     });
 
     const totalPaymentCollection = orders.reduce(
@@ -3142,17 +3163,29 @@ export class OrderService {
       0,
     );
 
-    const totalPickupCount = orders.filter(
-      (o) =>
-        o.order_status >= OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY &&
-        o.pickup_boy_id === user_id,
-    ).length;
+    const totalPickupCount = await this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.pickup_boy_id = :user_id', { user_id })
+      .andWhere(
+        'order.order_status >= :minStatus AND order.order_status <= :maxStatus',
+        {
+          minStatus: OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY,
+          maxStatus: OrderStatus.DELIVERED,
+        },
+      )
+      .andWhere('order.deleted_at IS NULL')
+      .andWhere('order.pickup_date IS NOT NULL')
+      .getCount();
 
-    const totalDeliveryCount = orders.filter(
-      (o) =>
-        o.order_status === OrderStatus.DELIVERED &&
-        o.delivery_boy_id === user_id,
-    ).length;
+    const totalDeliveryCount = await this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.delivery_boy_id = :user_id', { user_id })
+      .andWhere('order.order_status = :deliveredStatus', {
+        deliveredStatus: OrderStatus.DELIVERED,
+      })
+      .andWhere('order.deleted_at IS NULL')
+      .andWhere('order.pickup_date IS NOT NULL')
+      .getCount();
 
     const orderStatusBreakdown = {
       Pickup: totalPickupCount,
