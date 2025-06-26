@@ -31,7 +31,6 @@ export class CreateUserDto {
   password: string;
 
   @IsOptional()
-  // @IsEnum(Gender)
   gender: Gender;
 
   @IsNotEmpty()
