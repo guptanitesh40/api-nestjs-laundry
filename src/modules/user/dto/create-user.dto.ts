@@ -2,7 +2,6 @@ import {
   IsArray,
   IsDecimal,
   IsEmail,
-  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -31,8 +30,7 @@ export class CreateUserDto {
   @IsOptional()
   password: string;
 
-  @IsNotEmpty()
-  @IsEnum(Gender)
+  @IsOptional()
   gender: Gender;
 
   @IsNotEmpty()

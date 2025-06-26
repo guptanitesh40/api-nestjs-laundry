@@ -44,7 +44,7 @@ export class User extends BaseEntity {
   password: string;
 
   @Column({ type: 'int', nullable: true })
-  gender: Gender;
+  gender?: Gender;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   @IsOptional()
