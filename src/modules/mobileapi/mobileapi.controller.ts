@@ -3,23 +3,25 @@ import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
+import { OptionalAuthGuard } from '../auth/guard/optional.guard';
 import { RolesGuard } from '../auth/guard/role.guard';
 import { ApiService } from './api.service';
 
 @Controller('mobile')
-@UseGuards(RolesGuard)
-@UseGuards(AuthGuard('jwt'))
-@Roles(Role.CUSTOMER)
 export class MobileApiController {
   constructor(private readonly apiService: ApiService) {}
 
   @Get('/home')
+  @UseGuards(OptionalAuthGuard)
   async findAll(@Request() req): Promise<Response> {
-    const user = req.user;
-    return await this.apiService.findAll(user.user_id);
+    const user = req?.user;
+    return await this.apiService.findAll(user?.user_id);
   }
 
   @Get('products')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.CUSTOMER)
   async getProductsByCategoryAndService(
     @Request() req,
     @Query('category_id') category_id: number,
@@ -36,6 +38,9 @@ export class MobileApiController {
   }
 
   @Get('categories')
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.CUSTOMER)
   async getCategoriesByService(
     @Query('service_id') service_id: number,
   ): Promise<Response> {
