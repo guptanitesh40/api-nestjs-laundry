@@ -3062,6 +3062,10 @@ export class OrderService {
         ],
       })
       .andWhere('order.deleted_at IS NULL')
+      .andWhere(
+        'order.pickup_date IS NOT NULL OR order.delivery_date IS NOT NULL',
+      )
+
       .select([
         'order',
         'branch.branch_id',
@@ -3116,11 +3120,19 @@ export class OrderService {
           startDate: start.toISOString(),
           endDate: end.toISOString(),
         });
-      } else {
+      } else if (assignTo === AssignTo.PICKUP) {
         query.andWhere('order.pickup_date BETWEEN :startDate AND :endDate', {
           startDate: start.toISOString(),
           endDate: end.toISOString(),
         });
+      } else {
+        query.andWhere(
+          '(order.pickup_date BETWEEN :startDate AND :endDate OR order.delivery_date BETWEEN :startDate AND :endDate)',
+          {
+            startDate: start.toISOString(),
+            endDate: end.toISOString(),
+          },
+        );
       }
     }
 
@@ -3131,6 +3143,8 @@ export class OrderService {
     const result = [];
 
     orders.forEach((order) => {
+      console.log('order :- ', order.order_id);
+
       const isPickup = order.pickup_boy_id === user_id;
       const isDelivery = order.delivery_boy_id === user_id;
 
@@ -3175,6 +3189,9 @@ export class OrderService {
 
     const totalPickupCount = await this.orderRepository
       .createQueryBuilder('order')
+      .innerJoinAndSelect('order.branch', 'branch')
+      .innerJoinAndSelect('order.user', 'user')
+      .innerJoinAndSelect('branch.branchManager', 'branchManager')
       .where('order.pickup_boy_id = :user_id', { user_id })
       .andWhere(
         'order.order_status >= :minStatus AND order.order_status <= :maxStatus',
@@ -3189,12 +3206,15 @@ export class OrderService {
 
     const totalDeliveryCount = await this.orderRepository
       .createQueryBuilder('order')
+      .innerJoinAndSelect('order.branch', 'branch')
+      .innerJoinAndSelect('order.user', 'user')
+      .innerJoinAndSelect('branch.branchManager', 'branchManager')
       .where('order.delivery_boy_id = :user_id', { user_id })
       .andWhere('order.order_status = :deliveredStatus', {
         deliveredStatus: OrderStatus.DELIVERED,
       })
       .andWhere('order.deleted_at IS NULL')
-      .andWhere('order.pickup_date IS NOT NULL')
+      .andWhere('order.delivery_date IS NOT NULL')
       .getCount();
 
     const orderStatusBreakdown = {
