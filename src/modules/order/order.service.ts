@@ -3111,50 +3111,60 @@ export class OrderService {
       const end = new Date(end_date);
       end.setHours(23, 59, 59, 999);
 
-      query.andWhere('order.pickup_date BETWEEN :startDate AND :endDate', {
-        startDate: start.toISOString(),
-        endDate: end.toISOString(),
-      });
+      if (assignTo === AssignTo.DELIVERY) {
+        query.andWhere('order.delivery_date BETWEEN :startDate AND :endDate', {
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+        });
+      } else {
+        query.andWhere('order.pickup_date BETWEEN :startDate AND :endDate', {
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+        });
+      }
     }
 
     query.orderBy('order.created_at', 'DESC');
 
     const [orders, total]: any = await query.getManyAndCount();
 
-    orders.map((order) => {
-      if (
-        order.pickup_boy_id === user_id &&
-        order.delivery_boy_id !== user_id
-      ) {
-        order.current_order_status = 'Pickup Completed';
-      }
-      if (
-        order.delivery_boy_id === user_id &&
-        order.pickup_boy_id !== user_id
-      ) {
-        order.current_order_status = 'Delivery Completed';
-      }
-      if (
-        order.delivery_boy_id === user_id &&
-        order.pickup_boy_id === user_id &&
-        assignTo === AssignTo.PICKUP
-      ) {
-        order.current_order_status = 'Pickup Completed';
-      }
-      if (
-        order.delivery_boy_id === user_id &&
-        order.pickup_boy_id === user_id &&
-        assignTo === AssignTo.DELIVERY
-      ) {
-        order.current_order_status = 'Delivery Completed';
-      }
-      if (
-        order.delivery_boy_id === user_id &&
-        order.pickup_boy_id === user_id &&
-        assignTo !== AssignTo.PICKUP &&
-        assignTo !== AssignTo.DELIVERY
-      ) {
-        order.current_order_status = 'Delivery Completed';
+    const result = [];
+
+    orders.forEach((order) => {
+      const isPickup = order.pickup_boy_id === user_id;
+      const isDelivery = order.delivery_boy_id === user_id;
+
+      if (assignTo === AssignTo.PICKUP && isPickup) {
+        result.push({
+          ...order,
+          current_order_status: 'Pickup Completed',
+        });
+      } else if (assignTo === AssignTo.DELIVERY && isDelivery) {
+        result.push({
+          ...order,
+          current_order_status: 'Delivery Completed',
+        });
+      } else if (!assignTo) {
+        if (isPickup && isDelivery) {
+          result.push({
+            ...order,
+            current_order_status: 'Pickup Completed',
+          });
+          result.push({
+            ...order,
+            current_order_status: 'Delivery Completed',
+          });
+        } else if (isPickup) {
+          result.push({
+            ...order,
+            current_order_status: 'Pickup Completed',
+          });
+        } else if (isDelivery) {
+          result.push({
+            ...order,
+            current_order_status: 'Delivery Completed',
+          });
+        }
       }
     });
 
@@ -3205,7 +3215,7 @@ export class OrderService {
         totalPickupCount,
         totalDeliveryCount,
         orderStatusBreakdown,
-        orderDetails: orders,
+        orderDetails: result,
         limit: perPage,
         page_number: pageNumber,
         count: total,
