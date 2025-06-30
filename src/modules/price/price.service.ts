@@ -160,6 +160,7 @@ export class PriceService {
       })
       .select(['service.service_id', 'service.name'])
       .groupBy('service.service_id')
+      .orderBy('service.created_at', 'ASC')
       .getRawMany();
 
     return services;
@@ -186,6 +187,7 @@ export class PriceService {
       .where('category.category_id = :category_id', { category_id })
       .select(['product.product_id', 'product.name'])
       .groupBy('product.product_id')
+      .orderBy('product.created_at', 'ASC')
       .getRawMany();
 
     return uniqueProducts;
