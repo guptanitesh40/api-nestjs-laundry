@@ -1,10 +1,4 @@
-import {
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Length,
-} from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { AddressType } from 'src/enum/address_type.enum';
 
 export class CreateAddressDto {
@@ -44,9 +38,7 @@ export class CreateAddressDto {
   @IsOptional()
   long: number;
 
-  @IsString()
   @IsOptional()
-  @Length(6, 6)
   pincode: number;
 
   @IsString()

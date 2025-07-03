@@ -17,6 +17,7 @@ import {
   vision360_template_id_password_send,
 } from 'src/constants/TemplateId';
 import { Response } from 'src/dto/response.dto';
+import { UserAddress } from 'src/entities/address.entity';
 import { DeviceUser } from 'src/entities/device-user.entity';
 import { LoginHistory } from 'src/entities/login-history.entity';
 import { Order } from 'src/entities/order.entity';
@@ -57,6 +58,8 @@ export class UserService {
     private userBranchMappingRepository: Repository<UserBranchMapping>,
     @InjectRepository(WorkshopManagerMapping)
     private workshopManagerMappingRepository: Repository<WorkshopManagerMapping>,
+    @InjectRepository(UserAddress)
+    private userAddressRepository: Repository<UserAddress>,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
     private readonly httpService: HttpService,
@@ -952,13 +955,13 @@ export class UserService {
   }
 
   async validateOtp(mobile_number: number, otp: number): Promise<boolean> {
-    const tenMinutesAgo = new Date(new Date().getTime() - 10 * 60 * 1000);
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
     const otpEntry = await this.otpRepository.findOne({
       where: {
         mobile_number,
         otp,
         deleted_at: null,
-        created_at: MoreThan(tenMinutesAgo),
+        created_at: MoreThan(twoMinutesAgo),
       },
     });
     if (otpEntry) {
@@ -1234,24 +1237,66 @@ export class UserService {
         .pipe(csvParser())
         .on('data', (row) => rawRows.push(row))
         .on('end', async () => {
-          const customers = [];
+          const userEntities = [];
+          const addressEntities = [];
 
-          for (const row of rawRows) {
-            const hashedPassword = await bcrypt.hash(row.password, 10);
+          const hashedPasswords = await Promise.all(
+            rawRows.map((row) =>
+              bcrypt.hash(row.password || 'Welcome@123', 10),
+            ),
+          );
 
-            customers.push({
-              first_name: row.first_name,
-              last_name: row.last_name,
-              mobile_number: row.mobile_number,
-              password: hashedPassword,
-              role_id: 5,
-            });
+          for (let i = 0; i < rawRows.length; i++) {
+            const row = rawRows[i];
+
+            userEntities.push(
+              this.userRepository.create({
+                first_name: row.first_name,
+                last_name: row.last_name,
+                mobile_number: row.mobile_number,
+                password: hashedPasswords[i],
+                role_id: 5,
+              }),
+            );
           }
 
-          await this.userRepository.save(customers);
+          const savedUsers = await this.userRepository.save(userEntities);
+
+          const toNullableNumber = (value: any): number | null => {
+            const num = Number(value);
+            return isNaN(num) ? null : num;
+          };
+
+          for (let i = 0; i < savedUsers.length; i++) {
+            const user = savedUsers[i];
+            const row = rawRows[i];
+
+            addressEntities.push(
+              this.userAddressRepository.create({
+                address_type: Number(row.address_type) || 1,
+                full_name: row.Customer || `${row.first_name} ${row.last_name}`,
+                phone_number: row.phone_number || row.mobile_number || '',
+                building_number: row.building_number || '',
+                area: row.area || '',
+                landmark: row.landmark || '',
+                lat: toNullableNumber(row.lat),
+                long: toNullableNumber(row.long),
+                pincode: toNullableNumber(row.pincode),
+                city: 'Ahmedabad',
+                state: 'Gujarat',
+                country: 'India',
+                user_id: user.user_id,
+                is_default: true,
+              }),
+            );
+          }
+
+          await this.userAddressRepository.save(addressEntities);
+
           resolve({
-            message: 'Imported successfully',
-            count: customers.length,
+            message: 'Bulk import successful',
+            customers: savedUsers.length,
+            addresses: addressEntities.length,
           });
         })
         .on('error', reject);
