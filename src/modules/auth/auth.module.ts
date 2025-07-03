@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'dotenv';
+import { UserAddress } from 'src/entities/address.entity';
 import { DeviceUser } from 'src/entities/device-user.entity';
 import { LoginHistory } from 'src/entities/login-history.entity';
 import { Otp } from 'src/entities/otp.entity';
@@ -33,6 +34,7 @@ config();
       UserCompanyMapping,
       UserBranchMapping,
       WorkshopManagerMapping,
+      UserAddress,
     ]),
     UsersModule,
     OrderModule,

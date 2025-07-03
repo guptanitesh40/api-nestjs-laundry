@@ -1,7 +1,6 @@
 import {
   IsDecimal,
   IsEmail,
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -38,7 +37,6 @@ export class SignupDto {
   password: string;
 
   @IsOptional()
-  @IsEnum(Gender)
   gender: Gender;
 
   @IsNotEmpty()

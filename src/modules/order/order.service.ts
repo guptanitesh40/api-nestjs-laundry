@@ -3143,8 +3143,6 @@ export class OrderService {
     const result = [];
 
     orders.forEach((order) => {
-      console.log('order :- ', order.order_id);
-
       const isPickup = order.pickup_boy_id === user_id;
       const isDelivery = order.delivery_boy_id === user_id;
 

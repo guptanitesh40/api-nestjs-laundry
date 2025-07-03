@@ -1,6 +1,7 @@
 import { HttpModule } from '@nestjs/axios';
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserAddress } from 'src/entities/address.entity';
 import { DeviceUser } from 'src/entities/device-user.entity';
 import { LoginHistory } from 'src/entities/login-history.entity';
 import { Order } from 'src/entities/order.entity';
@@ -26,6 +27,7 @@ import { UserService } from './user.service';
       UserBranchMapping,
       WorkshopManagerMapping,
       Order,
+      UserAddress,
     ]),
     HttpModule,
     forwardRef(() => OrderModule),
