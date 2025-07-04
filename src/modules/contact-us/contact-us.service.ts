@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/dto/response.dto';
 import { ContactUs } from 'src/entities/contact-us.entity';
 import { Repository } from 'typeorm';
+import { sendContactEmail } from '../../utils/send-contact-email.helper';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { CreateContactUsDto } from './dto/create-contact-us.dto';
 
@@ -18,6 +19,8 @@ export class ContactUsService {
   ): Promise<Response> {
     const contact = this.contactUsRepository.create(createContactUsDto);
     const result = await this.contactUsRepository.save(contact);
+
+    await sendContactEmail(createContactUsDto);
 
     return {
       statusCode: 201,
