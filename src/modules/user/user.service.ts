@@ -1100,7 +1100,7 @@ export class UserService {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
       .where('user.role_id = :role_id', { role_id })
-      .orderBy('user.created_at', 'DESC')
+      .orderBy('user.first_name', 'ASC')
       .select([
         'user.user_id',
         'user.first_name',
