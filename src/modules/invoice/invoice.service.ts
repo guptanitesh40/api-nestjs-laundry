@@ -182,7 +182,9 @@ export class InvoiceService {
         };
       }) || [];
 
-    const totalQty = quantity + quantity;
+    const totalQty =
+      orderData.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) ||
+      0;
 
     const companyGstPercetage = orderData.company?.gst_percentage || 6;
 
@@ -258,17 +260,36 @@ export class InvoiceService {
 
     const gst = orderData.gst ? parseFloat(orderData.gst.toString()) : 0;
 
+    const formatDateTime = (dateInput) => {
+      const date = new Date(dateInput);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-based
+      const year = date.getFullYear();
+
+      let hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const formattedTime = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+
+      return `${day}/${month}/${year} ${formattedTime}`;
+    };
+
     const invoiceData = {
       invoiceNumber: orderData.order_id?.toString() || 'N/A',
       customer: {
         name: `${orderData.user?.first_name || ''} ${orderData.user?.last_name || ''}`.trim(),
         contact: orderData.user?.mobile_number?.toString() || 'N/A',
       },
+
       collectionTime: orderData.estimated_pickup_time
-        ? new Date(orderData.estimated_pickup_time).toLocaleString()
+        ? formatDateTime(orderData.estimated_pickup_time)
         : 'N/A',
+
       deliveryTime: orderData.estimated_delivery_time
-        ? new Date(new Date().setHours(19, 0, 0, 0)).toLocaleString()
+        ? formatDateTime(new Date().setHours(19, 0, 0, 0))
         : 'N/A',
 
       customerAddress: orderData.address_details || 'N/A',
