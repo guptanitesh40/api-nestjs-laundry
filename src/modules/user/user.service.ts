@@ -1302,4 +1302,55 @@ export class UserService {
         .on('error', reject);
     });
   }
+
+  async getUserBranches(user_id: number): Promise<Response> {
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.userBranchMappings', 'branchMapping')
+      .leftJoinAndSelect('branchMapping.branch', 'branch')
+      .where('user.user_id = :user_id', { user_id })
+      .andWhere('user.deleted_at IS NULL')
+      .andWhere('branchMapping.deleted_at IS NULL')
+      .andWhere('branch.deleted_at IS NULL')
+      .select([
+        'user.user_id',
+        'user.first_name',
+        'user.last_name',
+        'user.email',
+        'user.mobile_number',
+        'user.gender',
+        'user.education_qualification',
+        'user.role_id',
+        'user.created_by_user_id',
+        'branchMapping.branch_id',
+        'branch.branch_name',
+      ])
+      .getOne();
+
+    if (!user) {
+      return {
+        statusCode: 404,
+        message: 'User not found',
+        data: null,
+      };
+    }
+
+    const userImageWithUrl = appendBaseUrlToImagesOrPdf([user])[0];
+
+    const mappedUser = {
+      ...userImageWithUrl,
+      branches: user.userBranchMappings.map(
+        (branch) => branch.branch.branch_name,
+      ),
+      branch_ids: user.userBranchMappings.map((branch) => branch.branch_id),
+    };
+
+    return {
+      statusCode: 200,
+      message: 'User branch data found',
+      data: {
+        user: mappedUser,
+      },
+    };
+  }
 }

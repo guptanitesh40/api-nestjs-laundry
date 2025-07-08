@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Feedback } from 'src/entities/feedback.entity';
 import { Order } from 'src/entities/order.entity';
-import { RazorpayTransactions } from 'src/entities/razorpay.entity';
 import { User } from 'src/entities/user.entity';
 import { OrderStatus } from 'src/enum/order-status.eum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
@@ -10,6 +9,7 @@ import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
 import { convertDateParameters } from 'src/utils/date-formatted.helper';
 import { Repository } from 'typeorm';
+import { UserService } from '../modules/user/user.service';
 
 @Injectable()
 export class ReportService {
@@ -20,8 +20,7 @@ export class ReportService {
     private readonly userRespository: Repository<User>,
     @InjectRepository(Feedback)
     private readonly feedbackRepository: Repository<Feedback>,
-    @InjectRepository(RazorpayTransactions)
-    private readonly razorpayRepository: Repository<RazorpayTransactions>,
+    private readonly userService: UserService,
   ) {}
 
   private convertCountToNumber(arr) {
@@ -1204,9 +1203,14 @@ export class ReportService {
       );
     }
 
+    const userData = (await this.userService.getUserBranches(user.user_id))
+      .data;
+
+    const branch_ids = userData.user.branch_ids;
+
     if (user.role_id === Role.BRANCH_MANAGER) {
-      queryBuider.andWhere('branch.branch_manager_id = :userId', {
-        userId: user.user_id,
+      queryBuider.andWhere('branch.branch_id IN(:branchIds)', {
+        branchIds: branch_ids,
       });
     }
 

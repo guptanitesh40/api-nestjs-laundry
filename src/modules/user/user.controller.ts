@@ -220,7 +220,7 @@ export class UserController {
   @Roles(Role.SUPER_ADMIN)
   async getUserById(
     @Param('user_id') user_id: number,
-    @Query() paginationQueryDto: PaginationQueryDto,
+    @Query() paginationQueryDto?: PaginationQueryDto,
   ): Promise<Response> {
     return await this.userService.getUserById(user_id, paginationQueryDto);
   }
