@@ -9,4 +9,5 @@ export const FilePath = {
   SIGNATURE_IMAGE: 'images/logo',
   USER_IMAGES: 'images/user',
   USER_ID_PROOF: 'images/user',
+  SERVICE_LIST_IMAGES: 'images/service',
 };
