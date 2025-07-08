@@ -74,7 +74,9 @@ export class NotificationService {
 `;
     }
 
-    return `Dear ${order.user.first_name} ${order.user.last_name}, your order has been confirmed with Booking No:  SCONLINE/${order.order_id} on Dated ${formattedDate}. Total clothes: ${order.items.length}, Total Amount: ₹${order.total}. Delivery Date ${formattedDelivryDate}. Thank you for choosing Sikka Cleaners. ${process.env.WEBSITE_IP}`;
+    const quantity = order.items.reduce((acc, o) => acc + (o.quantity || 1), 0);
+
+    return `Dear ${order.user.first_name} ${order.user.last_name}, your order has been confirmed with Booking No:  SCONLINE/${order.order_id} on Dated ${formattedDate}.  Total Quantity: ${quantity}, Total Amount: ₹${order.total}. Delivery Date ${formattedDelivryDate}. Thank you for choosing Sikka Cleaners. ${process.env.WEBSITE_IP}`;
   }
 
   async sendPushNotification(
