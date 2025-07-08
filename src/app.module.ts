@@ -34,6 +34,7 @@ import { ServicesModule } from './modules/services/services.module';
 import { SettingModule } from './modules/settings/setting.module';
 import { UsersModule } from './modules/user/user.module';
 import { IsUniqueConstraint } from './modules/validator/is-unique-constarint';
+import { ServiceListModule } from './modules/web-contents/service-list/service-list.module';
 import { WebModule } from './modules/web/web.module';
 import { WorkshopModule } from './modules/workshop/workshop.module';
 import { MorganMiddleware } from './morgan.middleware';
@@ -77,6 +78,7 @@ import { ReportModule } from './report/report.module';
     HttpModule,
     LanguageModule,
     LabelModule,
+    ServiceListModule,
   ],
   controllers: [AppController],
   providers: [
