@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/modules/auth/guard/role.guard';
 import {
@@ -284,9 +284,15 @@ export class ReportController {
 
   @Get('branch-wise-summary')
   async getBranchWiseOrderSummary(
+    @Request() req,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.reportService.getBranchWiseOrderSummary(startDate, endDate);
+    const user = req.user;
+    return this.reportService.getBranchWiseOrderSummary(
+      user,
+      startDate,
+      endDate,
+    );
   }
 }

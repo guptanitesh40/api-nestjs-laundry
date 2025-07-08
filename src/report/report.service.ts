@@ -1162,6 +1162,7 @@ export class ReportService {
   }
 
   async getBranchWiseOrderSummary(
+    user?: any,
     startDate?: string,
     endDate?: string,
   ): Promise<any> {
@@ -1201,6 +1202,12 @@ export class ReportService {
         'orders.created_at BETWEEN :startDate AND :endDate',
         { startDate: formattedStartDate, endDate: formattedEndDate },
       );
+    }
+
+    if (user.role_id === Role.BRANCH_MANAGER) {
+      queryBuider.andWhere('branch.branch_manager_id = :userId', {
+        userId: user.user_id,
+      });
     }
 
     const result = await queryBuider
