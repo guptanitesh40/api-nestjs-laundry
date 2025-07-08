@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
-@Entity()
+@Entity({ name: 'why-choose-us' })
 export class WhyChooseUs extends BaseEntity {
   @PrimaryGeneratedColumn()
   why_choose_us_id: number;
