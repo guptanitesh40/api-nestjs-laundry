@@ -5,7 +5,7 @@ import { ServiceList } from 'src/entities/service-list.entity';
 import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
 import { CreateServiceListDto } from './dto/create-service-list.dto';
-import { UpdateServiceListDto } from './dto/update.service-list.dto';
+import { UpdateServiceListDto } from './dto/update-service-list.dto';
 
 @Injectable()
 export class ServiceListService {
@@ -24,11 +24,11 @@ export class ServiceListService {
     });
 
     const result = await this.serviceListRepository.save(serviceList);
-    const Banner = appendBaseUrlToImagesOrPdf([result])[0];
+    const ServiceList = appendBaseUrlToImagesOrPdf([result])[0];
     return {
       statusCode: 201,
       message: 'Service-list added successfully',
-      data: { result: Banner },
+      data: { result: ServiceList },
     };
   }
 

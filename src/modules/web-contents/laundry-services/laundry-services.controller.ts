@@ -16,20 +16,22 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FilePath } from 'src/constants/FilePath';
 import { Response } from 'src/dto/response.dto';
 import { fileUpload } from 'src/multer/image-upload';
-import { CreateServiceListDto } from './dto/create-service-list.dto';
-import { UpdateServiceListDto } from './dto/update-service-list.dto';
-import { ServiceListService } from './service.list.service';
+import { CreateLaundryListDto } from './dto/create-laundry-services.dto';
+import { UpdateLaundryServicesDto } from './dto/update-laundry-services';
+import { LaundryServicesService } from './laundry-services.service';
 
-@Controller('services-list')
-export class ServiceListController {
-  constructor(private readonly serviceListService: ServiceListService) {}
+@Controller('laundry-services')
+export class LaundryServicesController {
+  constructor(
+    private readonly laundryServicesService: LaundryServicesService,
+  ) {}
 
   @Post()
   @UseInterceptors(
     FileInterceptor('image', fileUpload(FilePath.SERVICE_LIST_IMAGES)),
   )
   async create(
-    @Body() createServiceListDto: CreateServiceListDto,
+    @Body() createLaundryListDto: CreateLaundryListDto,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<Response> {
     if (!file) {
@@ -37,12 +39,12 @@ export class ServiceListController {
     }
 
     const imagePath = FilePath.SERVICE_LIST_IMAGES + '/' + file.filename;
-    return this.serviceListService.create(createServiceListDto, imagePath);
+    return this.laundryServicesService.create(createLaundryListDto, imagePath);
   }
 
   @Get()
   async getAllServices() {
-    return await this.serviceListService.findAll();
+    return await this.laundryServicesService.findAll();
   }
 
   @Put(':id')
@@ -51,17 +53,21 @@ export class ServiceListController {
   )
   async update(
     @Param('id') id: number,
-    @Body() updateBannerDto: UpdateServiceListDto,
+    @Body() updateLaundryServicesDto: UpdateLaundryServicesDto,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<Response> {
     const imagePath = file
       ? FilePath.SERVICE_LIST_IMAGES + '/' + file.filename
       : null;
-    return await this.serviceListService.update(id, updateBannerDto, imagePath);
+    return await this.laundryServicesService.update(
+      id,
+      updateLaundryServicesDto,
+      imagePath,
+    );
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number): Promise<Response> {
-    return await this.serviceListService.delete(id);
+    return await this.laundryServicesService.delete(id);
   }
 }
