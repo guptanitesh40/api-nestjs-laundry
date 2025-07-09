@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   UploadedFile,
@@ -56,5 +58,10 @@ export class ServiceListController {
       ? FilePath.SERVICE_LIST_IMAGES + '/' + file.filename
       : null;
     return await this.serviceListService.update(id, updateBannerDto, imagePath);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id', ParseIntPipe) id: number): Promise<Response> {
+    return await this.serviceListService.delete(id);
   }
 }

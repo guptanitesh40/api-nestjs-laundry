@@ -82,4 +82,29 @@ export class ServiceListService {
       data: ServiceList,
     };
   }
+
+  async delete(id: number): Promise<Response> {
+    const serviceList = await this.serviceListRepository.findOne({
+      where: { service_list_id: id, deleted_at: null },
+    });
+
+    if (!serviceList) {
+      return {
+        statusCode: 404,
+        message: 'Service list not found',
+        data: null,
+      };
+    }
+
+    serviceList.deleted_at = new Date();
+    await this.serviceListRepository.save(serviceList);
+
+    const formattedServiceList = appendBaseUrlToImagesOrPdf([serviceList])[0];
+
+    return {
+      statusCode: 200,
+      message: 'Service list deleted successfully',
+      data: formattedServiceList,
+    };
+  }
 }
