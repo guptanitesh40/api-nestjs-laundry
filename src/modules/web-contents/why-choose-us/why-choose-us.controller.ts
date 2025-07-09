@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { Response } from 'src/dto/response.dto';
 import { CreateWhyChooseUsDto } from './dto/create-why-choose-us.dto';
 import { UpdateWhyChooseUsDto } from './dto/update-why-choose-us.dto';
@@ -26,5 +35,10 @@ export class WhyChooseUsController {
     @Body() updateWhyChooseUsDto: UpdateWhyChooseUsDto,
   ): Promise<Response> {
     return await this.whyChooseUsService.update(id, updateWhyChooseUsDto);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id', ParseIntPipe) id: number): Promise<Response> {
+    return await this.whyChooseUsService.delete(id);
   }
 }

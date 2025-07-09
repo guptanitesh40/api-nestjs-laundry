@@ -263,7 +263,7 @@ export class InvoiceService {
     const formatDateTime = (dateInput) => {
       const date = new Date(dateInput);
       const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-based
+      const month = String(date.getMonth() + 1).padStart(2, '0');
       const year = date.getFullYear();
 
       let hours = date.getHours();
@@ -289,7 +289,7 @@ export class InvoiceService {
         : 'N/A',
 
       deliveryTime: orderData.estimated_delivery_time
-        ? formatDateTime(new Date().setHours(19, 0, 0, 0))
+        ? formatDateTime(orderData.estimated_delivery_time)
         : 'N/A',
 
       customerAddress: orderData.address_details || 'N/A',

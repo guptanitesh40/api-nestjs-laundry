@@ -82,4 +82,29 @@ export class BenefitsService {
       data: Benefit,
     };
   }
+
+  async delete(id: number): Promise<Response> {
+    const benefit = await this.benefitRepository.findOne({
+      where: { benefit_id: id, deleted_at: null },
+    });
+
+    if (!benefit) {
+      return {
+        statusCode: 404,
+        message: 'Benefit not found',
+        data: null,
+      };
+    }
+
+    benefit.deleted_at = new Date();
+    await this.benefitRepository.save(benefit);
+
+    const formattedBenefit = appendBaseUrlToImagesOrPdf([benefit])[0];
+
+    return {
+      statusCode: 200,
+      message: 'Benefit deleted successfully',
+      data: formattedBenefit,
+    };
+  }
 }

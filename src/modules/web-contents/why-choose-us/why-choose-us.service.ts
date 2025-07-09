@@ -72,4 +72,27 @@ export class WhyChooseUsService {
       data: why_choose_us,
     };
   }
+
+  async delete(id: number): Promise<Response> {
+    const whyChooseUs = await this.whyChooseUsRepository.findOne({
+      where: { why_choose_us_id: id, deleted_at: null },
+    });
+
+    if (!whyChooseUs) {
+      return {
+        statusCode: 404,
+        message: 'WhyChooseUS not found',
+        data: null,
+      };
+    }
+
+    whyChooseUs.deleted_at = new Date();
+    await this.whyChooseUsRepository.save(whyChooseUs);
+
+    return {
+      statusCode: 200,
+      message: 'WhyChooseUS deleted successfully',
+      data: whyChooseUs,
+    };
+  }
 }
