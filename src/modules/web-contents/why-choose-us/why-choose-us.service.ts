@@ -69,7 +69,7 @@ export class WhyChooseUsService {
     return {
       statusCode: 200,
       message: 'Why-choose-us updated successfully',
-      data: { why_choose_us },
+      data: why_choose_us,
     };
   }
 }

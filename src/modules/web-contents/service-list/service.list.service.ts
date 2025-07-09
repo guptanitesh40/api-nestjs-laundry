@@ -18,12 +18,12 @@ export class ServiceListService {
     createServiceListDto: CreateServiceListDto,
     imagePath: string,
   ): Promise<Response> {
-    const banner = this.serviceListRepository.create({
+    const serviceList = this.serviceListRepository.create({
       ...createServiceListDto,
       image: imagePath,
     });
 
-    const result = await this.serviceListRepository.save(banner);
+    const result = await this.serviceListRepository.save(serviceList);
     const Banner = appendBaseUrlToImagesOrPdf([result])[0];
     return {
       statusCode: 201,
@@ -74,12 +74,12 @@ export class ServiceListService {
 
     Object.assign(update_service_list, updateData);
 
-    const Banner = appendBaseUrlToImagesOrPdf([update_service_list])[0];
+    const ServiceList = appendBaseUrlToImagesOrPdf([update_service_list])[0];
 
     return {
       statusCode: 200,
       message: 'Service updated successfully',
-      data: { update_banner: Banner },
+      data: ServiceList,
     };
   }
 }
