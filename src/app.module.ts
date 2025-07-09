@@ -36,6 +36,7 @@ import { SettingModule } from './modules/settings/setting.module';
 import { UsersModule } from './modules/user/user.module';
 import { IsUniqueConstraint } from './modules/validator/is-unique-constarint';
 import { BenefitModule } from './modules/web-contents/benefits/benefits.module';
+import { LaundryServicesModule } from './modules/web-contents/laundry-services/laundry-services.module';
 import { ServiceListModule } from './modules/web-contents/service-list/service-list.module';
 import { WhyChooseUsModule } from './modules/web-contents/why-choose-us/why-choose-us.module';
 import { WebModule } from './modules/web/web.module';
@@ -85,6 +86,7 @@ import { ReportModule } from './report/report.module';
     ServiceListModule,
     WhyChooseUsModule,
     BenefitModule,
+    LaundryServicesModule,
   ],
   controllers: [AppController],
   providers: [

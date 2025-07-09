@@ -16,9 +16,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FilePath } from 'src/constants/FilePath';
 import { Response } from 'src/dto/response.dto';
 import { fileUpload } from 'src/multer/image-upload';
-import { UpdateServiceListDto } from '../service-list/dto/update.service-list.dto';
 import { BenefitsService } from './benefits.service';
 import { CreateBenefitDto } from './dto/create.benefits.dto';
+import { UpdateBenefitDto } from './dto/update.benefits.dto';
 
 @Controller('benefits')
 export class BenefitsController {
@@ -51,7 +51,7 @@ export class BenefitsController {
   )
   async update(
     @Param('id') id: number,
-    @Body() updateBannerDto: UpdateServiceListDto,
+    @Body() updateBannerDto: UpdateBenefitDto,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<Response> {
     const imagePath = file
