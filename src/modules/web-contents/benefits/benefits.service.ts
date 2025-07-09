@@ -27,7 +27,7 @@ export class BenefitsService {
     const Banefit = appendBaseUrlToImagesOrPdf([result])[0];
     return {
       statusCode: 201,
-      message: 'Service-list added successfully',
+      message: 'Benefit added successfully',
       data: { result: Banefit },
     };
   }
@@ -42,7 +42,7 @@ export class BenefitsService {
 
     return {
       statusCode: 200,
-      message: 'Service-list retrieved successfully',
+      message: 'Benefits retrieved successfully',
       data: Benefit,
     };
   }
@@ -58,7 +58,7 @@ export class BenefitsService {
     if (!benefit) {
       return {
         statusCode: 404,
-        message: 'Service-list not found',
+        message: 'Benefits Service-list not found',
         data: null,
       };
     }
@@ -78,7 +78,7 @@ export class BenefitsService {
 
     return {
       statusCode: 200,
-      message: 'Service updated successfully',
+      message: 'Benefit updated successfully',
       data: Benefit,
     };
   }

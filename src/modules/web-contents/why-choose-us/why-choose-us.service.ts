@@ -20,7 +20,7 @@ export class WhyChooseUsService {
 
     return {
       statusCode: 201,
-      message: 'Category added successfully',
+      message: 'Choose-us card added successfully',
       data: { result },
     };
   }
@@ -34,7 +34,7 @@ export class WhyChooseUsService {
 
     return {
       statusCode: 200,
-      message: 'Why-choose-us retrieved successfully',
+      message: 'Choose-us card retrieved successfully',
       data: result,
     };
   }
@@ -53,7 +53,7 @@ export class WhyChooseUsService {
     if (!why_choose_us) {
       return {
         statusCode: 404,
-        message: 'Why-choose-us not found',
+        message: 'Choose-us card not found',
         data: null,
       };
     }
@@ -68,7 +68,7 @@ export class WhyChooseUsService {
 
     return {
       statusCode: 200,
-      message: 'Why-choose-us updated successfully',
+      message: 'Choose-us card updated successfully',
       data: why_choose_us,
     };
   }
@@ -81,7 +81,7 @@ export class WhyChooseUsService {
     if (!whyChooseUs) {
       return {
         statusCode: 404,
-        message: 'WhyChooseUS not found',
+        message: 'Choose-us card not found',
         data: null,
       };
     }
@@ -91,7 +91,7 @@ export class WhyChooseUsService {
 
     return {
       statusCode: 200,
-      message: 'WhyChooseUS deleted successfully',
+      message: 'Choose-us card deleted successfully',
       data: whyChooseUs,
     };
   }
