@@ -135,6 +135,8 @@ export class InvoiceService {
 
     const branchName = orderData.branch?.branch_name;
 
+    const branchAddress = orderData.branch?.branch_address;
+
     const date = orderData.created_at.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -310,6 +312,7 @@ export class InvoiceService {
       branchName,
       date,
       branchMobileNumber,
+      branchAddress,
       totalInWords: numberToWords(totalAmount),
       logoUrl,
       totalPendingDue,

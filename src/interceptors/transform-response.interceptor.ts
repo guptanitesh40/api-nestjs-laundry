@@ -27,6 +27,7 @@ export class NullTransformInterceptor implements NestInterceptor {
       'express_delivery_hour',
       'pincode',
       'gst_percentage',
+      'gender',
     ];
 
     const nullKeys = [
@@ -37,6 +38,7 @@ export class NullTransformInterceptor implements NestInterceptor {
       'note',
       'company',
       'defaultAddress',
+      'address',
     ];
 
     if (Array.isArray(data)) {

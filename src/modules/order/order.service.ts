@@ -1300,6 +1300,7 @@ export class OrderService {
         'branch.branch_name',
         'branch.branch_phone_number',
         'branch.branch_email',
+        'branch.branch_address',
         'company.company_id',
         'company.company_name',
         'company.email',

@@ -8,4 +8,7 @@ export class UpdateLaundryServicesDto {
   description: string;
 
   image: string;
+
+  @IsOptional()
+  note?: string;
 }
