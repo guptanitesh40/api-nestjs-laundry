@@ -154,7 +154,7 @@ export async function exportGstExcel(data: any[]): Promise<string> {
 
   worksheet.addRows(data);
 
-  const fileName = `not-active-customer-${uuidv4()}.xlsx`;
+  const fileName = `gst-report-${uuidv4()}.xlsx`;
   const exportPath = path.join(__dirname, '..', '..', 'pdf', fileName);
   await workbook.xlsx.writeFile(exportPath);
 
