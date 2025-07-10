@@ -1,4 +1,4 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateLaundryListDto {
   @IsNotEmpty()
@@ -8,4 +8,7 @@ export class CreateLaundryListDto {
   description: string;
 
   image: string;
+
+  @IsOptional()
+  note?: string;
 }

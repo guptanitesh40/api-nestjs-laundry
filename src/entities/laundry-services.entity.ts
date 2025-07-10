@@ -14,4 +14,7 @@ export class LaundryService extends BaseEntity {
 
   @Column()
   image: string;
+
+  @Column()
+  note?: string;
 }
