@@ -24,6 +24,7 @@ export class ReportController {
     @Query('endDate') endDate?: string,
     @Query('user_id') user_id?: number | number[],
     @Query('format') format?: string,
+    @Query('company_id') company_id?: number | number[],
   ) {
     const userIds = Array.isArray(user_id)
       ? user_id.map(Number)
@@ -31,11 +32,18 @@ export class ReportController {
         ? String(user_id).split(',').map(Number)
         : undefined;
 
+    const companyIds = Array.isArray(company_id)
+      ? company_id.map(Number)
+      : company_id
+        ? String(company_id).split(',').map(Number)
+        : undefined;
+
     if (format === 'excel') {
       const data = await this.reportService.getTotalOrderExcelReport(
         startDate,
         endDate,
         userIds,
+        companyIds,
       );
       const fileUrl = await exportTotalOrderExcel(data);
 
@@ -90,11 +98,19 @@ export class ReportController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('format') format?: string,
+    @Query('company_id') company_id?: number | number[],
   ) {
+    const companyIds = Array.isArray(company_id)
+      ? company_id.map(Number)
+      : company_id
+        ? String(company_id).split(',').map(Number)
+        : undefined;
+
     if (format === 'excel') {
       const data = await this.reportService.getRefundExcelReport(
         startDate,
         endDate,
+        companyIds,
       );
       const fileUrl = await exportRefundOrderExcel(data);
 
@@ -118,17 +134,26 @@ export class ReportController {
     @Query('endDate') endDate?: string,
     @Query('format') format?: string,
     @Query('user_id') user_id?: number | number[],
+    @Query('company_id') company_id?: number | number[],
   ) {
     const userIds = Array.isArray(user_id)
       ? user_id.map(Number)
       : user_id
         ? String(user_id).split(',').map(Number)
         : undefined;
+
+    const companyIds = Array.isArray(company_id)
+      ? company_id.map(Number)
+      : company_id
+        ? String(company_id).split(',').map(Number)
+        : undefined;
+
     if (format === 'excel') {
       const data = await this.reportService.getNotActiveCustomerExcelReport(
         startDate,
         endDate,
         userIds,
+        companyIds,
       );
       const fileUrl = await exportNotActiveCutomerExcel(data);
 
@@ -192,17 +217,26 @@ export class ReportController {
     @Query('endDate') endDate?: string,
     @Query('format') format?: 'pdf' | 'excel',
     @Query('user_id') user_id?: number | number[],
+    @Query('company_id') company_id?: number | number[],
   ): Promise<any> {
     const userIds = Array.isArray(user_id)
       ? user_id.map(Number)
       : user_id
         ? String(user_id).split(',').map(Number)
         : undefined;
+
+    const companyIds = Array.isArray(company_id)
+      ? company_id.map(Number)
+      : company_id
+        ? String(company_id).split(',').map(Number)
+        : undefined;
+
     if (format === 'excel') {
       const data = await this.reportService.getPaymentTransactionExcelReport(
         startDate,
         endDate,
         userIds,
+        companyIds,
       );
 
       const fileUrl = await exportPaymentTransactionExcel(data);
@@ -221,16 +255,24 @@ export class ReportController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('user_id') user_id?: number | number[],
+    @Query('company_id') company_id?: number | number[],
   ): Promise<any> {
     const userIds = Array.isArray(user_id)
       ? user_id.map(Number)
       : user_id
         ? String(user_id).split(',').map(Number)
         : undefined;
+
+    const companyIds = Array.isArray(company_id)
+      ? company_id.map(Number)
+      : company_id
+        ? String(company_id).split(',').map(Number)
+        : undefined;
     const data = await this.reportService.getGstExcelReport(
       startDate,
       endDate,
       userIds,
+      companyIds,
     );
 
     const fileUrl = await exportGstExcel(data);
@@ -243,16 +285,25 @@ export class ReportController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('user_id') user_id?: number | number[],
+    @Query('company_id') company_id?: number | number[],
   ): Promise<any> {
     const userIds = Array.isArray(user_id)
       ? user_id.map(Number)
       : user_id
         ? String(user_id).split(',').map(Number)
         : undefined;
+
+    const companyIds = Array.isArray(company_id)
+      ? company_id.map(Number)
+      : company_id
+        ? String(company_id).split(',').map(Number)
+        : undefined;
+
     const data = await this.reportService.getPickupExcelReport(
       startDate,
       endDate,
       userIds,
+      companyIds,
     );
 
     const fileUrl = await exportPickupExcel(data);
@@ -265,16 +316,25 @@ export class ReportController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('user_id') user_id?: number | number[],
+    @Query('company_id') company_id?: number | number[],
   ): Promise<any> {
     const userIds = Array.isArray(user_id)
       ? user_id.map(Number)
       : user_id
         ? String(user_id).split(',').map(Number)
         : undefined;
+
+    const companyIds = Array.isArray(company_id)
+      ? company_id.map(Number)
+      : company_id
+        ? String(company_id).split(',').map(Number)
+        : undefined;
+
     const data = await this.reportService.getDeliveryExcelReport(
       startDate,
       endDate,
       userIds,
+      companyIds,
     );
 
     const fileUrl = await exportDeliveryExcel(data);

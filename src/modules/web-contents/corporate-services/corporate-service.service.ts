@@ -38,7 +38,7 @@ export class CorporateServiceService {
 
     return {
       statusCode: 200,
-      message: 'Corporate Services Added successfully',
+      message: 'Corporate Services Retrived successfully',
       data: result,
     };
   }

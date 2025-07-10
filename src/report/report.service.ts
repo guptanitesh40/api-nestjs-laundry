@@ -86,6 +86,7 @@ export class ReportService {
     startDate?: string,
     endDate?: string,
     user_id?: number | number[],
+    company_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
@@ -128,6 +129,12 @@ export class ReportService {
     if (user_id) {
       queryBuilder.andWhere('orders.user_id In (:...userId)', {
         userId: user_id,
+      });
+    }
+
+    if (company_id) {
+      queryBuilder.andWhere('company.company_id In (:...companyId)', {
+        companyId: company_id,
       });
     }
 
@@ -427,6 +434,7 @@ export class ReportService {
   async getRefundExcelReport(
     startDate?: string,
     endDate?: string,
+    company_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
@@ -471,6 +479,12 @@ export class ReportService {
       queryBuilder = queryBuilder.andWhere(
         'orders.created_at >= NOW() - INTERVAL 6 MONTH',
       );
+    }
+
+    if (company_id) {
+      queryBuilder.andWhere('company.company_id In (:...companyId)', {
+        companyId: company_id,
+      });
     }
 
     const result = await queryBuilder
@@ -570,6 +584,7 @@ export class ReportService {
     startDate?: string,
     endDate?: string,
     user_id?: number | number[],
+    company_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
@@ -619,6 +634,12 @@ export class ReportService {
     if (user_id) {
       queryBuilder.andWhere('user.user_id In (:...userId)', {
         userId: user_id,
+      });
+    }
+
+    if (company_id) {
+      queryBuilder.andWhere('company.company_id In (:...companyId)', {
+        companyId: company_id,
       });
     }
 
@@ -909,6 +930,7 @@ export class ReportService {
     startDate?: string,
     endDate?: string,
     user_id?: number | number[],
+    company_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
@@ -952,6 +974,14 @@ export class ReportService {
       });
     }
 
+    console.log('company_id :- ', company_id);
+
+    if (company_id) {
+      queryBuilder.andWhere('company.company_id In (:...companyId)', {
+        companyId: company_id,
+      });
+    }
+
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
         'orders.created_at BETWEEN :startDate AND :endDate',
@@ -974,6 +1004,7 @@ export class ReportService {
     startDate?: string,
     endDate?: string,
     user_id?: number | number[],
+    company_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
@@ -1014,6 +1045,12 @@ export class ReportService {
       });
     }
 
+    if (company_id) {
+      queryBuilder.andWhere('company.company_id In (:...companyId)', {
+        companyId: company_id,
+      });
+    }
+
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
         'orders.created_at BETWEEN :startDate AND :endDate',
@@ -1036,6 +1073,7 @@ export class ReportService {
     startDate?: string,
     endDate?: string,
     user_id?: number | number[],
+    company_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
@@ -1076,6 +1114,12 @@ export class ReportService {
       });
     }
 
+    if (company_id) {
+      queryBuilder.andWhere('company.company_id In (:...companyId)', {
+        companyId: company_id,
+      });
+    }
+
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
         'orders.created_at BETWEEN :startDate AND :endDate',
@@ -1098,6 +1142,7 @@ export class ReportService {
     startDate?: string,
     endDate?: string,
     user_id?: number | number[],
+    company_id?: number | number[],
   ): Promise<any> {
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
@@ -1139,6 +1184,12 @@ export class ReportService {
     if (user_id) {
       queryBuilder.andWhere('orders.user_id In (:...userId)', {
         userId: user_id,
+      });
+    }
+
+    if (company_id) {
+      queryBuilder.andWhere('company.company_id In (:...companyId)', {
+        companyId: company_id,
       });
     }
 
