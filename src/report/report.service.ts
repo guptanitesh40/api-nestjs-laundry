@@ -974,8 +974,6 @@ export class ReportService {
       });
     }
 
-    console.log('company_id :- ', company_id);
-
     if (company_id) {
       queryBuilder.andWhere('company.company_id In (:...companyId)', {
         companyId: company_id,

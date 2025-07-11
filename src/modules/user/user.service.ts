@@ -112,6 +112,7 @@ export class UserService {
 
   async login(loginDto: LoginDto): Promise<Response> {
     const { username, password, role_id, device_type, device_token } = loginDto;
+
     let mobileCondition = {};
     if (Number(username)) {
       mobileCondition = {
@@ -119,6 +120,7 @@ export class UserService {
         role_id: role_id,
       };
     }
+
     const user = await this.userRepository.findOne({
       where: [
         {
@@ -127,7 +129,16 @@ export class UserService {
         },
         mobileCondition,
       ],
+      withDeleted: true,
     });
+
+    if (user.deleted_at) {
+      return {
+        statusCode: 403,
+        message: 'Your account is disabled. Please contact admin',
+      };
+    }
+
     const loginErrrorMessage = {
       statusCode: 403,
       message: 'Your username and password do not match with our records',
@@ -877,6 +888,32 @@ export class UserService {
       };
     }
 
+    if (user.role_id === Role.CUSTOMER) {
+      const pendingDueAmount =
+        await this.orderService.getUserDueAmount(user_id);
+      if (pendingDueAmount) {
+        return {
+          statusCode: 400,
+          message: 'Please clear the due amount before deletion.',
+          data: null,
+        };
+      }
+    }
+
+    if (user.role_id === Role.DELIVERY_BOY_AND_PICKUP_BOY) {
+      const unCompleteOrder = (
+        await this.orderService.getAssignedOrdersDriver(user_id)
+      ).data;
+
+      if (unCompleteOrder.length > 0) {
+        return {
+          statusCode: 400,
+          message: 'Please complete your Delivery and Pickup before deletion',
+          data: null,
+        };
+      }
+    }
+
     user.deleted_at = new Date();
 
     await this.userRepository.save(user);
@@ -1351,6 +1388,31 @@ export class UserService {
       data: {
         user: mappedUser,
       },
+    };
+  }
+
+  async restoreUser(user_id: number): Promise<Response> {
+    const user = await this.userRepository.findOne({
+      where: { user_id },
+      withDeleted: true,
+    });
+
+    if (!user.deleted_at) {
+      return {
+        statusCode: 400,
+        message: 'User is already active',
+        data: null,
+      };
+    }
+
+    user.deleted_at = null;
+
+    await this.userRepository.save(user);
+
+    return {
+      statusCode: 200,
+      message: 'User Restore Suceessfully',
+      data: null,
     };
   }
 }

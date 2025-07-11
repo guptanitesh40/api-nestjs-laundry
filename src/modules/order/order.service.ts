@@ -231,15 +231,23 @@ export class OrderService {
 
       const isExpress = createOrderDto.express_delivery_charges > 0;
 
-      const estimated_pickup_time = isExpress
-        ? addHours(
-            new Date(),
-            parseInt(settings['estimate_pickup_express_hour']),
-          )
-        : addHours(
-            new Date(),
-            parseInt(settings['estimate_pickup_normal_hour']),
-          );
+      let estimated_pickup_time = null;
+      if (
+        createOrderDto.created_by_user_id &&
+        createOrderDto.payment_type === PaymentType.CASH_ON_DELIVERY
+      ) {
+        estimated_pickup_time = new Date();
+      } else {
+        estimated_pickup_time = isExpress
+          ? addHours(
+              new Date(),
+              parseInt(settings['estimate_pickup_express_hour']),
+            )
+          : addHours(
+              new Date(),
+              parseInt(settings['estimate_pickup_normal_hour']),
+            );
+      }
 
       const expressHour = createOrderDto.express_delivery_hour;
       const normalDay = settings['estimate_delivery_normal_day'];
@@ -1525,6 +1533,42 @@ export class OrderService {
     };
   }
 
+  async getUserDueAmount(user_id: number): Promise<Response> {
+    const orders = await this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.user_id = :user_id', { user_id })
+      .andWhere('order.deleted_at IS NULL')
+      .andWhere('order.total > order.paid_amount + order.kasar_amount')
+      .andWhere('order.refund_status != :refundStatus', {
+        refundStatus: RefundStatus.FULL,
+      })
+      .andWhere('order.order_status NOT IN (:...orderStatus)', {
+        orderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .select([
+        'order.order_id AS order_id',
+        'SUM(order.total - order.paid_amount - order.kasar_amount - order.refund_amount) AS total_due',
+      ])
+      .groupBy('order.order_id')
+      .getRawMany();
+
+    let total_due = 0;
+    orders.forEach((order) => {
+      total_due += parseFloat(order.total_due);
+    });
+
+    return {
+      statusCode: 200,
+      message: 'User due amount fetched successfully',
+      data: {
+        total_due_amount: total_due,
+      },
+    };
+  }
+
   async pendingDueAmount(user_id: number): Promise<Response> {
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
@@ -1883,6 +1927,75 @@ export class OrderService {
       statusCode: 200,
       message:
         'Orders with assigned delivery boys or pickup boys retrieved successfully',
+      data: result,
+    };
+  }
+
+  async getAssignedOrdersDriver(assign_id: number): Promise<Response> {
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.items', 'items')
+      .innerJoinAndSelect('order.user', 'user')
+      .innerJoinAndSelect('order.address', 'address')
+      .innerJoinAndSelect('order.branch', 'branch')
+      .innerJoinAndSelect('branch.branchManager', 'branchManager')
+      .where(
+        '(order.order_status != :excludedPickupStatus AND order.order_status != :excludedDeliveryStatus)',
+        {
+          excludedPickupStatus: OrderStatus.ITEMS_RECEIVED_AT_BRANCH,
+          excludedDeliveryStatus: OrderStatus.DELIVERED,
+        },
+      )
+      .andWhere('order.deleted_at IS NULL')
+      .andWhere('(order.delivery_boy_id = :id OR order.pickup_boy_id = :id)', {
+        id: assign_id,
+      })
+      .select([
+        'order.order_id',
+        'order.delivery_boy_id',
+        'order.pickup_boy_id',
+        'order.order_status',
+        'order.payment_type',
+        'order.payment_status',
+        'order.transaction_id',
+        'order.total',
+        'order.paid_amount',
+        'order.kasar_amount',
+        'user.user_id',
+        'user.first_name',
+        'user.last_name',
+        'user.mobile_number',
+        'items',
+        'order.address_details',
+        'COUNT(items.item_id) AS total_item',
+        'order.estimated_pickup_time AS estimated_pickup_time_hour',
+        'address',
+        'branch.branch_id',
+        'branch.branch_name',
+        'branch.branch_address',
+        'branch.branch_manager_id',
+        'branchManager.user_id',
+        'branchManager.first_name',
+        'branchManager.last_name',
+        'branchManager.mobile_number',
+        'branchManager.email',
+      ])
+      .addSelect(
+        'order.total - order.paid_amount - order.kasar_amount',
+        'pending_amount',
+      )
+      .groupBy('order.order_id, items.item_id, user.user_id');
+
+    const orders = await queryBuilder.getMany();
+
+    const result = orders.map((order) => ({
+      ...order,
+      pending_amount: order.total - order.paid_amount - order.kasar_amount,
+    }));
+
+    return {
+      statusCode: 200,
+      message: 'Assigned orders retrieved successfully',
       data: result,
     };
   }

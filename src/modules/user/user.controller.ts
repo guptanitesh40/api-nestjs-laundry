@@ -6,6 +6,7 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Put,
@@ -280,5 +281,10 @@ export class UserController {
   @UseInterceptors(FileInterceptor('file', { storage: multer.memoryStorage() }))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     return await this.userService.importFromCsv(file.buffer);
+  }
+
+  @Patch('restore/:id')
+  async restoreUser(@Param('id', ParseIntPipe) id: number): Promise<Response> {
+    return this.userService.restoreUser(id);
   }
 }
