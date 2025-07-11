@@ -543,7 +543,6 @@ export class UserService {
       .leftJoinAndSelect('user.workshopManagerMappings', 'workshopMapping')
       .leftJoinAndSelect('workshopMapping.workshop', 'workshop')
       .where('user.user_id = :user_id', { user_id })
-      .andWhere('user.deleted_at IS NULL')
       .andWhere('orders.deleted_at IS NULL')
       .andWhere('companyMapping.deleted_at IS NULL')
       .andWhere('company.deleted_at IS NULL')
@@ -551,7 +550,9 @@ export class UserService {
       .andWhere('branch.deleted_at IS NULL')
       .andWhere('workshopMapping.deleted_at IS NULL')
       .andWhere('workshop.deleted_at IS NUll')
+      .withDeleted()
       .select([
+        'user.deleted_at',
         'user.user_id',
         'user.first_name',
         'user.last_name',
@@ -717,7 +718,6 @@ export class UserService {
       .leftJoinAndSelect('branchMapping.branch', 'branch')
       .leftJoinAndSelect('user.workshopManagerMappings', 'workshopMapping')
       .leftJoinAndSelect('workshopMapping.workshop', 'workshop')
-      .where('user.deleted_at IS NULL')
       .andWhere('companyMapping.deleted_at IS NULL')
       .andWhere('company.deleted_at IS NULL')
       .andWhere('workshopMapping.deleted_at IS NULL')
@@ -744,6 +744,7 @@ export class UserService {
       ])
       .addSelect("CONCAT(user.first_name, ' ', user.last_name)", 'full_name')
       .take(perPage)
+      .withDeleted()
       .skip(skip);
 
     if (search) {
@@ -889,9 +890,11 @@ export class UserService {
     }
 
     if (user.role_id === Role.CUSTOMER) {
-      const pendingDueAmount =
-        await this.orderService.getUserDueAmount(user_id);
-      if (pendingDueAmount) {
+      const pendingDueAmount = (
+        await this.orderService.getUserDueAmount(user_id)
+      ).data;
+
+      if (pendingDueAmount.total_due_amount) {
         return {
           statusCode: 400,
           message: 'Please clear the due amount before deletion.',
