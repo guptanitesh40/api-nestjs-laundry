@@ -49,6 +49,27 @@ export class NotificationService {
     await this.notificationRepository.save(notification);
   }
 
+  async sendUserNotification(user: any): Promise<any> {
+    if (!user) {
+      throw new NotFoundException(`User with Id ${user.user_id} not found`);
+    }
+    const message = this.prepareMessageForUser(user);
+
+    const encodedMessage = encodeURIComponent(message);
+
+    const finalUrl = `${this.apiUrl}?token=${process.env.VISION360_WHATSAPP_API_TOKEN}&phone=91${user.mobile_number}&message=${encodedMessage}`;
+
+    const response = await firstValueFrom(this.httpService.post(finalUrl, {}));
+
+    if (response.status !== 200) {
+      throw new Error('Failed to send WhatsApp notification');
+    }
+  }
+
+  private prepareMessageForUser(user: any) {
+    return `Dear ${user.first_name} ${user.last_name}, your Sikka Cleaners account is activated`;
+  }
+
   private prepareMessage(order: Order): string {
     const createdDate = new Date(order.created_at);
 

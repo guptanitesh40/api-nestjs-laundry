@@ -109,11 +109,17 @@ export class PriceService {
         'price',
         'category.category_id',
         'category.name',
+        'category.name_hindi',
+        'category.name_gujarati',
         'product.product_id',
         'product.name',
+        'product.name_hindi',
+        'product.name_gujarati',
         'product.image',
         'service.service_id',
         'service.name',
+        'service.name_hindi',
+        'service.name_gujarati',
         'service.image',
       ]);
 
@@ -173,7 +179,12 @@ export class PriceService {
       .innerJoinAndSelect('price.service', 'service')
       .where('service.service_id = :service_id', { service_id: service_id })
       .groupBy('category.category_id')
-      .select(['category.category_id', 'category.name'])
+      .select([
+        'category.category_id',
+        'category.name',
+        'category.name_hindi',
+        'category.name_gujarati',
+      ])
       .getRawMany();
 
     return uniqueCategories;
