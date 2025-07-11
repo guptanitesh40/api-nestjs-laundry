@@ -157,6 +157,10 @@ export class InvoiceService {
 
     const signImg = orderData?.company?.signature_image || '';
 
+    const customerPendingAmount = (
+      await this.orderService.getUserDueAmount(orderData.user_id)
+    ).data.total_due_amount;
+
     let signatureImage = '';
 
     if (signImg) {
@@ -332,6 +336,7 @@ export class InvoiceService {
       gstPercetage,
       inStateGst,
       companyGstPercetage,
+      customerPendingAmount,
     };
 
     return ejs.render(html, { invoice: invoiceData });
