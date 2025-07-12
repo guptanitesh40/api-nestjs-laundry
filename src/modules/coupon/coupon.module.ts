@@ -11,7 +11,7 @@ import { CouponService } from './coupon.service';
     TypeOrmModule.forFeature([Coupon]),
     forwardRef(() => OrderModule),
     UsersModule,
-    NotificationModule,
+    forwardRef(() => NotificationModule),
   ],
   providers: [CouponService],
   controllers: [CouponController],

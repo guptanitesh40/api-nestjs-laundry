@@ -38,6 +38,7 @@ import { Readable } from 'stream';
 import { In, MoreThan, Repository } from 'typeorm';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { UserFilterDto } from '../dto/users-filter.dto';
+import { NotificationService } from '../notification/notification.service';
 import { OrderService } from '../order/order.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -63,6 +64,7 @@ export class UserService {
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
     private readonly httpService: HttpService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async signup(signUpDto: SignupDto): Promise<User> {
@@ -1411,6 +1413,8 @@ export class UserService {
     user.deleted_at = null;
 
     await this.userRepository.save(user);
+
+    await this.notificationService.sendUserNotification(user);
 
     return {
       statusCode: 200,

@@ -15,7 +15,7 @@ import { InvoiceService } from './invoice.service';
     TypeOrmModule.forFeature([Order]),
     forwardRef(() => OrderModule),
     UsersModule,
-    NotificationModule,
+    forwardRef(() => NotificationModule),
     ProductModule,
     ServicesModule,
     PriceModule,

@@ -12,6 +12,7 @@ import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
 import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
 import { UserService } from 'src/modules/user/user.service';
+import { NotificationModule } from '../notification/notification.module';
 import { OrderModule } from '../order/order.module';
 import { UsersModule } from '../user/user.module';
 import { AuthController } from './auth.controller';
@@ -39,6 +40,7 @@ config();
     UsersModule,
     OrderModule,
     HttpModule,
+    NotificationModule,
   ],
   providers: [AuthService, UserService, JwtStrategy],
   controllers: [AuthController],
