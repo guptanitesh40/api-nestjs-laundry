@@ -16,22 +16,20 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FilePath } from 'src/constants/FilePath';
 import { Response } from 'src/dto/response.dto';
 import { fileUpload } from 'src/multer/image-upload';
-import { CreateLaundryListDto } from './dto/create-laundry-services.dto';
-import { UpdateLaundryServicesDto } from './dto/update-laundry-services.dto';
-import { LaundryServicesService } from './laundry-services.service';
+import { CreateLaundryHistoryDto } from './dto/create-laundry-history.dto';
+import { UpdateLaundryHistoryDto } from './dto/update-laundry-history.dto';
+import { LaundryHistoryService } from './laundry-history.service';
 
-@Controller('laundry-services')
-export class LaundryServicesController {
-  constructor(
-    private readonly laundryServicesService: LaundryServicesService,
-  ) {}
+@Controller('laundry-history')
+export class LaundryHistoryController {
+  constructor(private readonly laundryHistoryService: LaundryHistoryService) {}
 
   @Post()
   @UseInterceptors(
     FileInterceptor('image', fileUpload(FilePath.SERVICE_LIST_IMAGES)),
   )
   async create(
-    @Body() createLaundryListDto: CreateLaundryListDto,
+    @Body() createLaundryHistoryDto: CreateLaundryHistoryDto,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<Response> {
     if (!file) {
@@ -39,12 +37,15 @@ export class LaundryServicesController {
     }
 
     const imagePath = FilePath.SERVICE_LIST_IMAGES + '/' + file.filename;
-    return this.laundryServicesService.create(createLaundryListDto, imagePath);
+    return this.laundryHistoryService.create(
+      createLaundryHistoryDto,
+      imagePath,
+    );
   }
 
   @Get()
-  async getAllServices() {
-    return await this.laundryServicesService.findAll();
+  async findAll() {
+    return await this.laundryHistoryService.findAll();
   }
 
   @Put(':id')
@@ -53,21 +54,21 @@ export class LaundryServicesController {
   )
   async update(
     @Param('id') id: number,
-    @Body() updateLaundryServicesDto: UpdateLaundryServicesDto,
+    @Body() updateLaundryHistoryDto: UpdateLaundryHistoryDto,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<Response> {
     const imagePath = file
       ? FilePath.SERVICE_LIST_IMAGES + '/' + file.filename
       : null;
-    return await this.laundryServicesService.update(
+    return await this.laundryHistoryService.update(
       id,
-      updateLaundryServicesDto,
+      updateLaundryHistoryDto,
       imagePath,
     );
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number): Promise<Response> {
-    return await this.laundryServicesService.delete(id);
+    return await this.laundryHistoryService.delete(id);
   }
 }

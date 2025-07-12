@@ -5,7 +5,7 @@ import { LaundryService } from 'src/entities/laundry-services.entity';
 import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { Repository } from 'typeorm';
 import { CreateLaundryListDto } from './dto/create-laundry-services.dto';
-import { UpdateLaundryServicesDto } from './dto/update-laundry-services';
+import { UpdateLaundryServicesDto } from './dto/update-laundry-services.dto';
 
 @Injectable()
 export class LaundryServicesService {
