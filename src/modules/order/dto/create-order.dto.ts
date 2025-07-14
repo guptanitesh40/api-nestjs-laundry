@@ -119,6 +119,9 @@ export class CreateOrderDto {
 
   @IsOptional()
   gst_company_name: string;
+
+  @IsOptional()
+  confirm_by_id?: number;
 }
 
 export class OrderItemDto {
