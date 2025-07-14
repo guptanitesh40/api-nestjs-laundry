@@ -2737,6 +2737,15 @@ export class OrderService {
 
       order.order_status_details = getOrderStatusDetails(order);
 
+      const order_invoice = getPdfUrl(
+        order.order_id,
+        getOrderInvoiceFileFileName(),
+      );
+
+      const file = fs.existsSync(order_invoice.fileName);
+
+      order.order_invoice = file ? order_invoice : '';
+
       let total_qty = 0;
       order.items.map((item) => {
         return (total_qty += Number(item.quantity));
