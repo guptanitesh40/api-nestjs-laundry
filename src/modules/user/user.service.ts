@@ -107,7 +107,9 @@ export class UserService {
 
     const users = await this.userRepository.save(user);
 
-    await this.storeDeviceUser(users, device_type, device_token);
+    if (device_token) {
+      await this.storeDeviceUser(users, device_type, device_token);
+    }
 
     return users;
   }
@@ -159,12 +161,11 @@ export class UserService {
       return loginErrrorMessage;
     }
 
-    const deviceUser = await this.storeDeviceUser(
-      user,
-      device_type,
-      device_token,
-    );
-    await this.storeLoginHistory(user, device_type || null);
+    let deviceUser: any;
+    if (device_token) {
+      deviceUser = await this.storeDeviceUser(user, device_type, device_token);
+      await this.storeLoginHistory(user, device_type || null);
+    }
 
     return {
       statusCode: 200,
