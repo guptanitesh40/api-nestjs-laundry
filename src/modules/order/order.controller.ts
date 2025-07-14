@@ -215,8 +215,13 @@ export class OrderController {
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async updateOrderStatus(
     @Body() updateOrderStatusDto: UpdateOrderStatusDto,
+    @Request() req,
   ): Promise<any> {
-    return this.orderService.updateOrderStatus(updateOrderStatusDto);
+    const user = req.user;
+    return this.orderService.updateOrderStatus(
+      updateOrderStatusDto,
+      user.user_id,
+    );
   }
 
   @Patch('admin/orders/:order_id/update-payment-status')
@@ -356,7 +361,11 @@ export class OrderController {
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN)
-  async payDueAmountOrders(@Body() body: OrdersDto): Promise<Response> {
-    return await this.orderService.payDueAmountOrders(body);
+  async payDueAmountOrders(
+    @Body() body: OrdersDto,
+    @Request() req,
+  ): Promise<Response> {
+    const user = req.user;
+    return await this.orderService.payDueAmountOrders(body, user.user_id);
   }
 }

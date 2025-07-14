@@ -336,6 +336,7 @@ export class OrderService {
         createOrderDto.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH
       ) {
         createOrderDto.confirm_date = new Date();
+        createOrderDto.confirm_by_id = user_id;
       }
 
       const order = this.orderRepository.create({
@@ -355,6 +356,7 @@ export class OrderService {
         estimated_delivery_time: deliveryDaysToAdd,
         branch_id: createOrderDto.branch_id,
         transaction_id: createOrderDto?.transaction_id,
+        confirm_by_id: createOrderDto?.confirm_by_id,
       });
 
       if (
@@ -530,12 +532,24 @@ export class OrderService {
         'pickupBoy.user_id',
         'pickupBoy.first_name',
         'pickupBoy.last_name',
+        'pickupBoy.email',
+        'pickupBoy.mobile_number',
       ])
       .leftJoin('order.delivery_boy', 'deliveryBoy')
       .addSelect([
         'deliveryBoy.user_id',
         'deliveryBoy.first_name',
         'deliveryBoy.last_name',
+        'deliveryBoy.email',
+        'deliveryBoy.mobile_number',
+      ])
+      .leftJoin('order.confirm_by_user', 'confirmByUser')
+      .addSelect([
+        'confirmByUser.user_id',
+        'confirmByUser.first_name',
+        'confirmByUser.last_name',
+        'confirmByUser.email',
+        'confirmByUser.mobile_number',
       ])
       .where('order.deleted_at IS NULL')
       .select([
@@ -556,6 +570,21 @@ export class OrderService {
         'service.image',
         'branch.branch_id',
         'branch.branch_name',
+        'deliveryBoy.user_id',
+        'deliveryBoy.first_name',
+        'deliveryBoy.last_name',
+        'deliveryBoy.email',
+        'deliveryBoy.mobile_number',
+        'pickupBoy.user_id',
+        'pickupBoy.first_name',
+        'pickupBoy.last_name',
+        'pickupBoy.email',
+        'pickupBoy.mobile_number',
+        'confirmByUser.user_id',
+        'confirmByUser.first_name',
+        'confirmByUser.last_name',
+        'confirmByUser.email',
+        'confirmByUser.mobile_number',
       ])
       .take(perPage)
       .skip(skip);
@@ -791,14 +820,27 @@ export class OrderService {
       order.pickup_boy = order.pickup_boy_id
         ? {
             id: order.pickup_boy_id,
-            name: `${order.user?.first_name || ''} ${order.user?.last_name || ''}`.trim(),
+            name: `${order.pickup_boy?.first_name || ''} ${order.pickup_boy?.last_name || ''}`.trim(),
+            email: order.pickup_boy?.email,
+            mobile_number: order.pickup_boy?.mobile_number,
           }
         : null;
 
       order.delivery_boy = order.delivery_boy_id
         ? {
             id: order.delivery_boy_id,
-            name: `${order.user?.first_name || ''} ${order.user?.last_name || ''}`.trim(),
+            name: `${order.delivery_boy?.first_name || ''} ${order.delivery_boy?.last_name || ''}`.trim(),
+            email: order.delivery_boy?.email,
+            mobile_number: order.delivery_boy?.mobile_number,
+          }
+        : null;
+
+      order.confirm_by_user = order.confirm_by_id
+        ? {
+            id: order.confirm_by_id,
+            name: `${order.confirm_by_user?.first_name || ''} ${order.confirm_by_user?.last_name || ''}`.trim(),
+            email: order.confirm_by_user.email,
+            mobile_number: order.confirm_by_user.mobile_number,
           }
         : null;
 
@@ -876,12 +918,24 @@ export class OrderService {
         'pickupBoy.user_id',
         'pickupBoy.first_name',
         'pickupBoy.last_name',
+        'pickupBoy.email',
+        'pickupBoy.mobile_number',
       ])
       .leftJoin('order.delivery_boy', 'deliveryBoy')
       .addSelect([
         'deliveryBoy.user_id',
         'deliveryBoy.first_name',
         'deliveryBoy.last_name',
+        'deliveryBoy.email',
+        'deliveryBoy.mobile_number',
+      ])
+      .leftJoin('order.confirm_by_user', 'confirmByUser')
+      .addSelect([
+        'confirmByUser.user_id',
+        'confirmByUser.first_name',
+        'confirmByUser.last_name',
+        'confirmByUser.email',
+        'confirmByUser.mobile_number',
       ])
       .where('order.order_id = :order_id', { order_id })
       .andWhere('order.deleted_at IS NULL')
@@ -915,9 +969,18 @@ export class OrderService {
         'pickupBoy.user_id',
         'pickupBoy.first_name',
         'pickupBoy.last_name',
+        'pickupBoy.email',
+        'pickupBoy.mobile_number',
         'deliveryBoy.user_id',
         'deliveryBoy.first_name',
         'deliveryBoy.last_name',
+        'deliveryBoy.email',
+        'deliveryBoy.mobile_number',
+        'confirmByUser.user_id',
+        'confirmByUser.first_name',
+        'confirmByUser.last_name',
+        'confirmByUser.email',
+        'confirmByUser.mobile_number',
         'company.company_id',
         'company.company_name',
         'company.email',
@@ -980,6 +1043,8 @@ export class OrderService {
           pickup_boy__id: orders.pickup_boy_id,
           pickup_boy_name:
             `${orders.pickup_boy?.first_name || ''} ${orders.pickup_boy?.last_name || ''}  `.trim(),
+          email: orders.pickup_boy.email || '',
+          mobile_number: orders.pickup_boy.mobile_number || '',
         }
       : null;
 
@@ -988,6 +1053,17 @@ export class OrderService {
           delivery_boy_id: orders.delivery_boy_id,
           delivery_boy_name:
             `${orders.delivery_boy?.first_name || ''} ${orders.delivery_boy?.last_name || ''}`.trim(),
+          email: orders.delivery_boy.email || '',
+          mobile_number: orders.delivery_boy.mobile_number || '',
+        }
+      : null;
+
+    orders.confirm_by_user = orders.confirm_by_id
+      ? {
+          confirm_by_id: orders.confirm_by_id,
+          name: `${orders.confirm_by_user.first_name || ''} ${orders.confirm_by_user.last_name || ''}`.trim(),
+          email: orders.confirm_by_user.email || '',
+          mobile_number: orders.confirm_by_user.mobile_number || '',
         }
       : null;
 
@@ -1116,6 +1192,7 @@ export class OrderService {
 
   async updateOrderStatus(
     updateOrderStatusDto: UpdateOrderStatusDto,
+    user_id: number,
   ): Promise<any> {
     const { order_ids, order_status } = updateOrderStatusDto;
     const orders = await this.orderRepository.findBy({
@@ -1189,6 +1266,7 @@ export class OrderService {
 
       if (order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
         order.confirm_date = new Date();
+        order.confirm_by_id = user_id;
       }
       if (order_status === OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY) {
         order.pickup_date = new Date();
@@ -2934,7 +3012,10 @@ export class OrderService {
     };
   }
 
-  async payDueAmountOrders(ordersDto: OrdersDto): Promise<Response> {
+  async payDueAmountOrders(
+    ordersDto: OrdersDto,
+    user_id: number,
+  ): Promise<Response> {
     const updatedOrders = [];
 
     const orders_ids = ordersDto.orders.map((order) => order.order_id);
@@ -2987,6 +3068,7 @@ export class OrderService {
       order.kasar_amount = orderData.kasar_amount;
 
       order.payment_status = orderData.payment_status;
+      order.delivery_boy_id = user_id;
 
       updatedOrders.push(order);
     }

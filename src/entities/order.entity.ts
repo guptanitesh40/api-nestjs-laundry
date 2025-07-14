@@ -214,4 +214,13 @@ export class Order extends BaseEntity {
 
   @Column({ nullable: true, default: 0 })
   delivery_collect_amount: number;
+
+  @ManyToOne(() => User, (user) => user.confirmByUser, { nullable: true })
+  @JoinColumn({ name: 'confirm_by_id' })
+  @IsOptional()
+  confirm_by_user: User;
+
+  @Column({ nullable: true })
+  @IsOptional()
+  confirm_by_id: number;
 }
