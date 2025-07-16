@@ -124,6 +124,9 @@ export class User extends BaseEntity {
   @OneToMany(() => Order, (orderDetail) => orderDetail.confirm_by_user)
   confirmByUser: Order[];
 
+  @OneToMany(() => Order, (orderDetail) => orderDetail.delivered_by_user)
+  deliveredByUser: Order[];
+
   @OneToMany(() => Branch, (branch) => branch.branchManager)
   branches: Branch[];
 
