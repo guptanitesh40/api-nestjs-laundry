@@ -336,7 +336,7 @@ export class OrderService {
         createOrderDto.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH
       ) {
         createOrderDto.confirm_date = new Date();
-        createOrderDto.confirm_by_id = user_id;
+        createOrderDto.confirm_by_id = createOrderDto.created_by_user_id;
       }
 
       const order = this.orderRepository.create({
@@ -551,6 +551,14 @@ export class OrderService {
         'confirmByUser.email',
         'confirmByUser.mobile_number',
       ])
+      .leftJoin('order.delivered_by_user', 'deliveredByUser')
+      .addSelect([
+        'deliveredByUser.user_id',
+        'deliveredByUser.first_name',
+        'deliveredByUser.last_name',
+        'deliveredByUser.email',
+        'deliveredByUser.mobile_number',
+      ])
       .where('order.deleted_at IS NULL')
       .select([
         'order',
@@ -585,6 +593,11 @@ export class OrderService {
         'confirmByUser.last_name',
         'confirmByUser.email',
         'confirmByUser.mobile_number',
+        'deliveredByUser.user_id',
+        'deliveredByUser.first_name',
+        'deliveredByUser.last_name',
+        'deliveredByUser.email',
+        'deliveredByUser.mobile_number',
       ])
       .take(perPage)
       .skip(skip);
@@ -844,6 +857,15 @@ export class OrderService {
           }
         : null;
 
+      order.delivered_by_user = order.delivered_by_id
+        ? {
+            id: order.delivered_by_id,
+            name: `${order.delivered_by_user?.first_name || ''} ${order.delivered_by_user?.last_name || ''}`.trim(),
+            email: order.delivered_by_user.email,
+            mobile_number: order.delivered_by_user.mobile_number,
+          }
+        : null;
+
       const order_invoice = getPdfUrl(
         order.order_id,
         getOrderInvoiceFileFileName(),
@@ -937,6 +959,14 @@ export class OrderService {
         'confirmByUser.email',
         'confirmByUser.mobile_number',
       ])
+      .leftJoin('order.delivered_by_user', 'deliveredByUser')
+      .addSelect([
+        'deliveredByUser.user_id',
+        'deliveredByUser.first_name',
+        'deliveredByUser.last_name',
+        'deliveredByUser.email',
+        'deliveredByUser.mobile_number',
+      ])
       .where('order.order_id = :order_id', { order_id })
       .andWhere('order.deleted_at IS NULL')
       .select([
@@ -981,6 +1011,11 @@ export class OrderService {
         'confirmByUser.last_name',
         'confirmByUser.email',
         'confirmByUser.mobile_number',
+        'deliveredByUser.user_id',
+        'deliveredByUser.first_name',
+        'deliveredByUser.last_name',
+        'deliveredByUser.email',
+        'deliveredByUser.mobile_number',
         'company.company_id',
         'company.company_name',
         'company.email',
@@ -1064,6 +1099,15 @@ export class OrderService {
           name: `${orders.confirm_by_user.first_name || ''} ${orders.confirm_by_user.last_name || ''}`.trim(),
           email: orders.confirm_by_user.email || '',
           mobile_number: orders.confirm_by_user.mobile_number || '',
+        }
+      : null;
+
+    orders.delivered_by_user = orders.delivered_by_id
+      ? {
+          delivered_by_id: orders.delivered_by_id,
+          name: `${orders.delivered_by_user.first_name || ''} ${orders.delivered_by_user.last_name || ''}`.trim(),
+          email: orders.delivered_by_user.email || '',
+          mobile_number: orders.delivered_by_user.mobile_number || '',
         }
       : null;
 
@@ -1281,6 +1325,7 @@ export class OrderService {
         order.ready_delivery_date = new Date();
       }
       if (order_status === OrderStatus.DELIVERED) {
+        order.delivered_by_id = user_id;
         order.delivery_date = new Date();
       }
     }
@@ -3068,7 +3113,7 @@ export class OrderService {
       order.kasar_amount = orderData.kasar_amount;
 
       order.payment_status = orderData.payment_status;
-      order.delivery_boy_id = user_id;
+      order.delivered_by_id = user_id;
 
       updatedOrders.push(order);
     }
