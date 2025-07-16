@@ -41,6 +41,7 @@ import { LaundryBranchModule } from './modules/web-contents/laundry-branch/laund
 import { LaundryHistoryModule } from './modules/web-contents/laundry-history/laundry-history.module';
 import { LaundryServicesModule } from './modules/web-contents/laundry-services/laundry-services.module';
 import { ServiceListModule } from './modules/web-contents/service-list/service-list.module';
+import { WelcomeModule } from './modules/web-contents/welcome/welcome.module';
 import { WhyChooseUsModule } from './modules/web-contents/why-choose-us/why-choose-us.module';
 import { WebModule } from './modules/web/web.module';
 import { WorkshopModule } from './modules/workshop/workshop.module';
@@ -93,6 +94,7 @@ import { ReportModule } from './report/report.module';
     CorporateServiceModule,
     LaundryHistoryModule,
     LaundryBranchModule,
+    WelcomeModule,
   ],
   controllers: [AppController],
   providers: [
