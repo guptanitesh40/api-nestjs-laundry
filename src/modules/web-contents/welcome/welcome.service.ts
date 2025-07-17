@@ -41,10 +41,12 @@ export class WelcomeService {
 
     const result = await queryBuilder.getOne();
 
+    const welcome = appendBaseUrlToImagesOrPdf([result]);
+
     return {
       statusCode: 200,
       message: 'Welcome retrieved successfully',
-      data: result,
+      data: welcome,
     };
   }
 

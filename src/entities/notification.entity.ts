@@ -31,6 +31,6 @@ export class Notification extends BaseEntity {
   @Column()
   order_status: number;
 
-  @Column()
+  @Column({ type: 'text' })
   notification_message: string;
 }

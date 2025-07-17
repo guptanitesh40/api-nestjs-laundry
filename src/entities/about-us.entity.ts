@@ -9,14 +9,20 @@ export class AboutUs extends BaseEntity {
   @Column()
   title: string;
 
-  @Column()
-  description: string;
+  @Column({ type: 'text' })
+  description1: string;
+
+  @Column({ type: 'text' })
+  description2: string;
 
   @Column()
   image: string;
 
-  @Column()
-  description1: string;
+  @Column({ type: 'text' })
+  description3: string;
+
+  @Column({ type: 'text' })
+  description4: string;
 
   @Column()
   youtube_link: string;

@@ -5,13 +5,19 @@ export class CreateAboutUsDto {
   title: string;
 
   @IsOptional()
-  description: string;
+  description1: string;
+
+  @IsOptional()
+  description2: string;
 
   @IsOptional()
   image: string;
 
   @IsOptional()
-  description2: string;
+  description3: string;
+
+  @IsOptional()
+  description4: string;
 
   @IsOptional()
   youtube_link: string;
