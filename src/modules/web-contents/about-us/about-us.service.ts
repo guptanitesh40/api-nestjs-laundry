@@ -14,9 +14,18 @@ export class AboutUsService {
     private readonly aboutUsRepository: Repository<AboutUs>,
   ) {}
 
-  async create(dto: CreateAboutUsDto): Promise<AboutUs> {
-    const aboutUs = this.aboutUsRepository.create(dto);
-    return await this.aboutUsRepository.save(aboutUs);
+  async create(dto: CreateAboutUsDto, imagePath: string): Promise<Response> {
+    const aboutUs = this.aboutUsRepository.create({ ...dto, image: imagePath });
+
+    const result = await this.aboutUsRepository.save(aboutUs);
+
+    const AboutUS = appendBaseUrlToImagesOrPdf([result])[0];
+
+    return {
+      statusCode: 201,
+      message: 'About added successfully',
+      data: { result: AboutUS },
+    };
   }
 
   async findAll(): Promise<Response> {
@@ -26,10 +35,12 @@ export class AboutUsService {
 
     const result = await queryBuilder.getOne();
 
+    const AboutUS = appendBaseUrlToImagesOrPdf([result]);
+
     return {
       statusCode: 200,
       message: 'About us Retrived successfully',
-      data: result,
+      data: { result: AboutUS },
     };
   }
 

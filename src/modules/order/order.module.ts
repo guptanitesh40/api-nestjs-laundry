@@ -9,6 +9,7 @@ import { CouponModule } from '../coupon/coupon.module';
 import { InvoiceModule } from '../invoice/invoice.module';
 import { NotesModule } from '../notes/note.module';
 import { NotificationModule } from '../notification/notification.module';
+import { OrderLogModule } from '../order-log/order-log.module';
 import { PriceModule } from '../price/price.module';
 import { SettingModule } from '../settings/setting.module';
 import { UsersModule } from '../user/user.module';
@@ -31,6 +32,7 @@ import { OrderService } from './order.service';
     forwardRef(() => NotificationModule),
     BranchModule,
     AddressModule,
+    OrderLogModule,
   ],
   providers: [OrderService],
   controllers: [OrderController],

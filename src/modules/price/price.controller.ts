@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/decorator/roles.decorator';
 import { Response } from 'src/dto/response.dto';
 import { Role } from 'src/enum/role.enum';
 import { RolesGuard } from '../auth/guard/role.guard';
+import { PriceFilterDto } from '../dto/prices-filter.dto';
 import { CreatePriceDto } from './dto/create-price.dto';
 import { PriceService } from './price.service';
 
@@ -19,12 +20,23 @@ export class PriceController {
     return await this.priceService.create(createPriceDto);
   }
 
-  @Get()
+  @Get('admin')
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async findAll(): Promise<Response> {
     return await this.priceService.findAll();
+  }
+
+  @Get()
+  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  async getAllPrices(
+    @Query() filterDto: PriceFilterDto,
+    @Query('requiredKeys') requiredKeys?: string[],
+  ): Promise<Response> {
+    return await this.priceService.getAllPrices(filterDto, requiredKeys);
   }
 
   @Get('customer')

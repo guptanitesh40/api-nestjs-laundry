@@ -17,6 +17,7 @@ import { AssignTo } from 'src/enum/assign_to.enum';
 import { CustomerOrderStatuseLabel } from 'src/enum/customer_order_status_label.enum';
 import { ExpressDeliveryHour } from 'src/enum/express_delivery_hour.enum';
 import { OrderStatus } from 'src/enum/order-status.eum';
+import { OrderLogType } from 'src/enum/order_log_type.enum';
 import { PaymentStatus, PaymentType } from 'src/enum/payment.enum';
 import { RefundStatus } from 'src/enum/refund_status.enum';
 import { Role } from 'src/enum/role.enum';
@@ -52,6 +53,7 @@ import { InvoiceService } from '../invoice/invoice.service';
 import { CreateNoteDto } from '../notes/dto/create-note.dto';
 import { NotesService } from '../notes/note.service';
 import { NotificationService } from '../notification/notification.service';
+import { OrderLogService } from '../order-log/order-log.service';
 import { PriceService } from '../price/price.service';
 import { SettingService } from '../settings/setting.service';
 import { UserService } from '../user/user.service';
@@ -84,6 +86,7 @@ export class OrderService {
     private readonly branchService: BranchService,
     private readonly addressService: AddressService,
     private dataSource: DataSource,
+    private readonly orderLogService: OrderLogService,
   ) {}
 
   async create(
@@ -356,7 +359,6 @@ export class OrderService {
         estimated_delivery_time: deliveryDaysToAdd,
         branch_id: createOrderDto.branch_id,
         transaction_id: createOrderDto?.transaction_id,
-        confirm_by_id: createOrderDto?.confirm_by_id,
       });
 
       if (
@@ -527,6 +529,7 @@ export class OrderService {
       .leftJoinAndSelect('items.product', 'product')
       .leftJoinAndSelect('items.service', 'service')
       .leftJoinAndSelect('order.branch', 'branch')
+      .leftJoinAndSelect('order.orderLogs', 'orderLog')
       .leftJoin('order.pickup_boy', 'pickupBoy')
       .addSelect([
         'pickupBoy.user_id',
@@ -542,22 +545,6 @@ export class OrderService {
         'deliveryBoy.last_name',
         'deliveryBoy.email',
         'deliveryBoy.mobile_number',
-      ])
-      .leftJoin('order.confirm_by_user', 'confirmByUser')
-      .addSelect([
-        'confirmByUser.user_id',
-        'confirmByUser.first_name',
-        'confirmByUser.last_name',
-        'confirmByUser.email',
-        'confirmByUser.mobile_number',
-      ])
-      .leftJoin('order.delivered_by_user', 'deliveredByUser')
-      .addSelect([
-        'deliveredByUser.user_id',
-        'deliveredByUser.first_name',
-        'deliveredByUser.last_name',
-        'deliveredByUser.email',
-        'deliveredByUser.mobile_number',
       ])
       .where('order.deleted_at IS NULL')
       .select([
@@ -588,16 +575,9 @@ export class OrderService {
         'pickupBoy.last_name',
         'pickupBoy.email',
         'pickupBoy.mobile_number',
-        'confirmByUser.user_id',
-        'confirmByUser.first_name',
-        'confirmByUser.last_name',
-        'confirmByUser.email',
-        'confirmByUser.mobile_number',
-        'deliveredByUser.user_id',
-        'deliveredByUser.first_name',
-        'deliveredByUser.last_name',
-        'deliveredByUser.email',
-        'deliveredByUser.mobile_number',
+        'orderLog.user_id',
+        'orderLog.order_id',
+        'orderLog.type',
       ])
       .take(perPage)
       .skip(skip);
@@ -848,24 +828,6 @@ export class OrderService {
           }
         : null;
 
-      order.confirm_by_user = order.confirm_by_id
-        ? {
-            id: order.confirm_by_id,
-            name: `${order.confirm_by_user?.first_name || ''} ${order.confirm_by_user?.last_name || ''}`.trim(),
-            email: order.confirm_by_user.email,
-            mobile_number: order.confirm_by_user.mobile_number,
-          }
-        : null;
-
-      order.delivered_by_user = order.delivered_by_id
-        ? {
-            id: order.delivered_by_id,
-            name: `${order.delivered_by_user?.first_name || ''} ${order.delivered_by_user?.last_name || ''}`.trim(),
-            email: order.delivered_by_user.email,
-            mobile_number: order.delivered_by_user.mobile_number,
-          }
-        : null;
-
       const order_invoice = getPdfUrl(
         order.order_id,
         getOrderInvoiceFileFileName(),
@@ -935,6 +897,7 @@ export class OrderService {
       .leftJoinAndSelect('order.notes', 'notes')
       .leftJoinAndSelect('notes.user', 'note_user')
       .leftJoinAndSelect('order.company', 'company')
+      .leftJoinAndSelect('order.orderLogs', 'orderLog')
       .leftJoin('order.pickup_boy', 'pickupBoy')
       .addSelect([
         'pickupBoy.user_id',
@@ -950,22 +913,6 @@ export class OrderService {
         'deliveryBoy.last_name',
         'deliveryBoy.email',
         'deliveryBoy.mobile_number',
-      ])
-      .leftJoin('order.confirm_by_user', 'confirmByUser')
-      .addSelect([
-        'confirmByUser.user_id',
-        'confirmByUser.first_name',
-        'confirmByUser.last_name',
-        'confirmByUser.email',
-        'confirmByUser.mobile_number',
-      ])
-      .leftJoin('order.delivered_by_user', 'deliveredByUser')
-      .addSelect([
-        'deliveredByUser.user_id',
-        'deliveredByUser.first_name',
-        'deliveredByUser.last_name',
-        'deliveredByUser.email',
-        'deliveredByUser.mobile_number',
       ])
       .where('order.order_id = :order_id', { order_id })
       .andWhere('order.deleted_at IS NULL')
@@ -1006,16 +953,6 @@ export class OrderService {
         'deliveryBoy.last_name',
         'deliveryBoy.email',
         'deliveryBoy.mobile_number',
-        'confirmByUser.user_id',
-        'confirmByUser.first_name',
-        'confirmByUser.last_name',
-        'confirmByUser.email',
-        'confirmByUser.mobile_number',
-        'deliveredByUser.user_id',
-        'deliveredByUser.first_name',
-        'deliveredByUser.last_name',
-        'deliveredByUser.email',
-        'deliveredByUser.mobile_number',
         'company.company_id',
         'company.company_name',
         'company.email',
@@ -1026,6 +963,9 @@ export class OrderService {
         'company.gstin',
         'company.hsn_sac_code',
         'company.msme_number',
+        'orderLog.user_id',
+        'orderLog.order_id',
+        'orderLog.type',
       ]);
 
     const orders: any = await queryBuilder.getOne();
@@ -1090,24 +1030,6 @@ export class OrderService {
             `${orders.delivery_boy?.first_name || ''} ${orders.delivery_boy?.last_name || ''}`.trim(),
           email: orders.delivery_boy.email || '',
           mobile_number: orders.delivery_boy.mobile_number || '',
-        }
-      : null;
-
-    orders.confirm_by_user = orders.confirm_by_id
-      ? {
-          confirm_by_id: orders.confirm_by_id,
-          name: `${orders.confirm_by_user.first_name || ''} ${orders.confirm_by_user.last_name || ''}`.trim(),
-          email: orders.confirm_by_user.email || '',
-          mobile_number: orders.confirm_by_user.mobile_number || '',
-        }
-      : null;
-
-    orders.delivered_by_user = orders.delivered_by_id
-      ? {
-          delivered_by_id: orders.delivered_by_id,
-          name: `${orders.delivered_by_user.first_name || ''} ${orders.delivered_by_user.last_name || ''}`.trim(),
-          email: orders.delivered_by_user.email || '',
-          mobile_number: orders.delivered_by_user.mobile_number || '',
         }
       : null;
 
@@ -1310,13 +1232,24 @@ export class OrderService {
 
       if (order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
         order.confirm_date = new Date();
-        order.confirm_by_id = user_id;
+        await this.orderLogService.create(
+          user_id,
+          order.order_id,
+          OrderLogType.CONFIRMED_BY,
+        );
       }
       if (order_status === OrderStatus.PICKUP_COMPLETED_BY_PICKUP_BOY) {
         order.pickup_date = new Date();
       }
       if (order_status === OrderStatus.WORKSHOP_ASSIGNED) {
         order.workshop_date = new Date();
+      }
+      if (order_status === OrderStatus.WORKSHOP_WORK_IS_COMPLETED) {
+        await this.orderLogService.create(
+          user_id,
+          order.order_id,
+          OrderLogType.WORKSHOP_ASSIGNED,
+        );
       }
       if (
         order_status ===
@@ -1325,8 +1258,12 @@ export class OrderService {
         order.ready_delivery_date = new Date();
       }
       if (order_status === OrderStatus.DELIVERED) {
-        order.delivered_by_id = user_id;
         order.delivery_date = new Date();
+        await this.orderLogService.create(
+          user_id,
+          order.order_id,
+          OrderLogType.DELIVERED_BY,
+        );
       }
     }
 
@@ -2710,6 +2647,22 @@ export class OrderService {
       .leftJoinAndSelect('workshop.workshopManagerMappings', 'mapping')
       .leftJoinAndSelect('mapping.user', 'manager_user')
       .where('order.deleted_at IS NULL')
+      .leftJoin('order.pickup_boy', 'pickupBoy')
+      .addSelect([
+        'pickupBoy.user_id',
+        'pickupBoy.first_name',
+        'pickupBoy.last_name',
+        'pickupBoy.email',
+        'pickupBoy.mobile_number',
+      ])
+      .leftJoin('order.delivery_boy', 'deliveryBoy')
+      .addSelect([
+        'deliveryBoy.user_id',
+        'deliveryBoy.first_name',
+        'deliveryBoy.last_name',
+        'deliveryBoy.email',
+        'deliveryBoy.mobile_number',
+      ])
       .andWhere('workshop.deleted_at IS NULL')
       .select([
         'order',
@@ -2725,6 +2678,16 @@ export class OrderService {
         'manager_user.user_id',
         'manager_user.first_name',
         'manager_user.last_name',
+        'deliveryBoy.user_id',
+        'deliveryBoy.first_name',
+        'deliveryBoy.last_name',
+        'deliveryBoy.email',
+        'deliveryBoy.mobile_number',
+        'pickupBoy.user_id',
+        'pickupBoy.first_name',
+        'pickupBoy.last_name',
+        'pickupBoy.email',
+        'pickupBoy.mobile_number',
       ])
       .take(perPage)
       .skip(skip);
@@ -2868,6 +2831,24 @@ export class OrderService {
       const file = fs.existsSync(order_invoice.fileName);
 
       order.order_invoice = file ? order_invoice : '';
+
+      order.pickup_boy = order.pickup_boy_id
+        ? {
+            id: order.pickup_boy_id,
+            name: `${order.pickup_boy?.first_name || ''} ${order.pickup_boy?.last_name || ''}`.trim(),
+            email: order.pickup_boy?.email,
+            mobile_number: order.pickup_boy?.mobile_number,
+          }
+        : null;
+
+      order.delivery_boy = order.delivery_boy_id
+        ? {
+            id: order.delivery_boy_id,
+            name: `${order.delivery_boy?.first_name || ''} ${order.delivery_boy?.last_name || ''}`.trim(),
+            email: order.delivery_boy?.email,
+            mobile_number: order.delivery_boy?.mobile_number,
+          }
+        : null;
 
       let total_qty = 0;
       order.items.map((item) => {
@@ -3091,6 +3072,12 @@ export class OrderService {
 
       order.order_status = orderData.order_status;
 
+      await this.orderLogService.create(
+        user_id,
+        order.order_id,
+        OrderLogType.DELIVERED_BY,
+      );
+
       if (order.refund_status === RefundStatus.FULL) {
         throw new BadRequestException(
           `This order ${orderData.order_id} is fully refunded`,
@@ -3113,7 +3100,6 @@ export class OrderService {
       order.kasar_amount = orderData.kasar_amount;
 
       order.payment_status = orderData.payment_status;
-      order.delivered_by_id = user_id;
 
       updatedOrders.push(order);
     }

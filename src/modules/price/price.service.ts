@@ -4,6 +4,7 @@ import { Response } from 'src/dto/response.dto';
 import { Price } from 'src/entities/price.entity';
 import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { DataSource, IsNull, Repository } from 'typeorm';
+import { PriceFilterDto } from '../dto/prices-filter.dto';
 import { InvoiceService } from '../invoice/invoice.service';
 import { CreatePriceDto } from './dto/create-price.dto';
 
@@ -23,25 +24,41 @@ export class PriceService {
     await queryRunner.startTransaction();
 
     try {
-      const validPrices = [];
-      for (const priceDto of createPriceDto.prices) {
-        if (priceDto.price !== 0) {
-          validPrices.push(priceDto);
-        }
-      }
+      const incomingPrices = createPriceDto.prices.filter(
+        (p) => p.price != null,
+      );
 
-      if (validPrices.length > 0) {
-        await queryRunner.manager.update(
-          Price,
-          { deleted_at: IsNull() },
-          { deleted_at: new Date() },
+      const existingPrices = await queryRunner.manager.find(Price, {
+        where: { deleted_at: IsNull() },
+      });
+
+      const changedPrices = incomingPrices.filter((incoming) => {
+        const existing = existingPrices.find(
+          (e) =>
+            e.product_id === incoming.product_id &&
+            e.service_id === incoming.service_id &&
+            e.category_id === incoming.category_id,
         );
 
-        await queryRunner.manager.insert(Price, createPriceDto.prices);
+        return !existing || existing.price !== incoming.price;
+      });
+
+      for (const changed of changedPrices) {
+        await queryRunner.manager.update(
+          Price,
+          {
+            product_id: changed.product_id,
+            service_id: changed.service_id,
+            category_id: changed.category_id,
+            deleted_at: IsNull(),
+          },
+          { deleted_at: new Date() },
+        );
       }
 
-      await queryRunner.commitTransaction();
-      await this.invoiceService.generatePriceListPDF();
+      if (changedPrices.length > 0) {
+        await queryRunner.manager.insert(Price, changedPrices);
+      }
 
       return {
         statusCode: 201,
@@ -88,6 +105,99 @@ export class PriceService {
       message:
         'Prices retrieved successfully (category_id, product_id, service_id)',
       data: result,
+    };
+  }
+
+  async getAllPrices(
+    filterDto: PriceFilterDto,
+    requiredKeys?: string[],
+  ): Promise<Response> {
+    const {
+      page_number,
+      per_page,
+      search,
+      category_ids,
+      product_ids,
+      service_ids,
+      sort_by,
+      order,
+    } = filterDto;
+
+    const pageNumber = page_number ?? 1;
+    const perPage = per_page ?? 100;
+    const skip = (pageNumber - 1) * perPage;
+
+    const query = this.priceRepository
+      .createQueryBuilder('price')
+      .where('price.deleted_at IS NULL')
+      .andWhere('price.price > 0')
+      .take(perPage)
+      .skip(skip);
+
+    if (requiredKeys?.length) {
+      requiredKeys.forEach((key, index) => {
+        const [categoryId, productId, serviceId] = key.split('_');
+        query.orWhere(
+          `(price.category_id = :categoryId${index} AND price.product_id = :productId${index} AND price.service_id = :serviceId${index})`,
+          {
+            [`categoryId${index}`]: categoryId,
+            [`productId${index}`]: productId,
+            [`serviceId${index}`]: serviceId,
+          },
+        );
+      });
+    }
+
+    if (search) {
+      query.andWhere(
+        `(LOWER(price.product_name) LIKE :search OR LOWER(price.category_name) LIKE :search OR LOWER(price.service_name) LIKE :search)`,
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    let sortColumn = 'price.created_at';
+    let sortOrder: 'ASC' | 'DESC' = 'DESC';
+
+    if (sort_by) {
+      sortColumn = sort_by;
+    }
+    if (order) {
+      sortOrder = order;
+    }
+
+    query.orderBy(sortColumn, sortOrder);
+
+    if (category_ids?.length) {
+      query.andWhere('price.category_id IN (:...category_ids)', {
+        category_ids,
+      });
+    }
+
+    if (product_ids?.length) {
+      query.andWhere('price.product_id IN (:...product_ids)', { product_ids });
+    }
+
+    if (service_ids?.length) {
+      query.andWhere('price.service_id IN (:...service_ids)', { service_ids });
+    }
+
+    const [items, total] = await query.getManyAndCount();
+
+    const result = {};
+    items.forEach((price) => {
+      result[`${price.category_id}_${price.product_id}_${price.service_id}`] =
+        price.price;
+    });
+
+    return {
+      statusCode: 200,
+      message: 'Prices fetched successfully with filters and pagination.',
+      data: {
+        items: result,
+        limit: perPage,
+        page_number: pageNumber,
+        count: total,
+      },
     };
   }
 

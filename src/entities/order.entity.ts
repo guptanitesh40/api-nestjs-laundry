@@ -20,6 +20,7 @@ import { Feedback } from './feedback.entity';
 import { Note } from './note.entity';
 import { Notification } from './notification.entity';
 import { OrderItem } from './order-item.entity';
+import { OrderLog } from './order-logs.entity';
 import { User } from './user.entity';
 import { Workshop } from './workshop.entity';
 
@@ -215,21 +216,6 @@ export class Order extends BaseEntity {
   @Column({ nullable: true, default: 0 })
   delivery_collect_amount: number;
 
-  @ManyToOne(() => User, (user) => user.confirmByUser, { nullable: true })
-  @JoinColumn({ name: 'confirm_by_id' })
-  @IsOptional()
-  confirm_by_user: User;
-
-  @Column({ nullable: true })
-  @IsOptional()
-  confirm_by_id: number;
-
-  @ManyToOne(() => User, (user) => user.deliveredByUser, { nullable: true })
-  @JoinColumn({ name: 'delivered_by_id' })
-  @IsOptional()
-  delivered_by_user: User;
-
-  @Column({ nullable: true })
-  @IsOptional()
-  delivered_by_id: number;
+  @OneToMany(() => OrderLog, (log) => log.order)
+  orderLogs: OrderLog[];
 }

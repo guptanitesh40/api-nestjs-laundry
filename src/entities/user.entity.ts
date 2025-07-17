@@ -16,6 +16,7 @@ import { DeviceUser } from './device-user.entity';
 import { LoginHistory } from './login-history.entity';
 import { Note } from './note.entity';
 import { Notification } from './notification.entity';
+import { OrderLog } from './order-logs.entity';
 import { Order } from './order.entity';
 import { RazorpayTransactions } from './razorpay.entity';
 import { Role } from './role.entity';
@@ -121,11 +122,8 @@ export class User extends BaseEntity {
   @OneToMany(() => Order, (orderDetail) => orderDetail.pickup_boy)
   ordersAsPickupBoy: Order[];
 
-  @OneToMany(() => Order, (orderDetail) => orderDetail.confirm_by_user)
-  confirmByUser: Order[];
-
-  @OneToMany(() => Order, (orderDetail) => orderDetail.delivered_by_user)
-  deliveredByUser: Order[];
+  @OneToMany(() => OrderLog, (orderlog) => orderlog.user)
+  orderLogs: OrderLog[];
 
   @OneToMany(() => Branch, (branch) => branch.branchManager)
   branches: Branch[];

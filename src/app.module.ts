@@ -35,6 +35,7 @@ import { ServicesModule } from './modules/services/services.module';
 import { SettingModule } from './modules/settings/setting.module';
 import { UsersModule } from './modules/user/user.module';
 import { IsUniqueConstraint } from './modules/validator/is-unique-constarint';
+import { AboutUsModule } from './modules/web-contents/about-us/about-us.module';
 import { BenefitModule } from './modules/web-contents/benefits/benefits.module';
 import { CorporateServiceModule } from './modules/web-contents/corporate-services/corporate-service.module';
 import { HomePageModule } from './modules/web-contents/home-section/home-page.module';
@@ -101,6 +102,7 @@ import { ReportModule } from './report/report.module';
     OurServiceModule,
     OurPriceModule,
     HomePageModule,
+    AboutUsModule,
   ],
   controllers: [AppController],
   providers: [
