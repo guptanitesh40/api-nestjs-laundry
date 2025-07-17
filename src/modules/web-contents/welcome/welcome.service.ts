@@ -39,7 +39,7 @@ export class WelcomeService {
       .createQueryBuilder('welcome')
       .where('welcome.deleted_at IS NULL');
 
-    const result = await queryBuilder.getMany();
+    const result = await queryBuilder.getOne();
 
     return {
       statusCode: 200,
