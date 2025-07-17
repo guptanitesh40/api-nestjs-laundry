@@ -37,6 +37,7 @@ import { UsersModule } from './modules/user/user.module';
 import { IsUniqueConstraint } from './modules/validator/is-unique-constarint';
 import { BenefitModule } from './modules/web-contents/benefits/benefits.module';
 import { CorporateServiceModule } from './modules/web-contents/corporate-services/corporate-service.module';
+import { HomePageModule } from './modules/web-contents/home-section/home-page.module';
 import { LaundryBranchModule } from './modules/web-contents/laundry-branch/laundry-branch.module';
 import { LaundryHistoryModule } from './modules/web-contents/laundry-history/laundry-history.module';
 import { LaundryServicesModule } from './modules/web-contents/laundry-services/laundry-services.module';
@@ -99,6 +100,7 @@ import { ReportModule } from './report/report.module';
     WelcomeModule,
     OurServiceModule,
     OurPriceModule,
+    HomePageModule,
   ],
   controllers: [AppController],
   providers: [

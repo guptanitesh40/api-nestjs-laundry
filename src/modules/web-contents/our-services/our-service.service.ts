@@ -29,7 +29,7 @@ export class OurServiceService {
       .createQueryBuilder('our-service')
       .where('our-service.deleted_at IS NULL');
 
-    const result = await queryBuilder.getMany();
+    const result = await queryBuilder.getOne();
 
     return {
       statusCode: 200,
