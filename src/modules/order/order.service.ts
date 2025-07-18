@@ -335,7 +335,6 @@ export class OrderService {
         createOrderDto.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH
       ) {
         createOrderDto.confirm_date = new Date();
-        createOrderDto.confirm_by_id = createOrderDto.created_by_user_id;
       }
 
       const order = this.orderRepository.create({
@@ -356,6 +355,16 @@ export class OrderService {
         branch_id: createOrderDto.branch_id,
         transaction_id: createOrderDto?.transaction_id,
       });
+
+      if (
+        createOrderDto.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH
+      ) {
+        await this.orderLogService.create(
+          user_id,
+          order.order_id,
+          OrderLogType.CONFIRMED_BY,
+        );
+      }
 
       if (
         createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT &&
@@ -475,9 +484,104 @@ export class OrderService {
   async createAdminOrder(
     createOrderDto: CreateOrderDto,
     admin_id: number,
+    quick_order_by_admin?: boolean,
   ): Promise<Response> {
     await this.userService.findOneByRole(createOrderDto.user_id, Role.CUSTOMER);
     createOrderDto.created_by_user_id = admin_id;
+
+    if (Boolean(quick_order_by_admin) === true) {
+      const user = await this.userService.findUserById(createOrderDto.user_id);
+      const address = await (
+        await this.addressService.findOne(
+          createOrderDto.user_id,
+          createOrderDto.address_id,
+        )
+      ).data;
+
+      const userAddress = address.result;
+
+      const address_details = `${userAddress.building_number}, ${userAddress.area}, ${userAddress.city}, ${userAddress.state}, ${userAddress.country} - ${userAddress.pincode}`;
+
+      const address_type = address?.address_type || 1;
+
+      const settingKeys = [
+        'estimate_pickup_normal_hour',
+        'estimate_pickup_express_hour',
+        'estimate_delivery_normal_day',
+      ];
+      const settingsResponse = await this.settingService.findAll(settingKeys);
+      const settings = settingsResponse.data;
+
+      const expressHour = createOrderDto.express_delivery_hour;
+
+      const estimated_pickup_time = expressHour
+        ? addHours(
+            new Date(),
+            parseInt(settings['estimate_pickup_express_hour']),
+          )
+        : addHours(
+            new Date(),
+            parseInt(settings['estimate_pickup_normal_hour']),
+          );
+
+      const normalDay = settings['estimate_delivery_normal_day'];
+
+      let deliveryDaysToAdd: any = '';
+
+      if (expressHour) {
+        deliveryDaysToAdd = expressHour
+          ? expressHour === ExpressDeliveryHour.HOURS_24
+            ? addHours(new Date(), 24)
+            : expressHour === ExpressDeliveryHour.HOURS_48
+              ? addHours(new Date(), 48)
+              : expressHour === ExpressDeliveryHour.HOURS_72
+                ? addHours(new Date(), 72)
+                : 0
+          : 0;
+      } else {
+        deliveryDaysToAdd = addDays(new Date(), Number(normalDay));
+      }
+
+      if (!address) {
+        throw new NotFoundException(
+          `Address with id ${createOrderDto.address_id} not found`,
+        );
+      }
+      const order = this.orderRepository.create({
+        ...createOrderDto,
+        user_id: createOrderDto.user_id,
+        payment_type: createOrderDto.payment_type,
+        payment_status: createOrderDto.payment_status,
+        normal_delivery_charges: createOrderDto.normal_delivery_charges || 0,
+        express_delivery_charges: createOrderDto.express_delivery_charges || 0,
+        express_delivery_hour: createOrderDto.express_delivery_hour || 0,
+        sub_total: createOrderDto.sub_total,
+        address_id: createOrderDto.address_id,
+        address_details: address_details,
+        total: 0,
+        address_type: address_type,
+        branch_id: createOrderDto.branch_id,
+        estimated_pickup_time,
+        estimated_delivery_time: deliveryDaysToAdd,
+      });
+
+      const result = await this.orderRepository.save(order);
+
+      const orderDetail = {
+        ...result,
+        user: {
+          first_name: user.first_name,
+          last_name: user.last_name,
+          mobile_number: user.mobile_number,
+        },
+      };
+
+      return {
+        statusCode: 200,
+        message: 'Order details added successfully',
+        data: { orderDetail },
+      };
+    }
 
     const result = await this.create(createOrderDto);
 
