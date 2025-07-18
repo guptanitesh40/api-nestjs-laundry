@@ -281,6 +281,7 @@ export class OrderService {
 
       for (const item of createOrderDto.items) {
         const key = `${item.category_id}_${item.product_id}_${item.service_id}`;
+        console.log(item);
 
         if (!createOrderDto.created_by_user_id) {
           const prices = pricesResponse.data[key];
@@ -298,6 +299,8 @@ export class OrderService {
 
         if (orderItemsMap.has(key)) {
           const existingItem = orderItemsMap.get(key);
+          console.log('existingItem :- ', existingItem);
+
           existingItem.quantity += item.quantity || 1;
         } else {
           orderItemsMap.set(key, {
@@ -318,6 +321,7 @@ export class OrderService {
 
       let calculatedSubTotal = 0;
       for (const item of orderItemsMap.values()) {
+        console.log(item);
         calculatedSubTotal += item.price * item.quantity;
       }
 
@@ -328,11 +332,6 @@ export class OrderService {
         );
         coupon_discount = couponValidation.data.discountAmount;
         calculatedSubTotal -= coupon_discount;
-      }
-      if (calculatedSubTotal !== createOrderDto.sub_total) {
-        throw new Error(
-          'Sub-total mismatch: Please verify item prices and quantities.',
-        );
       }
 
       if (
@@ -345,7 +344,7 @@ export class OrderService {
       const order = this.orderRepository.create({
         ...createOrderDto,
         normal_delivery_charges: createOrderDto.normal_delivery_charges || 0,
-        sub_total: calculatedSubTotal,
+        sub_total: createOrderDto.sub_total,
         user_id: user_id | createOrderDto.user_id,
         total,
         coupon_code,
