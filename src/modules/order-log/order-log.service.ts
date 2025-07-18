@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderLog } from 'src/entities/order-logs.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 @Injectable()
 export class OrderLogService {
@@ -22,5 +22,24 @@ export class OrderLogService {
     });
 
     return await this.orderLogRepository.save(log);
+  }
+
+  async getAll(orderIds: number[]): Promise<OrderLog[]> {
+    return this.orderLogRepository.find({
+      where: { order_id: In(orderIds) },
+      relations: ['user'],
+      select: {
+        user_id: true,
+        order_id: true,
+        type: true,
+        user: {
+          user_id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+          mobile_number: true,
+        },
+      },
+    });
   }
 }

@@ -4,8 +4,11 @@ import { Response } from 'src/dto/response.dto';
 import { Price } from 'src/entities/price.entity';
 import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { DataSource, IsNull, Repository } from 'typeorm';
+import { CategoryService } from '../categories/category.service';
 import { PriceFilterDto } from '../dto/prices-filter.dto';
 import { InvoiceService } from '../invoice/invoice.service';
+import { ProductService } from '../products/product.service';
+import { ServicesService } from '../services/services.service';
 import { CreatePriceDto } from './dto/create-price.dto';
 
 @Injectable()
@@ -15,6 +18,10 @@ export class PriceService {
     private priceRepository: Repository<Price>,
     @Inject(forwardRef(() => InvoiceService))
     private invoiceService: InvoiceService,
+    private categoryService: CategoryService,
+    @Inject(forwardRef(() => ProductService))
+    private productService: ProductService,
+    private serviceService: ServicesService,
     private dataSource: DataSource,
   ) {}
 
@@ -108,10 +115,7 @@ export class PriceService {
     };
   }
 
-  async getAllPrices(
-    filterDto: PriceFilterDto,
-    requiredKeys?: string[],
-  ): Promise<Response> {
+  async getAllPrices(filterDto: PriceFilterDto): Promise<Response> {
     const {
       page_number,
       per_page,
@@ -127,76 +131,101 @@ export class PriceService {
     const perPage = per_page ?? 100;
     const skip = (pageNumber - 1) * perPage;
 
-    const query = this.priceRepository
+    const [categoryRes, productRes, serviceRes] = await Promise.all([
+      this.categoryService.getAll(),
+      this.productService.getAll(),
+      this.serviceService.getAll(),
+    ]);
+
+    const categories = Array.isArray(categoryRes?.data?.category)
+      ? categoryRes.data.category
+      : [];
+    const products = Array.isArray(productRes?.data?.product)
+      ? productRes.data.product
+      : [];
+    const services = Array.isArray(serviceRes?.data?.services)
+      ? serviceRes.data.services
+      : [];
+
+    const filteredCategories = category_ids?.length
+      ? categories.filter((cat) => category_ids.includes(Number(cat.id)))
+      : categories;
+
+    const filteredProducts = product_ids?.length
+      ? products.filter((prod) => product_ids.includes(prod.id))
+      : products;
+
+    const filteredServices = service_ids?.length
+      ? services.filter((srv) => service_ids.includes(srv.id))
+      : services;
+
+    const combinations = [];
+    for (const category of filteredCategories) {
+      for (const product of filteredProducts) {
+        for (const service of filteredServices) {
+          combinations.push({
+            category_id: category.category_id,
+            category_name: category.name,
+            product_id: product.product_id,
+            product_name: product.name,
+            service_id: service.service_id,
+            service_name: service.name,
+          });
+        }
+      }
+    }
+
+    const prices = await this.priceRepository
       .createQueryBuilder('price')
       .where('price.deleted_at IS NULL')
-      .andWhere('price.price > 0')
-      .take(perPage)
-      .skip(skip);
+      .getMany();
 
-    if (requiredKeys?.length) {
-      requiredKeys.forEach((key, index) => {
-        const [categoryId, productId, serviceId] = key.split('_');
-        query.orWhere(
-          `(price.category_id = :categoryId${index} AND price.product_id = :productId${index} AND price.service_id = :serviceId${index})`,
-          {
-            [`categoryId${index}`]: categoryId,
-            [`productId${index}`]: productId,
-            [`serviceId${index}`]: serviceId,
-          },
-        );
-      });
-    }
+    const priceMap = new Map();
+    prices.forEach((p) => {
+      const key = `${p.category_id}_${p.product_id}_${p.service_id}`;
+      priceMap.set(key, p.price);
+    });
 
-    if (search) {
-      query.andWhere(
-        `(LOWER(price.product_name) LIKE :search OR LOWER(price.category_name) LIKE :search OR LOWER(price.service_name) LIKE :search)`,
-        { search: `%${search.toLowerCase()}%` },
-      );
-    }
+    const resultWithPrices = combinations.map((combo) => {
+      const key = `${combo.category_id}_${combo.product_id}_${combo.service_id}`;
+      const price = priceMap.has(key) ? priceMap.get(key) : null;
 
-    let sortColumn = 'price.created_at';
-    let sortOrder: 'ASC' | 'DESC' = 'DESC';
+      return {
+        ...combo,
+        price,
+      };
+    });
+
+    const searchedResults = search
+      ? resultWithPrices.filter((r) => {
+          const term = search.toLowerCase();
+          return (
+            r.category_name.toLowerCase().includes(term) ||
+            r.product_name.toLowerCase().includes(term) ||
+            r.service_name.toLowerCase().includes(term)
+          );
+        })
+      : resultWithPrices;
 
     if (sort_by) {
-      sortColumn = sort_by;
-    }
-    if (order) {
-      sortOrder = order;
-    }
-
-    query.orderBy(sortColumn, sortOrder);
-
-    if (category_ids?.length) {
-      query.andWhere('price.category_id IN (:...category_ids)', {
-        category_ids,
+      searchedResults.sort((a, b) => {
+        const aValue = a[sort_by];
+        const bValue = b[sort_by];
+        if (order === 'ASC') return aValue > bValue ? 1 : -1;
+        return aValue < bValue ? 1 : -1;
       });
     }
 
-    if (product_ids?.length) {
-      query.andWhere('price.product_id IN (:...product_ids)', { product_ids });
-    }
-
-    if (service_ids?.length) {
-      query.andWhere('price.service_id IN (:...service_ids)', { service_ids });
-    }
-
-    const [items, total] = await query.getManyAndCount();
-
-    const result = {};
-    items.forEach((price) => {
-      result[`${price.category_id}_${price.product_id}_${price.service_id}`] =
-        price.price;
-    });
+    const paginated = searchedResults.slice(skip, skip + perPage);
 
     return {
       statusCode: 200,
-      message: 'Prices fetched successfully with filters and pagination.',
+      message: 'Prices with all combinations fetched successfully.',
       data: {
-        items: result,
+        items: paginated,
         limit: perPage,
         page_number: pageNumber,
-        count: total,
+        count: searchedResults.length,
       },
     };
   }

@@ -34,9 +34,9 @@ export class PriceController {
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   async getAllPrices(
     @Query() filterDto: PriceFilterDto,
-    @Query('requiredKeys') requiredKeys?: string[],
+    // @Query('requiredKeys') requiredKeys?: string[],
   ): Promise<Response> {
-    return await this.priceService.getAllPrices(filterDto, requiredKeys);
+    return await this.priceService.getAllPrices(filterDto);
   }
 
   @Get('customer')
