@@ -147,16 +147,26 @@ export class PriceService {
       ? serviceRes.data.services
       : [];
 
-    const filteredCategories = category_ids?.length
-      ? categories.filter((cat) => category_ids.includes(Number(cat.id)))
+    const hasCategoryFilter =
+      Array.isArray(category_ids) && category_ids.length > 0;
+    const hasProductFilter =
+      Array.isArray(product_ids) && product_ids.length > 0;
+
+    const hasServiceFilter =
+      Array.isArray(service_ids) && service_ids.length > 0;
+
+    const filteredCategories = hasCategoryFilter
+      ? categories.filter((cat) =>
+          category_ids.includes(Number(cat.category_id)),
+        )
       : categories;
 
-    const filteredProducts = product_ids?.length
-      ? products.filter((prod) => product_ids.includes(prod.id))
+    const filteredProducts = hasProductFilter
+      ? products.filter((prod) => product_ids.includes(Number(prod.product_id)))
       : products;
 
-    const filteredServices = service_ids?.length
-      ? services.filter((srv) => service_ids.includes(srv.id))
+    const filteredServices = hasServiceFilter
+      ? services.filter((srv) => service_ids.includes(Number(srv.service_id)))
       : services;
 
     const combinations = [];

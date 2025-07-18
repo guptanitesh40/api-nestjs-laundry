@@ -179,10 +179,15 @@ export class OrderController {
   async createorder(
     @Request() req,
     @Body() createOrderDto: CreateOrderDto,
+    @Query('quick_order_by_admin') quick_order_by_admin?: boolean,
   ): Promise<Response> {
     const admin_id = req.user;
 
-    return this.orderService.createAdminOrder(createOrderDto, admin_id.user_id);
+    return this.orderService.createAdminOrder(
+      createOrderDto,
+      admin_id.user_id,
+      quick_order_by_admin,
+    );
   }
 
   @Get('admin/orders')
