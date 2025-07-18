@@ -530,6 +530,7 @@ export class OrderService {
       .leftJoinAndSelect('items.service', 'service')
       .leftJoinAndSelect('order.branch', 'branch')
       .leftJoinAndSelect('order.orderLogs', 'orderLog')
+      .leftJoinAndSelect('orderLog.user', 'userLog')
       .leftJoin('order.pickup_boy', 'pickupBoy')
       .addSelect([
         'pickupBoy.user_id',
@@ -578,6 +579,11 @@ export class OrderService {
         'orderLog.user_id',
         'orderLog.order_id',
         'orderLog.type',
+        'userLog.user_id',
+        'userLog.first_name',
+        'userLog.last_name',
+        'userLog.email',
+        'userLog.mobile_number',
       ])
       .take(perPage)
       .skip(skip);
@@ -898,6 +904,7 @@ export class OrderService {
       .leftJoinAndSelect('notes.user', 'note_user')
       .leftJoinAndSelect('order.company', 'company')
       .leftJoinAndSelect('order.orderLogs', 'orderLog')
+      .leftJoinAndSelect('orderLog.user', 'userLog')
       .leftJoin('order.pickup_boy', 'pickupBoy')
       .addSelect([
         'pickupBoy.user_id',
@@ -966,6 +973,11 @@ export class OrderService {
         'orderLog.user_id',
         'orderLog.order_id',
         'orderLog.type',
+        'userLog.user_id',
+        'userLog.first_name',
+        'userLog.last_name',
+        'userLog.email',
+        'userLog.mobile_number',
       ]);
 
     const orders: any = await queryBuilder.getOne();
@@ -2646,6 +2658,8 @@ export class OrderService {
       .innerJoinAndSelect('order.workshop', 'workshop')
       .leftJoinAndSelect('workshop.workshopManagerMappings', 'mapping')
       .leftJoinAndSelect('mapping.user', 'manager_user')
+      .leftJoinAndSelect('order.orderLogs', 'orderLog')
+      .leftJoinAndSelect('orderLog.user', 'userLog')
       .where('order.deleted_at IS NULL')
       .leftJoin('order.pickup_boy', 'pickupBoy')
       .addSelect([
@@ -2688,6 +2702,13 @@ export class OrderService {
         'pickupBoy.last_name',
         'pickupBoy.email',
         'pickupBoy.mobile_number',
+        'orderLog.user_id',
+        'orderLog.order_id',
+        'orderLog.type',
+        'userLog.first_name',
+        'userLog.last_name',
+        'userLog.email',
+        'userLog.mobile_number',
       ])
       .take(perPage)
       .skip(skip);
