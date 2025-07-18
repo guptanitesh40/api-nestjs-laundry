@@ -32,10 +32,7 @@ export class PriceController {
   @UseGuards(RolesGuard)
   @UseGuards(AuthGuard('jwt'))
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
-  async getAllPrices(
-    @Query() filterDto: PriceFilterDto,
-    // @Query('requiredKeys') requiredKeys?: string[],
-  ): Promise<Response> {
+  async getAllPrices(@Query() filterDto: PriceFilterDto): Promise<Response> {
     return await this.priceService.getAllPrices(filterDto);
   }
 

@@ -525,8 +525,6 @@ export class OrderService {
       .leftJoinAndSelect('items.product', 'product')
       .leftJoinAndSelect('items.service', 'service')
       .leftJoinAndSelect('order.branch', 'branch')
-      // .leftJoinAndSelect('order.orderLogs', 'orderLog')
-      // .leftJoinAndSelect('orderLog.user', 'userLog')
       .leftJoin('order.orderLogs', 'orderLog')
       .leftJoin('orderLog.user', 'userLog')
       .addSelect([
