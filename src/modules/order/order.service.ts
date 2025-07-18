@@ -298,6 +298,7 @@ export class OrderService {
 
         if (orderItemsMap.has(key)) {
           const existingItem = orderItemsMap.get(key);
+
           existingItem.quantity += item.quantity || 1;
         } else {
           orderItemsMap.set(key, {
@@ -329,11 +330,6 @@ export class OrderService {
         coupon_discount = couponValidation.data.discountAmount;
         calculatedSubTotal -= coupon_discount;
       }
-      if (calculatedSubTotal !== createOrderDto.sub_total) {
-        throw new Error(
-          'Sub-total mismatch: Please verify item prices and quantities.',
-        );
-      }
 
       if (
         createOrderDto.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH
@@ -345,7 +341,7 @@ export class OrderService {
       const order = this.orderRepository.create({
         ...createOrderDto,
         normal_delivery_charges: createOrderDto.normal_delivery_charges || 0,
-        sub_total: calculatedSubTotal,
+        sub_total: createOrderDto.sub_total,
         user_id: user_id | createOrderDto.user_id,
         total,
         coupon_code,
@@ -529,8 +525,19 @@ export class OrderService {
       .leftJoinAndSelect('items.product', 'product')
       .leftJoinAndSelect('items.service', 'service')
       .leftJoinAndSelect('order.branch', 'branch')
-      .leftJoinAndSelect('order.orderLogs', 'orderLog')
-      .leftJoinAndSelect('orderLog.user', 'userLog')
+      .leftJoin('order.orderLogs', 'orderLog')
+      .leftJoin('orderLog.user', 'userLog')
+      .addSelect([
+        'orderLog.user_id',
+        'orderLog.order_id',
+        'orderLog.type',
+        'userLog.user_id',
+        'userLog.first_name',
+        'userLog.last_name',
+        'userLog.email',
+        'userLog.mobile_number',
+      ])
+
       .leftJoin('order.pickup_boy', 'pickupBoy')
       .addSelect([
         'pickupBoy.user_id',
@@ -807,6 +814,17 @@ export class OrderService {
     queryBuilder.orderBy(sortColumn, sortOrder);
 
     const [orders, total]: any = await queryBuilder.getManyAndCount();
+
+    const orderIds = orders.map((order) => order.order_id);
+
+    const orderLogs = await this.orderLogService.getAll(orderIds);
+
+    orders.forEach((order) => {
+      order.orderLogs = orderLogs.filter(
+        (log) => log.order_id === order.order_id,
+      );
+    });
+
     orders.map((order) => {
       if (order.total > order.paid_amount) {
         order.pending_due_amount =

@@ -10,7 +10,7 @@ import { ProductService } from './product.service';
   imports: [
     TypeOrmModule.forFeature([Product]),
     forwardRef(() => InvoiceModule),
-    PriceModule,
+    forwardRef(() => PriceModule),
   ],
   providers: [ProductService],
   controllers: [ProductController],
