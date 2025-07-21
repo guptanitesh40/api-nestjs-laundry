@@ -107,6 +107,7 @@ export class ReportService {
         'DATE_FORMAT(orders.created_at, "%Y-%m-%d") AS booking_date',
         'DATE_FORMAT(orders.estimated_pickup_time, "%Y-%m-%d") AS pickup_date',
         'DATE_FORMAT(orders.estimated_delivery_time, "%Y-%m-%d") AS delivery_date',
+        'orders.paid_amount AS paid_amount',
         'orders.total AS total_amount',
         'orders.address_details AS address_details',
         'orders.payment_status AS payment_status',
@@ -459,6 +460,12 @@ export class ReportService {
         'orders.address_details AS address_details',
         'orders.refund_amount AS refund_amount',
         'orders.updated_at AS refund_date',
+        `CASE orders.refund_status 
+        WHEN 1 THEN 'Full Refund'
+        WHEN 2 THEN 'Partial Refund'
+        WHEN 3 THEN 'None'
+        END AS payment_status
+        `,
       ])
       .where('orders.deleted_at IS NULL')
       .andWhere('customer.deleted_at IS NULL')
@@ -948,8 +955,18 @@ export class ReportService {
         "CONCAT(customer.first_name, ' ', customer.last_name) AS customer_name",
         'orders.gst_company_name AS customer_company_name',
         'orders.total AS total_amount',
-        'orders.payment_status AS payment_status',
-        'orders.payment_type AS payment_type',
+
+        `CASE orders.payment_status 
+        WHEN 1 THEN 'Payment Pending'
+        WHEN 2 THEN 'Full Payment Received'
+        WHEN 3 THEN 'Partial Payment Received'
+        END AS payment_status`,
+
+        `CASE orders.payment_type
+        WHEN 1 THEN 'Case On Delivery'
+        WHEN 2 THEN 'Online Payment'
+        END AS payment_type`,
+
         'orders.transaction_id AS transaction_id',
       ])
       .addSelect(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')

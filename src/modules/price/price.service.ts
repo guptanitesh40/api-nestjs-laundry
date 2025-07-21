@@ -34,42 +34,40 @@ export class PriceService {
       const incomingPrices = createPriceDto.prices.filter(
         (p) => p.price != null,
       );
+      const insertedPrices = [];
 
-      const existingPrices = await queryRunner.manager.find(Price, {
-        where: { deleted_at: IsNull() },
-      });
-
-      const changedPrices = incomingPrices.filter((incoming) => {
-        const existing = existingPrices.find(
-          (e) =>
-            e.product_id === incoming.product_id &&
-            e.service_id === incoming.service_id &&
-            e.category_id === incoming.category_id,
-        );
-
-        return !existing || existing.price !== incoming.price;
-      });
-
-      for (const changed of changedPrices) {
-        await queryRunner.manager.update(
-          Price,
-          {
-            product_id: changed.product_id,
-            service_id: changed.service_id,
-            category_id: changed.category_id,
+      for (const price of incomingPrices) {
+        const existing = await queryRunner.manager.findOne(Price, {
+          where: {
+            product_id: price.product_id,
+            service_id: price.service_id,
+            category_id: price.category_id,
             deleted_at: IsNull(),
           },
-          { deleted_at: new Date() },
-        );
+        });
+
+        if (!existing || existing.price !== price.price) {
+          if (existing) {
+            await queryRunner.manager.update(
+              Price,
+              { price_id: existing.price_id },
+              { deleted_at: new Date() },
+            );
+          }
+
+          insertedPrices.push(price);
+        }
       }
 
-      if (changedPrices.length > 0) {
-        await queryRunner.manager.insert(Price, changedPrices);
+      if (insertedPrices.length > 0) {
+        await queryRunner.manager.insert(Price, insertedPrices);
       }
+
+      await queryRunner.commitTransaction();
 
       return {
         statusCode: 201,
-        message: 'Price added successfully',
+        message: 'Prices updated successfully',
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -134,7 +132,7 @@ export class PriceService {
     const [categoryRes, productRes, serviceRes] = await Promise.all([
       this.categoryService.getAll(),
       this.productService.getAll(),
-      this.serviceService.getAll(),
+      this.serviceService.getAllServices(),
     ]);
 
     const categories = Array.isArray(categoryRes?.data?.category)
