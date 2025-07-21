@@ -8,19 +8,13 @@ export async function exportTotalOrderExcel(data: any[]): Promise<string> {
 
   worksheet.columns = [
     { header: 'ID', key: 'order_id' },
-    { header: 'Company', key: 'company' },
     { header: 'Branch', key: 'branch' },
     { header: 'Customer Name', key: 'customer_name' },
-    { header: 'Customer Company', key: 'customer_company_name' },
-    { header: 'Customer Address', key: 'address_details' },
-    { header: 'GSTIN', key: 'customer_gstin' },
     { header: 'Booking Date', key: 'booking_date' },
-    { header: 'Pickup Date', key: 'pickup_date' },
     { header: 'Delivery Date', key: 'delivery_date' },
+    { header: 'Paid Amount', key: 'paid_amount' },
     { header: 'Total Amount', key: 'total_amount' },
-    { header: 'Payment Status', key: 'payment_status' },
     { header: 'Pending Amount', key: 'pending_amount' },
-    { header: 'Payment Type', key: 'payment_type' },
     { header: 'Kasar Amount', key: 'kasar_amount' },
   ];
 
