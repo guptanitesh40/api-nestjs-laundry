@@ -10,11 +10,7 @@ export class OrderLogService {
     private readonly orderLogRepository: Repository<OrderLog>,
   ) {}
 
-  async create(
-    user_id: number,
-    order_id: number,
-    type: string,
-  ): Promise<OrderLog> {
+  async create(user_id: number, order_id: number, type: string): Promise<any> {
     const log = this.orderLogRepository.create({
       user_id,
       order_id,

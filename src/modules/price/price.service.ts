@@ -132,7 +132,7 @@ export class PriceService {
     const [categoryRes, productRes, serviceRes] = await Promise.all([
       this.categoryService.getAll(),
       this.productService.getAll(),
-      this.serviceService.getAll(),
+      this.serviceService.getAllServices(),
     ]);
 
     const categories = Array.isArray(categoryRes?.data?.category)

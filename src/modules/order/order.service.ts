@@ -206,6 +206,7 @@ export class OrderService {
       const user = await this.userService.findUserById(
         createOrderDto.user_id ?? user_id,
       );
+      console.log(user);
 
       await queryRunner.manager.findOne(Branch, {
         where: { branch_id: createOrderDto.branch_id, deleted_at: null },
@@ -336,12 +337,13 @@ export class OrderService {
       ) {
         createOrderDto.confirm_date = new Date();
       }
+      console.log('user_id', user_id);
 
       const order = this.orderRepository.create({
         ...createOrderDto,
         normal_delivery_charges: createOrderDto.normal_delivery_charges || 0,
         sub_total: createOrderDto.sub_total,
-        user_id: user_id | createOrderDto.user_id,
+        user_id: user_id || createOrderDto.user_id,
         total,
         coupon_code,
         coupon_discount,
@@ -355,16 +357,6 @@ export class OrderService {
         branch_id: createOrderDto.branch_id,
         transaction_id: createOrderDto?.transaction_id,
       });
-
-      if (
-        createOrderDto.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH
-      ) {
-        await this.orderLogService.create(
-          user_id,
-          order.order_id,
-          OrderLogType.CONFIRMED_BY,
-        );
-      }
 
       if (
         createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT &&
@@ -420,6 +412,7 @@ export class OrderService {
           });
         }
       }
+
       await this.cartService.removeCartByUser(user.user_id);
 
       orderDetail = {
@@ -460,6 +453,15 @@ export class OrderService {
     }
 
     try {
+      if (
+        createOrderDto.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH
+      ) {
+        await this.orderLogService.create(
+          orderDetail.user_id,
+          orderDetail.order_id,
+          OrderLogType.CONFIRMED_BY,
+        );
+      }
       await this.notificationService?.sendOrderNotification(orderDetail);
 
       await this.invoiceService.generateOrderLabels(orderDetail.order_id);

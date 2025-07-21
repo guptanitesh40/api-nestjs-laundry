@@ -28,6 +28,19 @@ export class ServicesService {
     };
   }
 
+  async getAllServices(): Promise<Response> {
+    const services = await this.serviceRepository.find({
+      where: { deleted_at: null },
+    });
+
+    const service = appendBaseUrlToImagesOrPdf(services);
+    return {
+      statusCode: 200,
+      message: 'Services retrieved successfully',
+      data: { services: service },
+    };
+  }
+
   async findAll(paginationQueryDto: PaginationQueryDto): Promise<Response> {
     const { per_page, page_number, search, sort_by, order } =
       paginationQueryDto;
