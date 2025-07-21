@@ -38,7 +38,7 @@ export async function exportPaymentTransactionExcel(
   data: any[],
 ): Promise<string> {
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Total Orders');
+  const worksheet = workbook.addWorksheet('Payment Transaction');
 
   worksheet.columns = [
     { header: 'ID', key: 'order_id' },
@@ -71,7 +71,7 @@ export async function exportPaymentTransactionExcel(
 
 export async function exportRefundOrderExcel(data: any[]): Promise<string> {
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Total Orders');
+  const worksheet = workbook.addWorksheet('Refund Orders');
 
   worksheet.columns = [
     { header: 'ID', key: 'order_id' },
@@ -110,15 +110,12 @@ export async function exportNotActiveCutomerExcel(
   data: any[],
 ): Promise<string> {
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Total Orders');
+  const worksheet = workbook.addWorksheet('Not Active Customer');
 
   worksheet.columns = [
-    { header: 'Company', key: 'company' },
     { header: 'Branch', key: 'branch' },
     { header: 'Customer Name', key: 'customer_name' },
-    { header: 'Customer Company', key: 'customer_company_name' },
     { header: 'Customer Address', key: 'address_details' },
-    { header: 'GSTIN', key: 'customer_gstin' },
     { header: 'Last Order Date', key: 'last_order_date' },
   ];
 
@@ -141,7 +138,7 @@ export async function exportNotActiveCutomerExcel(
 
 export async function exportGstExcel(data: any[]): Promise<string> {
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Total Orders');
+  const worksheet = workbook.addWorksheet('Gst');
 
   worksheet.columns = [
     { header: 'Order Number', key: 'order_id' },
@@ -178,12 +175,8 @@ export async function exportPickupExcel(data: any[]): Promise<string> {
     { header: 'Pickup Date', key: 'pickup_date' },
     { header: 'Pickup Done By', key: 'pickup_boy_name' },
     { header: 'Order Number', key: 'order_id' },
-    { header: 'Company', key: 'company' },
     { header: 'Branch', key: 'branch' },
     { header: 'Customer Name', key: 'customer_name' },
-    { header: 'Customer Company Name', key: 'customer_company_name' },
-    { header: 'Customer Address', key: 'address_details' },
-    { header: 'Customer GSTIN', key: 'customer_gstin' },
   ];
 
   worksheet.getRow(1).eachCell((cell) => {
