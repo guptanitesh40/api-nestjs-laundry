@@ -206,7 +206,6 @@ export class OrderService {
       const user = await this.userService.findUserById(
         createOrderDto.user_id ?? user_id,
       );
-      console.log(user);
 
       await queryRunner.manager.findOne(Branch, {
         where: { branch_id: createOrderDto.branch_id, deleted_at: null },
@@ -337,7 +336,6 @@ export class OrderService {
       ) {
         createOrderDto.confirm_date = new Date();
       }
-      console.log('user_id', user_id);
 
       const order = this.orderRepository.create({
         ...createOrderDto,
