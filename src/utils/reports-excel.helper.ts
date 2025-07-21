@@ -1,6 +1,5 @@
 import * as ExcelJS from 'exceljs';
 import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 
 export async function exportTotalOrderExcel(data: any[]): Promise<string> {
   const workbook = new ExcelJS.Workbook();
@@ -24,7 +23,10 @@ export async function exportTotalOrderExcel(data: any[]): Promise<string> {
 
   worksheet.addRows(data);
 
-  const fileName = `total-order-${uuidv4()}.xlsx`;
+  const reportName = 'Total-orders-Report';
+  const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+  const fileName = `${reportName}-${dateStr}.xlsx`;
+
   const exportPath = path.join(__dirname, '..', '..', 'pdf', fileName);
   await workbook.xlsx.writeFile(exportPath);
 
@@ -56,7 +58,10 @@ export async function exportPaymentTransactionExcel(
 
   worksheet.addRows(data);
 
-  const fileName = `transaction-report-${uuidv4()}.xlsx`;
+  const reportName = 'Transaction-Report';
+  const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+  const fileName = `${reportName}-${dateStr}.xlsx`;
+
   const exportPath = path.join(__dirname, '..', '..', 'pdf', fileName);
   await workbook.xlsx.writeFile(exportPath);
 
@@ -90,7 +95,10 @@ export async function exportRefundOrderExcel(data: any[]): Promise<string> {
 
   worksheet.addRows(data);
 
-  const fileName = `refund-order-${uuidv4()}.xlsx`;
+  const reportName = 'Refund-Orders-Report';
+  const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+  const fileName = `${reportName}-${dateStr}.xlsx`;
+
   const exportPath = path.join(__dirname, '..', '..', 'pdf', fileName);
   await workbook.xlsx.writeFile(exportPath);
 
@@ -120,7 +128,10 @@ export async function exportNotActiveCutomerExcel(
 
   worksheet.addRows(data);
 
-  const fileName = `not-active-customer-${uuidv4()}.xlsx`;
+  const reportName = 'Not-Active-Customer-Report';
+  const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+  const fileName = `${reportName}-${dateStr}.xlsx`;
+
   const exportPath = path.join(__dirname, '..', '..', 'pdf', fileName);
   await workbook.xlsx.writeFile(exportPath);
 
@@ -148,7 +159,10 @@ export async function exportGstExcel(data: any[]): Promise<string> {
 
   worksheet.addRows(data);
 
-  const fileName = `gst-report-${uuidv4()}.xlsx`;
+  const reportName = 'Gst-Report';
+  const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+  const fileName = `${reportName}-${dateStr}.xlsx`;
+
   const exportPath = path.join(__dirname, '..', '..', 'pdf', fileName);
   await workbook.xlsx.writeFile(exportPath);
 
@@ -178,7 +192,10 @@ export async function exportPickupExcel(data: any[]): Promise<string> {
 
   worksheet.addRows(data);
 
-  const fileName = `pickup-${uuidv4()}.xlsx`;
+  const reportName = 'Pickup-Report';
+  const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+  const fileName = `${reportName}-${dateStr}.xlsx`;
+
   const exportPath = path.join(__dirname, '..', '..', 'pdf', fileName);
   await workbook.xlsx.writeFile(exportPath);
 
@@ -210,7 +227,10 @@ export async function exportDeliveryExcel(data: any[]): Promise<string> {
 
   worksheet.addRows(data);
 
-  const fileName = `delivery-${uuidv4()}.xlsx`;
+  const reportName = 'Transaction-Report';
+  const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+  const fileName = `${reportName}-${dateStr}.xlsx`;
+
   const exportPath = path.join(__dirname, '..', '..', 'pdf', fileName);
   await workbook.xlsx.writeFile(exportPath);
 
