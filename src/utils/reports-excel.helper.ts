@@ -45,7 +45,7 @@ export async function exportPaymentTransactionExcel(
     { header: 'Company', key: 'company' },
     { header: 'Branch', key: 'branch' },
     { header: 'Customer Name', key: 'customer_name' },
-    { header: 'Customer Company', key: 'customer_company_name' },
+    // { header: 'Customer Company', key: 'customer_company_name' },
     { header: 'Total Amount', key: 'total_amount' },
     { header: 'Payment Status', key: 'payment_status' },
     { header: 'Payment Type', key: 'payment_type' },
@@ -78,9 +78,7 @@ export async function exportRefundOrderExcel(data: any[]): Promise<string> {
     { header: 'Company', key: 'company' },
     { header: 'Branch', key: 'branch' },
     { header: 'Customer Name', key: 'customer_name' },
-    { header: 'Customer Company', key: 'customer_company_name' },
     { header: 'Customer Address', key: 'address_details' },
-    { header: 'GSTIN', key: 'customer_gstin' },
     { header: 'Booking Date', key: 'booking_date' },
     { header: 'Pickup Date', key: 'pickup_date' },
     { header: 'Delivery Date', key: 'delivery_date' },
@@ -145,9 +143,7 @@ export async function exportGstExcel(data: any[]): Promise<string> {
     { header: 'Company', key: 'company' },
     { header: 'Branch', key: 'branch' },
     { header: 'Customer Name', key: 'customer_name' },
-    { header: 'Customer Company', key: 'customer_company_name' },
     { header: 'Customer Address', key: 'address_details' },
-    { header: 'GSTIN', key: 'customer_gstin' },
   ];
 
   worksheet.getRow(1).eachCell((cell) => {
@@ -204,14 +200,12 @@ export async function exportDeliveryExcel(data: any[]): Promise<string> {
     { header: 'Delivery Date', key: 'delivery_date' },
     { header: 'Delivery Done By', key: 'delivery_boy_name' },
     { header: 'Order Number', key: 'order_id' },
-    { header: 'Company', key: 'company' },
     { header: 'Branch', key: 'branch' },
     { header: 'Customer Name', key: 'customer_name' },
     { header: 'Order Number', key: 'order_id' },
     { header: 'Payment Collected', key: 'paid_amount' },
     { header: 'Customer Company Name', key: 'customer_company_name' },
     { header: 'Customer Address', key: 'address_details' },
-    { header: 'Customer GSTIN', key: 'customer_gstin' },
   ];
 
   worksheet.getRow(1).eachCell((cell) => {
