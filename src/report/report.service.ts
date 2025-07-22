@@ -10,6 +10,7 @@ import { Role } from 'src/enum/role.enum';
 import { convertDateParameters } from 'src/utils/date-formatted.helper';
 import { Repository } from 'typeorm';
 import { UserService } from '../modules/user/user.service';
+import { ReportFilterDto } from './dto/report-filter.dto';
 
 @Injectable()
 export class ReportService {
@@ -30,10 +31,9 @@ export class ReportService {
     });
   }
 
-  async getTotalOrderReport(
-    startDate?: string,
-    endDate?: string,
-  ): Promise<any> {
+  async getTotalOrderReport(reportFilterDto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -83,11 +83,11 @@ export class ReportService {
   }
 
   async getTotalOrderExcelReport(
-    startDate?: string,
-    endDate?: string,
-    user_id?: number | number[],
-    company_id?: number | number[],
+    reportFilterDto: ReportFilterDto,
   ): Promise<any> {
+    const { startDate, endDate, user_id, company_id, branch_id } =
+      reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -139,6 +139,12 @@ export class ReportService {
       });
     }
 
+    if (branch_id) {
+      queryBuilder.andWhere('branch.branch_id In (:...branchId)', {
+        branchId: branch_id,
+      });
+    }
+
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
         'orders.created_at BETWEEN :startDate AND :endDate',
@@ -158,9 +164,9 @@ export class ReportService {
   }
 
   async getDeliveryCompletedReport(
-    startDate?: string,
-    endDate?: string,
+    reportFilterDto: ReportFilterDto,
   ): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -209,9 +215,9 @@ export class ReportService {
   }
 
   async getDeliveryPendingReport(
-    startDate?: string,
-    endDate?: string,
+    reportFilterDto: ReportFilterDto,
   ): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -251,7 +257,8 @@ export class ReportService {
     return result;
   }
 
-  async getDeliveryReport(startDate?: string, endDate?: string): Promise<any> {
+  async getDeliveryReport(reportFilterDto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -300,7 +307,8 @@ export class ReportService {
     return result;
   }
 
-  async getPaymentReport(startDate?: string, endDate?: string): Promise<any> {
+  async getPaymentReport(reportFilterDto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -339,10 +347,8 @@ export class ReportService {
     return result;
   }
 
-  async getPendingAmountReport(
-    startDate?: string,
-    endDate?: string,
-  ): Promise<any> {
+  async getPendingAmountReport(reportFilterDto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
     const { startDate: formattedStartDate, endDate: formatedEndDate } =
       convertDateParameters(startDate, endDate);
     let queryBuilder = this.orderRepository
@@ -395,7 +401,9 @@ export class ReportService {
     return result;
   }
 
-  async getRefundReport(startDate?: string, endDate?: string): Promise<any> {
+  async getRefundReport(reportFilterDto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -432,11 +440,9 @@ export class ReportService {
     return result;
   }
 
-  async getRefundExcelReport(
-    startDate?: string,
-    endDate?: string,
-    company_id?: number | number[],
-  ): Promise<any> {
+  async getRefundExcelReport(reportFilterDto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate, company_id, branch_id } = reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -494,6 +500,12 @@ export class ReportService {
       });
     }
 
+    if (branch_id) {
+      queryBuilder.andWhere('branch.branch_id In (:...branchId)', {
+        branchId: branch_id,
+      });
+    }
+
     const result = await queryBuilder
       .orderBy('orders.created_at', 'ASC')
       .getRawMany();
@@ -501,7 +513,8 @@ export class ReportService {
     return result;
   }
 
-  async getKasarReport(startDate?: string, endDate?: string): Promise<any> {
+  async getKasarReport(reportFilterDto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -537,9 +550,9 @@ export class ReportService {
   }
 
   async getNotActiveCustomerReport(
-    startDate?: string,
-    endDate?: string,
+    reportFilterDto: ReportFilterDto,
   ): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -588,11 +601,11 @@ export class ReportService {
   }
 
   async getNotActiveCustomerExcelReport(
-    startDate?: string,
-    endDate?: string,
-    user_id?: number | number[],
-    company_id?: number | number[],
+    reportFilterDto: ReportFilterDto,
   ): Promise<any> {
+    const { startDate, endDate, user_id, company_id, branch_id } =
+      reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -650,6 +663,12 @@ export class ReportService {
       });
     }
 
+    if (branch_id) {
+      queryBuilder.andWhere('branch.branch_is In (:...branchId)', {
+        branchId: branch_id,
+      });
+    }
+
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
         'user.created_at BETWEEN :startDate AND :endDate',
@@ -672,9 +691,10 @@ export class ReportService {
   }
 
   async getNewCustomerAcquisitionReport(
-    startDate?: string,
-    endDate?: string,
+    reportFilterDto: ReportFilterDto,
   ): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
     let queryBuilder = this.userRespository
@@ -709,9 +729,10 @@ export class ReportService {
   }
 
   async getCustomerActivityReport(
-    startDate?: string,
-    endDate?: string,
+    reportFilterDto: ReportFilterDto,
   ): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -747,10 +768,9 @@ export class ReportService {
     return result;
   }
 
-  async getSalesBookingReport(
-    startDate?: string,
-    endDate?: string,
-  ): Promise<any> {
+  async getSalesBookingReport(reportFilterDto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -798,7 +818,8 @@ export class ReportService {
     return result;
   }
 
-  async getFeedbackTrends(startDate?: string, endDate?: string): Promise<any> {
+  async getFeedbackTrends(reportFilterDto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -830,10 +851,10 @@ export class ReportService {
   }
 
   async getBranchWiseSalesAndCollectionsReport(
-    startDate?: string,
-    endDate?: string,
-    branch_id?: number,
+    reportFilterDto: ReportFilterDto,
   ): Promise<any> {
+    const { startDate, endDate, branch_id } = reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -887,9 +908,10 @@ export class ReportService {
   }
 
   async getPaymentTransactionReport(
-    startDate?: string,
-    endDate?: string,
+    reportFilterDto: ReportFilterDto,
   ): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -934,11 +956,11 @@ export class ReportService {
   }
 
   async getPaymentTransactionExcelReport(
-    startDate?: string,
-    endDate?: string,
-    user_id?: number | number[],
-    company_id?: number | number[],
+    reportFilterDto: ReportFilterDto,
   ): Promise<any> {
+    const { startDate, endDate, user_id, company_id, branch_id } =
+      reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -997,6 +1019,12 @@ export class ReportService {
       });
     }
 
+    if (branch_id) {
+      queryBuilder.andWhere('company.branch_id In (:...branchId)', {
+        branchId: branch_id,
+      });
+    }
+
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
         'orders.created_at BETWEEN :startDate AND :endDate',
@@ -1015,12 +1043,9 @@ export class ReportService {
     return result;
   }
 
-  async getGstExcelReport(
-    startDate?: string,
-    endDate?: string,
-    user_id?: number | number[],
-    company_id?: number | number[],
-  ): Promise<any> {
+  async getGstExcelReport(reportFilterDto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate, user_id, company_id, branch_id } =
+      reportFilterDto;
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -1066,6 +1091,12 @@ export class ReportService {
       });
     }
 
+    if (branch_id) {
+      queryBuilder.andWhere('branch.branch_id In (:...branchId)', {
+        branchId: branch_id,
+      });
+    }
+
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
         'orders.created_at BETWEEN :startDate AND :endDate',
@@ -1084,12 +1115,10 @@ export class ReportService {
     return result;
   }
 
-  async getPickupExcelReport(
-    startDate?: string,
-    endDate?: string,
-    user_id?: number | number[],
-    company_id?: number | number[],
-  ): Promise<any> {
+  async getPickupExcelReport(reportFilterDto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate, user_id, company_id, branch_id } =
+      reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -1135,6 +1164,12 @@ export class ReportService {
       });
     }
 
+    if (branch_id) {
+      queryBuilder.andWhere('branch.branch_id In (:...branchId)', {
+        branchId: branch_id,
+      });
+    }
+
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
         'orders.created_at BETWEEN :startDate AND :endDate',
@@ -1153,12 +1188,10 @@ export class ReportService {
     return result;
   }
 
-  async getDeliveryExcelReport(
-    startDate?: string,
-    endDate?: string,
-    user_id?: number | number[],
-    company_id?: number | number[],
-  ): Promise<any> {
+  async getDeliveryExcelReport(reportFilterDto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate, user_id, company_id, branch_id } =
+      reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 
@@ -1208,6 +1241,17 @@ export class ReportService {
       });
     }
 
+    if (company_id) {
+      queryBuilder.andWhere('company.company_id In (:...companyId)', {
+        companyId: company_id,
+      });
+    }
+    if (branch_id) {
+      queryBuilder.andWhere('brach.branch_id In (:...branchId)', {
+        branchId: branch_id,
+      });
+    }
+
     if (formattedStartDate && formattedEndDate) {
       queryBuilder = queryBuilder.andWhere(
         'orders.created_at BETWEEN :startDate AND :endDate',
@@ -1228,9 +1272,10 @@ export class ReportService {
 
   async getBranchWiseOrderSummary(
     user?: any,
-    startDate?: string,
-    endDate?: string,
+    reportFilterDto?: ReportFilterDto,
   ): Promise<any> {
+    const { startDate, endDate } = reportFilterDto;
+
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
       convertDateParameters(startDate, endDate);
 

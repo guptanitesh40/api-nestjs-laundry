@@ -455,7 +455,7 @@ export class OrderService {
         createOrderDto.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH
       ) {
         await this.orderLogService.create(
-          orderDetail.user_id,
+          createOrderDto.created_by_user_id,
           orderDetail.order_id,
           OrderLogType.CONFIRMED_BY,
         );
@@ -3152,6 +3152,8 @@ export class OrderService {
       order.paid_amount += orderData.paid_amount;
       order.kasar_amount = orderData.kasar_amount;
 
+      order.delivery_date = new Date();
+
       order.payment_status = orderData.payment_status;
 
       updatedOrders.push(order);
@@ -3241,7 +3243,7 @@ export class OrderService {
 
       order.paid_amount += orderData.paid_amount;
       order.kasar_amount = orderData.kasar_amount;
-
+      order.delivery_date = new Date();
       order.payment_status = orderData.payment_status;
 
       updatedOrders.push(order);
