@@ -10,6 +10,7 @@ import {
   exportRefundOrderExcel,
   exportTotalOrderExcel,
 } from 'src/utils/reports-excel.helper';
+import { ReportFilterDto } from './dto/report-filter.dto';
 import { ReportService } from './report.service';
 
 @Controller('report')
@@ -19,225 +20,116 @@ export class ReportController {
   constructor(private readonly reportService: ReportService) {}
 
   @Get('total-orders')
-  async getTotalOrderReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('user_id') user_id?: number | number[],
-    @Query('format') format?: string,
-    @Query('company_id') company_id?: number | number[],
-  ) {
-    const userIds = Array.isArray(user_id)
-      ? user_id.map(Number)
-      : user_id
-        ? String(user_id).split(',').map(Number)
-        : undefined;
-
-    const companyIds = Array.isArray(company_id)
-      ? company_id.map(Number)
-      : company_id
-        ? String(company_id).split(',').map(Number)
-        : undefined;
-
-    if (format === 'excel') {
-      const data = await this.reportService.getTotalOrderExcelReport(
-        startDate,
-        endDate,
-        userIds,
-        companyIds,
-      );
+  async getTotalOrderReport(@Query() reportFilterDto: ReportFilterDto) {
+    if (reportFilterDto.format === 'excel') {
+      const data =
+        await this.reportService.getTotalOrderExcelReport(reportFilterDto);
       const fileUrl = await exportTotalOrderExcel(data);
 
       return { url: fileUrl };
     }
 
-    return this.reportService.getTotalOrderReport(startDate, endDate);
+    return this.reportService.getTotalOrderReport(reportFilterDto);
   }
 
   @Get('delivery-completed-report')
-  async getDeliveryCompletedReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    return this.reportService.getDeliveryCompletedReport(startDate, endDate);
+  async getDeliveryCompletedReport(@Query() reportFilterDto: ReportFilterDto) {
+    return this.reportService.getDeliveryCompletedReport(reportFilterDto);
   }
 
   @Get('delivery-pending-report')
-  async getDeliveryPendingReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    return this.reportService.getDeliveryPendingReport(startDate, endDate);
+  async getDeliveryPendingReport(@Query() reportFilterDto: ReportFilterDto) {
+    return this.reportService.getDeliveryPendingReport(reportFilterDto);
   }
 
   @Get('delivery-report')
-  async getDelievryReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    return this.reportService.getDeliveryReport(startDate, endDate);
+  async getDelievryReport(@Query() reportFilterDto: ReportFilterDto) {
+    return this.reportService.getDeliveryReport(reportFilterDto);
   }
 
   @Get('payment-type-report')
-  async getPaymentTypeReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    return this.reportService.getPaymentReport(startDate, endDate);
+  async getPaymentTypeReport(@Query() reportFilterDto: ReportFilterDto) {
+    return this.reportService.getPaymentReport(reportFilterDto);
   }
 
   @Get('pending-amount-report')
-  async getPendingAmountReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    return this.reportService.getPendingAmountReport(startDate, endDate);
+  async getPendingAmountReport(@Query() reportFilterDto: ReportFilterDto) {
+    return this.reportService.getPendingAmountReport(reportFilterDto);
   }
 
   @Get('refund-report')
-  async getRefundReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('format') format?: string,
-    @Query('company_id') company_id?: number | number[],
-  ) {
-    const companyIds = Array.isArray(company_id)
-      ? company_id.map(Number)
-      : company_id
-        ? String(company_id).split(',').map(Number)
-        : undefined;
-
-    if (format === 'excel') {
-      const data = await this.reportService.getRefundExcelReport(
-        startDate,
-        endDate,
-        companyIds,
-      );
+  async getRefundReport(@Query() reportFilterDto: ReportFilterDto) {
+    if (reportFilterDto.format === 'excel') {
+      const data =
+        await this.reportService.getRefundExcelReport(reportFilterDto);
       const fileUrl = await exportRefundOrderExcel(data);
 
       return { url: fileUrl };
     }
 
-    return this.reportService.getRefundReport(startDate, endDate);
+    return this.reportService.getRefundReport(reportFilterDto);
   }
 
   @Get('kasar-report')
-  async getKasarReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    return this.reportService.getKasarReport(startDate, endDate);
+  async getKasarReport(@Query() reportFilterDto: ReportFilterDto) {
+    return this.reportService.getKasarReport(reportFilterDto);
   }
 
   @Get('inactive-customer-report')
-  async getInactiveCustomerReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('format') format?: string,
-    @Query('user_id') user_id?: number | number[],
-    @Query('company_id') company_id?: number | number[],
-  ) {
-    const userIds = Array.isArray(user_id)
-      ? user_id.map(Number)
-      : user_id
-        ? String(user_id).split(',').map(Number)
-        : undefined;
-
-    const companyIds = Array.isArray(company_id)
-      ? company_id.map(Number)
-      : company_id
-        ? String(company_id).split(',').map(Number)
-        : undefined;
-
-    if (format === 'excel') {
-      const data = await this.reportService.getNotActiveCustomerExcelReport(
-        startDate,
-        endDate,
-        userIds,
-        companyIds,
-      );
+  async getInactiveCustomerReport(@Query() reportFilterDto: ReportFilterDto) {
+    if (reportFilterDto.format === 'excel') {
+      const data =
+        await this.reportService.getNotActiveCustomerExcelReport(
+          reportFilterDto,
+        );
       const fileUrl = await exportNotActiveCutomerExcel(data);
 
       return { url: fileUrl };
     }
 
-    return this.reportService.getNotActiveCustomerReport(startDate, endDate);
+    return this.reportService.getNotActiveCustomerReport(reportFilterDto);
   }
 
   @Get('new-customer-acquisition-report')
   async getNewCustomerAcquisitionReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
+    @Query() reportFilterDto: ReportFilterDto,
   ) {
-    return this.reportService.getNewCustomerAcquisitionReport(
-      startDate,
-      endDate,
-    );
+    return this.reportService.getNewCustomerAcquisitionReport(reportFilterDto);
   }
 
   @Get('customer-activity')
-  async getCustomerActivityReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    return this.reportService.getCustomerActivityReport(startDate, endDate);
+  async getCustomerActivityReport(@Query() reportFilterDto: ReportFilterDto) {
+    return this.reportService.getCustomerActivityReport(reportFilterDto);
   }
 
   @Get('sales-booking')
-  async getSalesBookingReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    return this.reportService.getSalesBookingReport(startDate, endDate);
+  async getSalesBookingReport(@Query() reportFilterDto: ReportFilterDto) {
+    return this.reportService.getSalesBookingReport(reportFilterDto);
   }
 
   @Get('customers-feedback')
-  async getFeedbacks(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    return this.reportService.getFeedbackTrends(startDate, endDate);
+  async getFeedbacks(@Query() reportFilterDto: ReportFilterDto) {
+    return this.reportService.getFeedbackTrends(reportFilterDto);
   }
 
   @Get('branch-wise-sales-collections')
   async getBranchWiseSalesAndCollectionReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('branch_id') branch_id?: number,
+    @Query() reportFilterDto: ReportFilterDto,
   ) {
     return this.reportService.getBranchWiseSalesAndCollectionsReport(
-      startDate,
-      endDate,
-      branch_id,
+      reportFilterDto,
     );
   }
 
   @Get('payment-transaction')
   async getPaymentTransactionReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('format') format?: 'pdf' | 'excel',
-    @Query('user_id') user_id?: number | number[],
-    @Query('company_id') company_id?: number | number[],
+    @Query() reportFilterDto: ReportFilterDto,
   ): Promise<any> {
-    const userIds = Array.isArray(user_id)
-      ? user_id.map(Number)
-      : user_id
-        ? String(user_id).split(',').map(Number)
-        : undefined;
-
-    const companyIds = Array.isArray(company_id)
-      ? company_id.map(Number)
-      : company_id
-        ? String(company_id).split(',').map(Number)
-        : undefined;
-
-    if (format === 'excel') {
-      const data = await this.reportService.getPaymentTransactionExcelReport(
-        startDate,
-        endDate,
-        userIds,
-        companyIds,
-      );
+    if (reportFilterDto.format === 'excel') {
+      const data =
+        await this.reportService.getPaymentTransactionExcelReport(
+          reportFilterDto,
+        );
 
       const fileUrl = await exportPaymentTransactionExcel(data);
 
@@ -245,35 +137,15 @@ export class ReportController {
     }
 
     return await this.reportService.getPaymentTransactionReport(
-      startDate,
-      endDate,
+      reportFilterDto,
     );
   }
 
   @Get('gst')
   async getGstExcelReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('user_id') user_id?: number | number[],
-    @Query('company_id') company_id?: number | number[],
+    @Query() reportFilterDto: ReportFilterDto,
   ): Promise<any> {
-    const userIds = Array.isArray(user_id)
-      ? user_id.map(Number)
-      : user_id
-        ? String(user_id).split(',').map(Number)
-        : undefined;
-
-    const companyIds = Array.isArray(company_id)
-      ? company_id.map(Number)
-      : company_id
-        ? String(company_id).split(',').map(Number)
-        : undefined;
-    const data = await this.reportService.getGstExcelReport(
-      startDate,
-      endDate,
-      userIds,
-      companyIds,
-    );
+    const data = await this.reportService.getGstExcelReport(reportFilterDto);
 
     const fileUrl = await exportGstExcel(data);
 
@@ -282,29 +154,9 @@ export class ReportController {
 
   @Get('pickup')
   async getPickupExcelReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('user_id') user_id?: number | number[],
-    @Query('company_id') company_id?: number | number[],
+    @Query() reportFilterDto: ReportFilterDto,
   ): Promise<any> {
-    const userIds = Array.isArray(user_id)
-      ? user_id.map(Number)
-      : user_id
-        ? String(user_id).split(',').map(Number)
-        : undefined;
-
-    const companyIds = Array.isArray(company_id)
-      ? company_id.map(Number)
-      : company_id
-        ? String(company_id).split(',').map(Number)
-        : undefined;
-
-    const data = await this.reportService.getPickupExcelReport(
-      startDate,
-      endDate,
-      userIds,
-      companyIds,
-    );
+    const data = await this.reportService.getPickupExcelReport(reportFilterDto);
 
     const fileUrl = await exportPickupExcel(data);
 
@@ -313,29 +165,10 @@ export class ReportController {
 
   @Get('delivery')
   async getDeliveryExcelReport(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('user_id') user_id?: number | number[],
-    @Query('company_id') company_id?: number | number[],
+    @Query() reportFilterDto: ReportFilterDto,
   ): Promise<any> {
-    const userIds = Array.isArray(user_id)
-      ? user_id.map(Number)
-      : user_id
-        ? String(user_id).split(',').map(Number)
-        : undefined;
-
-    const companyIds = Array.isArray(company_id)
-      ? company_id.map(Number)
-      : company_id
-        ? String(company_id).split(',').map(Number)
-        : undefined;
-
-    const data = await this.reportService.getDeliveryExcelReport(
-      startDate,
-      endDate,
-      userIds,
-      companyIds,
-    );
+    const data =
+      await this.reportService.getDeliveryExcelReport(reportFilterDto);
 
     const fileUrl = await exportDeliveryExcel(data);
 
@@ -345,14 +178,9 @@ export class ReportController {
   @Get('branch-wise-summary')
   async getBranchWiseOrderSummary(
     @Request() req,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
+    @Query() reportFilterDto: ReportFilterDto,
   ) {
     const user = req.user;
-    return this.reportService.getBranchWiseOrderSummary(
-      user,
-      startDate,
-      endDate,
-    );
+    return this.reportService.getBranchWiseOrderSummary(user, reportFilterDto);
   }
 }

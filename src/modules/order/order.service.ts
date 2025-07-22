@@ -455,7 +455,7 @@ export class OrderService {
         createOrderDto.order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH
       ) {
         await this.orderLogService.create(
-          orderDetail.user_id,
+          createOrderDto.created_by_user_id,
           orderDetail.order_id,
           OrderLogType.CONFIRMED_BY,
         );
