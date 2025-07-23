@@ -27,6 +27,7 @@ import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
 import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
 import { DeviceType } from 'src/enum/device_type.enum';
+import { OrderStatus } from 'src/enum/order-status.eum';
 import { OtpType } from 'src/enum/otp.enum';
 import { PaymentStatus } from 'src/enum/payment.enum';
 import { Role } from 'src/enum/role.enum';
@@ -599,6 +600,12 @@ export class UserService {
 
     let pending_due_amount = 0;
     for (const order of user.orders) {
+      if (
+        order.order_status === OrderStatus.CANCELLED_BY_ADMIN ||
+        order.order_status === OrderStatus.CANCELLED_BY_CUSTOMER
+      )
+        continue;
+
       const { pending_due_amount: orderDueAmount } =
         await this.calculatePendingDueAmount(order);
       pending_due_amount += orderDueAmount;

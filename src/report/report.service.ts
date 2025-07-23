@@ -1116,7 +1116,7 @@ export class ReportService {
   }
 
   async getPickupExcelReport(reportFilterDto: ReportFilterDto): Promise<any> {
-    const { startDate, endDate, user_id, company_id, branch_id } =
+    const { startDate, endDate, user_id, company_id, branch_id, driver_id } =
       reportFilterDto;
 
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
@@ -1168,6 +1168,10 @@ export class ReportService {
       queryBuilder.andWhere('branch.branch_id In (:...branchId)', {
         branchId: branch_id,
       });
+    }
+
+    if (driver_id) {
+      queryBuilder.andWhere('');
     }
 
     if (formattedStartDate && formattedEndDate) {

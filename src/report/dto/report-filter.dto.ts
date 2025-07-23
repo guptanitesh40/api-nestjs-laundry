@@ -19,6 +19,9 @@ export class ReportFilterDto {
   @applyNumberArrayValidation()
   branch_id?: number[];
 
+  @applyNumberArrayValidation()
+  driver_id?: number[];
+
   @IsOptional()
   format?: string;
 }

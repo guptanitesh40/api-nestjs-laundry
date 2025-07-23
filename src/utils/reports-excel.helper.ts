@@ -173,6 +173,12 @@ export async function exportPickupExcel(data: any[]): Promise<string> {
     { header: 'Order Number', key: 'order_id' },
     { header: 'Branch', key: 'branch' },
     { header: 'Customer Name', key: 'customer_name' },
+    { header: 'Total Amount', key: 'total_amount' },
+    { header: 'Paid Amount', key: 'paid_amount' },
+    { header: 'Pending Amount', key: 'pending_amount' },
+    { header: 'Payment Status', key: 'payment_status' },
+    { header: 'Kasar Amount', key: 'kasar_amount' },
+    { header: 'Delivery Collect Amount', key: 'delivery_collect_amount' },
   ];
 
   worksheet.getRow(1).eachCell((cell) => {
@@ -206,6 +212,12 @@ export async function exportDeliveryExcel(data: any[]): Promise<string> {
     { header: 'Payment Collected', key: 'paid_amount' },
     { header: 'Customer Company Name', key: 'customer_company_name' },
     { header: 'Customer Address', key: 'address_details' },
+    { header: 'Total Amount', key: 'total_amount' },
+    { header: 'Paid Amount', key: 'paid_amount' },
+    { header: 'Pending Amount', key: 'pending_amount' },
+    { header: 'Payment Status', key: 'payment_status' },
+    { header: 'Kasar Amount', key: 'kasar_amount' },
+    { header: 'Delivery Collect Amount', key: 'delivery_collect_amount' },
   ];
 
   worksheet.getRow(1).eachCell((cell) => {
