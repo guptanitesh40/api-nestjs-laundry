@@ -1401,7 +1401,6 @@ export class OrderService {
         );
       }
     }
-    console.log(order_status);
 
     await this.orderRepository.save(orders);
 
