@@ -1378,6 +1378,7 @@ export class OrderService {
       if (order_status === OrderStatus.WORKSHOP_ASSIGNED) {
         order.workshop_date = new Date();
       }
+
       if (order_status === OrderStatus.WORKSHOP_WORK_IS_COMPLETED) {
         await this.orderLogService.create(
           user_id,
@@ -1400,6 +1401,7 @@ export class OrderService {
         );
       }
     }
+    console.log(order_status);
 
     await this.orderRepository.save(orders);
 
@@ -1420,6 +1422,15 @@ export class OrderService {
       if (order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
         await this.invoiceService.generateOrderLabels(order.order_id);
       }
+
+      if (order_status === OrderStatus.ORDER_COMPLETED_AND_RECEIVED_AT_BRANCH) {
+        const orderDetails = (await this.getOrderDetail(order.order_id)).data;
+
+        await this.notificationService.sendOrderCompleteworkshopNotification(
+          orderDetails,
+        );
+      }
+
       const deviceToken = deviceTokens.find(
         (token) => token.user_id === order.user_id,
       )?.device_token;
