@@ -1171,7 +1171,9 @@ export class ReportService {
     }
 
     if (driver_id) {
-      queryBuilder.andWhere('');
+      queryBuilder.andWhere('order.pickup_boy_id In (:...driverId)', {
+        driverId: driver_id,
+      });
     }
 
     if (formattedStartDate && formattedEndDate) {
@@ -1193,7 +1195,7 @@ export class ReportService {
   }
 
   async getDeliveryExcelReport(reportFilterDto: ReportFilterDto): Promise<any> {
-    const { startDate, endDate, user_id, company_id, branch_id } =
+    const { startDate, endDate, user_id, company_id, branch_id, driver_id } =
       reportFilterDto;
 
     const { startDate: formattedStartDate, endDate: formattedEndDate } =
@@ -1253,6 +1255,12 @@ export class ReportService {
     if (branch_id) {
       queryBuilder.andWhere('brach.branch_id In (:...branchId)', {
         branchId: branch_id,
+      });
+    }
+
+    if (driver_id) {
+      queryBuilder.andWhere('order.delivery_boy_id In (:...driverId)', {
+        driverId: driver_id,
       });
     }
 
