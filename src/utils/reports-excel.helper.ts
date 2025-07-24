@@ -45,7 +45,6 @@ export async function exportPaymentTransactionExcel(
     { header: 'Company', key: 'company' },
     { header: 'Branch', key: 'branch' },
     { header: 'Customer Name', key: 'customer_name' },
-    // { header: 'Customer Company', key: 'customer_company_name' },
     { header: 'Total Amount', key: 'total_amount' },
     { header: 'Payment Status', key: 'payment_status' },
     { header: 'Payment Type', key: 'payment_type' },
@@ -209,7 +208,6 @@ export async function exportDeliveryExcel(data: any[]): Promise<string> {
     { header: 'Branch', key: 'branch' },
     { header: 'Customer Name', key: 'customer_name' },
     { header: 'Order Number', key: 'order_id' },
-    { header: 'Payment Collected', key: 'paid_amount' },
     { header: 'Customer Company Name', key: 'customer_company_name' },
     { header: 'Customer Address', key: 'address_details' },
     { header: 'Total Amount', key: 'total_amount' },
@@ -226,7 +224,7 @@ export async function exportDeliveryExcel(data: any[]): Promise<string> {
 
   worksheet.addRows(data);
 
-  const reportName = 'Transaction-Report';
+  const reportName = 'Delivery-Report';
   const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
   const fileName = `${reportName}-${dateStr}.xlsx`;
 

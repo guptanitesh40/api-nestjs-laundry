@@ -1138,6 +1138,16 @@ export class ReportService {
         'orders.address_details AS address_details',
         'orders.gst_company_name AS customer_company_name',
         'orders.gstin AS customer_gstin',
+        'orders.total AS total_amount',
+        'orders.paid_amount AS paid_amount',
+        '(orders.total - orders.paid_amount - IFNULL(orders.kasar_amount, 0)) AS pending_amount',
+        'orders.delivery_collect_amount AS delivery_collect_amount',
+        'orders.kasar_amount AS kasar_amount',
+        `CASE orders.payment_status 
+        WHEN 1 THEN 'Payment Pending'
+        WHEN 2 THEN 'Full Payment Received'
+        WHEN 3 THEN 'Partial Payment Received'
+        END AS payment_status`,
       ])
       .addSelect(`DATE_FORMAT(orders.created_at, '%b-%Y')`, 'month')
       .where('orders.deleted_at IS NULL')
@@ -1171,7 +1181,7 @@ export class ReportService {
     }
 
     if (driver_id) {
-      queryBuilder.andWhere('order.pickup_boy_id In (:...driverId)', {
+      queryBuilder.andWhere('orders.pickup_boy_id In (:...driverId)', {
         driverId: driver_id,
       });
     }
@@ -1216,7 +1226,16 @@ export class ReportService {
         'orders.address_details AS address_details',
         'orders.gst_company_name AS customer_company_name',
         'orders.gstin AS customer_gstin',
+        'orders.total AS total_amount',
         'orders.paid_amount AS paid_amount',
+        '(orders.total - orders.paid_amount - IFNULL(orders.kasar_amount, 0)) AS pending_amount',
+        'orders.delivery_collect_amount AS delivery_collect_amount',
+        'orders.kasar_amount AS kasar_amount',
+        `CASE orders.payment_status 
+        WHEN 1 THEN 'Payment Pending'
+        WHEN 2 THEN 'Full Payment Received'
+        WHEN 3 THEN 'Partial Payment Received'
+        END AS payment_status`,
       ])
       .addSelect(
         "CONCAT(deliveryBoy.first_name, ' ', deliveryBoy.last_name) AS delivery_boy_name",
@@ -1253,13 +1272,13 @@ export class ReportService {
       });
     }
     if (branch_id) {
-      queryBuilder.andWhere('brach.branch_id In (:...branchId)', {
+      queryBuilder.andWhere('branch.branch_id In (:...branchId)', {
         branchId: branch_id,
       });
     }
 
     if (driver_id) {
-      queryBuilder.andWhere('order.delivery_boy_id In (:...driverId)', {
+      queryBuilder.andWhere('orders.delivery_boy_id In (:...driverId)', {
         driverId: driver_id,
       });
     }
