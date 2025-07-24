@@ -576,6 +576,11 @@ export class OrderService {
         },
       };
 
+      await this.invoiceService.generateAndSaveInvoicePdf(
+        orderDetail.order_id,
+        'true',
+      );
+
       return {
         statusCode: 200,
         message: 'Order details added successfully',
