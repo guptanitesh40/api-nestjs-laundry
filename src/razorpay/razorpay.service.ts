@@ -208,6 +208,19 @@ export class RazorpayService {
     };
   }
 
+  async checkPaymentStatus(paymentLinkId: string) {
+    const paymentLink = await this.razorpay.paymentLink.fetch(paymentLinkId);
+
+    if (paymentLink.status === 'paid') {
+      await this.razorpayRepository.update(
+        { razorpay_payment_link_id: paymentLinkId },
+        { status: 'paid' },
+      );
+    }
+
+    return paymentLink.status;
+  }
+
   async updateStatusPaymentLinkId(payment_link_id: string, status: string) {
     const razorpay = await this.razorpayRepository.findOne({
       where: { razorpay_payment_link_id: payment_link_id, deleted_at: null },

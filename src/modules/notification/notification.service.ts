@@ -77,7 +77,7 @@ export class NotificationService {
   }
 
   private prepareMessageOrderPayment(order: any) {
-    return `Thank you for making the payment of ${order.paid_amount} at Sikka Cleaners. Payment has been processed successfully.`;
+    return `Thank you for making the payment of  ₹ ${order.paid_amount} at Sikka Cleaners. Payment has been processed successfully.`;
   }
 
   async sendUserNotification(user: any): Promise<any> {

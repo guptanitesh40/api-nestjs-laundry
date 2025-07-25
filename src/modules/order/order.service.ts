@@ -416,6 +416,7 @@ export class OrderService {
       orderDetail = {
         order_id: savedOrder.order_id,
         total: savedOrder.total,
+        // paid_amount: savedOrder.paid_amount,
         created_at: savedOrder.created_at,
         address_details: savedOrder.address_details,
         total_items: orderItems.length,
@@ -461,7 +462,16 @@ export class OrderService {
         );
       }
       await this.notificationService?.sendOrderNotification(orderDetail);
-      // await this.notificationService?.sendOrderPaymentNotification(orderDetail);
+
+      // if (
+      //   createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT &&
+      //   !createOrderDto.created_by_user_id
+      // ) {
+      //   await this.notificationService?.sendOrderPaymentNotification(
+      //     orderDetail,
+      //   );
+      // }
+
       await this.invoiceService.generateOrderLabels(orderDetail.order_id);
       await this.invoiceService.generateGeneralOrderLabel(orderDetail);
       await this.invoiceService.generateAndSaveInvoicePdf(
