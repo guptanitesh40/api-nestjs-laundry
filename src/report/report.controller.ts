@@ -8,6 +8,7 @@ import {
   exportPaymentTransactionExcel,
   exportPickupExcel,
   exportRefundOrderExcel,
+  exportServiceWiseExcel,
   exportTotalOrderExcel,
 } from 'src/utils/reports-excel.helper';
 import { ReportFilterDto } from './dto/report-filter.dto';
@@ -182,5 +183,14 @@ export class ReportController {
   ) {
     const user = req.user;
     return this.reportService.getBranchWiseOrderSummary(user, reportFilterDto);
+  }
+
+  @Get('service-wise-report')
+  async getServiceWiseReport(@Query() dto: ReportFilterDto) {
+    const data = await this.reportService.getServiceWiseReport(dto);
+
+    const fileUrl = await exportServiceWiseExcel(data);
+
+    return { url: fileUrl };
   }
 }

@@ -1368,4 +1368,60 @@ export class ReportService {
 
     return result;
   }
+
+  async getServiceWiseReport(dto: ReportFilterDto): Promise<any> {
+    const { startDate, endDate, branch_id, service_id } = dto;
+
+    const { startDate: formattedStartDate, endDate: formattedEndDate } =
+      convertDateParameters(startDate, endDate);
+
+    const query = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoin('order.branch', 'branch')
+      .leftJoin('order.items', 'item')
+      .leftJoin('item.service', 'service')
+      .select([
+        'branch.branch_name AS branch',
+        'service.name AS service',
+        'SUM(item.quantity) AS total_quantity',
+        'SUM(order.total) AS total_amount',
+        'SUM(order.paid_amount) AS paid_amount',
+        '(SUM(order.total) - SUM(order.paid_amount) - SUM(order.kasar_amount)) AS pending_amount',
+      ])
+      .where('order.deleted_at IS NULL')
+      .andWhere('branch.deleted_at IS NULL')
+      .andWhere('order.order_status NOT IN (:...orderStatus)', {
+        orderStatus: [
+          OrderStatus.CANCELLED_BY_ADMIN,
+          OrderStatus.CANCELLED_BY_CUSTOMER,
+        ],
+      })
+      .andWhere('order.refund_status != :excludeRefund', {
+        excludeRefund: RefundStatus.FULL,
+      });
+
+    if (formattedStartDate && formattedEndDate) {
+      query.andWhere('orders.created_at BETWEEN :startDate AND :endDate', {
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      });
+    }
+
+    if (branch_id) {
+      query.andWhere('branch.branch_id In (:...branchId)', {
+        branchId: branch_id,
+      });
+    }
+
+    if (service_id) {
+      query.andWhere('service.service_id  In (:...serviceId)', {
+        serviceId: service_id,
+      });
+    }
+
+    query.groupBy('branch.branch_name, service.name');
+    query.orderBy('branch.branch_name');
+
+    return await query.getRawMany();
+  }
 }

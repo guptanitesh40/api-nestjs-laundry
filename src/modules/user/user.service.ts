@@ -37,6 +37,7 @@ import { appendBaseUrlToImagesOrPdf } from 'src/utils/image-path.helper';
 import { getOrderStatusDetails } from 'src/utils/order-status.helper';
 import { Readable } from 'stream';
 import { In, MoreThan, Repository } from 'typeorm';
+import { AddressService } from '../address/address.service';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { UserFilterDto } from '../dto/users-filter.dto';
 import { NotificationService } from '../notification/notification.service';
@@ -66,6 +67,7 @@ export class UserService {
     private readonly orderService: OrderService,
     private readonly httpService: HttpService,
     private readonly notificationService: NotificationService,
+    private readonly addressService: AddressService,
   ) {}
 
   async signup(signUpDto: SignupDto): Promise<User> {
@@ -610,12 +612,13 @@ export class UserService {
         await this.calculatePendingDueAmount(order);
       pending_due_amount += orderDueAmount;
     }
-
+    const userAddress = (await this.addressService.getAll(user_id)).data.result;
     const userImageWithUrl = appendBaseUrlToImagesOrPdf([user])[0];
 
     const mappedUser = {
       ...userImageWithUrl,
       orders: orders.orders,
+      address: userAddress,
       branches: user.userBranchMappings.map(
         (branch) => branch.branch.branch_name,
       ),

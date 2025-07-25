@@ -31,6 +31,7 @@ export class NullTransformInterceptor implements NestInterceptor {
       'confirm_by_id',
       'delivered_by_id',
       'workshop_by_id',
+      'paid_amount',
     ];
 
     const nullKeys = [
