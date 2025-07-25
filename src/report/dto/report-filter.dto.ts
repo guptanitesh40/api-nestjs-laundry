@@ -22,6 +22,9 @@ export class ReportFilterDto {
   @applyNumberArrayValidation()
   driver_id?: number[];
 
+  @applyNumberArrayValidation()
+  service_id?: number[];
+
   @IsOptional()
   format?: string;
 }

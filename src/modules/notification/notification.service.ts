@@ -49,6 +49,37 @@ export class NotificationService {
     await this.notificationRepository.save(notification);
   }
 
+  async sendOrderPaymentNotification(order: any): Promise<void> {
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${order.order_id} not found.`);
+    }
+
+    const message = this.prepareMessageOrderPayment(order);
+
+    const encodedMessage = encodeURIComponent(message);
+
+    const finalUrl = `${this.apiUrl}?token=${process.env.VISION360_WHATSAPP_API_TOKEN}&phone=91${order.user.mobile_number}&message=${encodedMessage}`;
+
+    const response = await firstValueFrom(this.httpService.post(finalUrl, {}));
+
+    if (response.status !== 200) {
+      throw new Error('Failed to send WhatsApp notification');
+    }
+
+    const notification = this.notificationRepository.create({
+      order_id: order.order_id,
+      user_id: order.user_id,
+      order_status: order.order_status,
+      notification_message: message,
+    });
+
+    await this.notificationRepository.save(notification);
+  }
+
+  private prepareMessageOrderPayment(order: any) {
+    return `Thank you for making the payment of ${order.paid_amount} at Sikka Cleaners. Payment has been processed successfully.`;
+  }
+
   async sendUserNotification(user: any): Promise<any> {
     if (!user) {
       throw new NotFoundException(`User with Id ${user.user_id} not found`);

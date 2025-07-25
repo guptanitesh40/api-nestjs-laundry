@@ -461,7 +461,7 @@ export class OrderService {
         );
       }
       await this.notificationService?.sendOrderNotification(orderDetail);
-
+      // await this.notificationService?.sendOrderPaymentNotification(orderDetail);
       await this.invoiceService.generateOrderLabels(orderDetail.order_id);
       await this.invoiceService.generateGeneralOrderLabel(orderDetail);
       await this.invoiceService.generateAndSaveInvoicePdf(

@@ -11,6 +11,7 @@ import { UserBranchMapping } from 'src/entities/user-branch-mapping.entity';
 import { UserCompanyMapping } from 'src/entities/user-company-mapping.entity';
 import { User } from 'src/entities/user.entity';
 import { WorkshopManagerMapping } from 'src/entities/workshop-manager-mapping.entity';
+import { AddressModule } from '../address/address.module';
 import { NotificationModule } from '../notification/notification.module';
 import { OrderModule } from '../order/order.module';
 import { UserController } from './user.controller';
@@ -33,6 +34,7 @@ import { UserService } from './user.service';
     HttpModule,
     forwardRef(() => OrderModule),
     forwardRef(() => NotificationModule),
+    AddressModule,
   ],
   providers: [UserService],
   controllers: [UserController],

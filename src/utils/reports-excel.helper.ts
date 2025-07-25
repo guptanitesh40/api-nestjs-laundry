@@ -234,3 +234,33 @@ export async function exportDeliveryExcel(data: any[]): Promise<string> {
   const baseUrl = process.env.BASE_URL;
   return `${baseUrl}/pdf/${fileName}`;
 }
+
+export async function exportServiceWiseExcel(data: any[]): Promise<string> {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Service Wise Report');
+
+  worksheet.columns = [
+    { header: 'Branch', key: 'branch' },
+    { header: 'Service', key: 'service' },
+    { header: 'Total Quantity', key: 'total_quantity' },
+    { header: 'Total Amount', key: 'total_amount' },
+    { header: 'Paid Amount', key: 'paid_amount' },
+    { header: 'Pending Amount', key: 'pending_amount' },
+  ];
+
+  worksheet.getRow(1).eachCell((cell) => {
+    cell.font = { bold: true };
+  });
+
+  worksheet.addRows(data);
+
+  const reportName = 'Service-Wise-Report';
+  const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+  const fileName = `${reportName}-${dateStr}.xlsx`;
+
+  const exportPath = path.join(__dirname, '..', '..', 'pdf', fileName);
+  await workbook.xlsx.writeFile(exportPath);
+
+  const baseUrl = process.env.BASE_URL;
+  return `${baseUrl}/pdf/${fileName}`;
+}
