@@ -1401,7 +1401,7 @@ export class ReportService {
       });
 
     if (formattedStartDate && formattedEndDate) {
-      query.andWhere('orders.created_at BETWEEN :startDate AND :endDate', {
+      query.andWhere('order.created_at BETWEEN :startDate AND :endDate', {
         startDate: formattedStartDate,
         endDate: formattedEndDate,
       });
