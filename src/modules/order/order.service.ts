@@ -1996,6 +1996,11 @@ export class OrderService {
       clearDueAmount.transaction_id,
     );
 
+    await this.razorpayService.updateTransactionStatus(
+      clearDueAmount.transaction_id,
+      'paid',
+    );
+
     if (!razorPay) {
       throw new NotFoundException(
         `Razorpay transaction with ID ${clearDueAmount.transaction_id} not found`,

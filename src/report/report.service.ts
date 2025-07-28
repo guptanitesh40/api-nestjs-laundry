@@ -1377,9 +1377,9 @@ export class ReportService {
 
     const query = this.orderRepository
       .createQueryBuilder('order')
-      .leftJoin('order.branch', 'branch')
-      .leftJoin('order.items', 'item')
-      .leftJoin('item.service', 'service')
+      .innerJoin('order.branch', 'branch')
+      .innerJoin('order.items', 'item')
+      .innerJoin('item.service', 'service')
       .select([
         'branch.branch_name AS branch',
         'service.name AS service',
