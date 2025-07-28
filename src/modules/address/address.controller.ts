@@ -85,6 +85,19 @@ export class AddressController {
     return this.userAddressService.update(user.user_id, id, updateAddressDto);
   }
 
+  @Put('admin/:id')
+  async updateAddress(
+    @Param('id') id: number,
+    @Body() updateAddressDto: UpdateUserAddressDto,
+  ): Promise<Response> {
+    return this.userAddressService.updateAddress(id, updateAddressDto);
+  }
+
+  @Delete('admin/:id')
+  async deleteAddress(@Param('id') id: number): Promise<Response> {
+    return this.userAddressService.deleteAddress(id);
+  }
+
   @Delete(':id')
   @Roles(Role.CUSTOMER)
   async delete(@Request() req, @Param('id') id: number): Promise<Response> {

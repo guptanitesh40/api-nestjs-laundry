@@ -104,7 +104,17 @@ export class OrderService {
 
       const userAddress = address.result;
 
-      const address_details = `${userAddress.building_number}, ${userAddress.area}, ${userAddress.city}, ${userAddress.state}, ${userAddress.country} - ${userAddress.pincode}`;
+      const addressParts = [
+        userAddress.building_number,
+        userAddress.area,
+        userAddress.city,
+        userAddress.state,
+        userAddress.country,
+      ];
+
+      const address_details =
+        addressParts.filter((part) => part && part.trim() !== '').join(', ') +
+        (userAddress.pincode ? ` - ${userAddress.pincode}` : '');
 
       const address_type = address?.address_type || 1;
 
@@ -211,7 +221,17 @@ export class OrderService {
         where: { branch_id: createOrderDto.branch_id, deleted_at: null },
       });
 
-      const address_details = `${address.building_number}, ${address.area}, ${address.city}, ${address.state}, ${address.country} - ${address.pincode}`;
+      const addressParts = [
+        address.building_number,
+        address.area,
+        address.city,
+        address.state,
+        address.country,
+      ];
+
+      const address_details =
+        addressParts.filter((part) => part && part.trim() !== '').join(', ') +
+        (address.pincode ? ` - ${address.pincode}` : '');
 
       const addess_type = address?.address_type;
 
@@ -510,9 +530,19 @@ export class OrderService {
 
       const userAddress = address.result;
 
-      const address_details = `${userAddress.building_number}, ${userAddress.area}, ${userAddress.city}, ${userAddress.state}, ${userAddress.country} - ${userAddress.pincode}`;
+      const addressParts = [
+        userAddress.building_number,
+        userAddress.area,
+        userAddress.city,
+        userAddress.state,
+        userAddress.country,
+      ];
 
-      const address_type = address?.address_type || 1;
+      const address_details =
+        addressParts.filter((part) => part && part.trim() !== '').join(', ') +
+        (userAddress.pincode ? ` - ${userAddress.pincode}` : '');
+
+      const address_type = userAddress?.address_type;
 
       const settingKeys = [
         'estimate_pickup_normal_hour',
