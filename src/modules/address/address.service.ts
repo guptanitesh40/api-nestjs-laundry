@@ -135,11 +135,66 @@ export class AddressService {
     };
   }
 
+  async updateAddress(
+    id: number,
+    updateAddressdto: UpdateUserAddressDto,
+  ): Promise<Response> {
+    const address = await this.userAddressRepository.findOne({
+      where: { address_id: id, deleted_at: null },
+    });
+
+    if (!address) {
+      return {
+        statusCode: 404,
+        message: 'Address not found',
+        data: null,
+      };
+    }
+
+    await this.userAddressRepository.update(id, updateAddressdto);
+
+    const updatedAddress = await this.userAddressRepository.findOne({
+      where: { address_id: id, deleted_at: null },
+    });
+
+    return {
+      statusCode: 200,
+      message: 'Address updated successfully',
+      data: { updatedAddress },
+    };
+  }
+
   async delete(user_id: number, id: number): Promise<Response> {
     const address = await this.userAddressRepository.findOne({
       where: {
         address_id: id,
         user_id: user_id,
+        deleted_at: null,
+      },
+    });
+
+    if (!address) {
+      return {
+        statusCode: 404,
+        message: 'Address not found',
+        data: null,
+      };
+    }
+
+    address.deleted_at = new Date();
+    await this.userAddressRepository.save(address);
+
+    return {
+      statusCode: 200,
+      message: 'Address deleted successfully',
+      data: address,
+    };
+  }
+
+  async deleteAddress(id: number): Promise<Response> {
+    const address = await this.userAddressRepository.findOne({
+      where: {
+        address_id: id,
         deleted_at: null,
       },
     });

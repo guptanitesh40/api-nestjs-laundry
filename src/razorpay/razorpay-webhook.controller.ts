@@ -20,7 +20,6 @@ export class RazorpayWebhookController {
     @Req() req: Request,
     @Headers('x-razorpay-signature') razorpaySignature: string,
   ) {
-    console.log('Incoming Webhook 🔔:', req.body);
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
     const generatedSignature = crypto

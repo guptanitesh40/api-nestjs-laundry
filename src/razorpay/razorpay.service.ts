@@ -85,12 +85,18 @@ export class RazorpayService {
   async getAllTransactions(
     razorpayFilterDto: RazorpayFilterDto,
   ): Promise<Response> {
-    const { per_page, page_number, search, sort_by, order, status, user_id } =
+    let { per_page, page_number, search, sort_by, order, status, user_id } =
       razorpayFilterDto;
 
     const pageNumber = page_number ?? 1;
     const perPage = per_page ?? 10;
     const skip = (pageNumber - 1) * perPage;
+
+    if (!status) {
+      status = ['paid'];
+    } else if (!Array.isArray(status)) {
+      status = [status];
+    }
 
     const queryBuilder = this.razorpayRepository
       .createQueryBuilder('razorpay')
