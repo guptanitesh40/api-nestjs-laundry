@@ -93,27 +93,6 @@ export class NotificationService {
     }
   }
 
-  async sendOrderCompleteworkshopNotification(order: any): Promise<any> {
-    if (!order) {
-      throw new NotFoundException(`Order with Id ${order.order_id} not found`);
-    }
-    const message = this.prepareMessageForOrderCompleted(order);
-
-    const encodedMessage = encodeURIComponent(message);
-
-    const finalUrl = `${this.apiUrl}?token=${process.env.VISION360_WHATSAPP_API_TOKEN}&phone=91${order.user.mobile_number}&message=${encodedMessage}`;
-
-    const response = await firstValueFrom(this.httpService.post(finalUrl, {}));
-
-    if (response.status !== 200) {
-      throw new Error('Failed to send WhatsApp notification');
-    }
-  }
-
-  private prepareMessageForOrderCompleted(order: any) {
-    return `Dear ${order.user.first_name} ${order.user.last_name}, your order with Booking No: SCONLINE/${order.order_id} has been completed at the workshop and received at the branch.`;
-  }
-
   private prepareMessageForUser(user: any) {
     return `Dear ${user.first_name} ${user.last_name}, your Sikka Cleaners account is activated`;
   }
@@ -136,8 +115,7 @@ export class NotificationService {
     }
 
     if (
-      order.order_status ===
-      OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
+      order.order_status === OrderStatus.ORDER_COMPLETED_AND_RECEIVED_AT_BRANCH
     ) {
       return `Dear ${order.user.first_name} ${order.user.last_name},your clothes for dry clean/steam press, (Booking No: SCONLINE/${order.order_id}) are ready. Thank You. Sikka Cleaners. ${process.env.WEBSITE_IP}
 `;

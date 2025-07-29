@@ -1455,8 +1455,7 @@ export class OrderService {
     const notifications = orders.map(async (order) => {
       if (
         order_status === OrderStatus.DELIVERED ||
-        order_status ===
-          OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
+        order_status === OrderStatus.ORDER_COMPLETED_AND_RECEIVED_AT_BRANCH
       ) {
         const orderDetails = (await this.getOrderDetail(order.order_id)).data;
 
@@ -1465,14 +1464,6 @@ export class OrderService {
 
       if (order_status === OrderStatus.ITEMS_RECEIVED_AT_BRANCH) {
         await this.invoiceService.generateOrderLabels(order.order_id);
-      }
-
-      if (order_status === OrderStatus.ORDER_COMPLETED_AND_RECEIVED_AT_BRANCH) {
-        const orderDetails = (await this.getOrderDetail(order.order_id)).data;
-
-        await this.notificationService.sendOrderCompleteworkshopNotification(
-          orderDetails,
-        );
       }
 
       const deviceToken = deviceTokens.find(
@@ -2523,9 +2514,8 @@ export class OrderService {
 
     await Promise.all(
       orders.map(async (order) => {
-        const orderDetails = (await this.getOrderDetail(order.order_id)).data;
-
-        await this.notificationService.sendOrderNotification(orderDetails);
+        // const orderDetails = (await this.getOrderDetail(order.order_id)).data;
+        // await this.notificationService.sendOrderNotification(orderDetails);
 
         const deviceToken = deviceTokensMap.find(
           (token) => token.user_id === order.user_id,
