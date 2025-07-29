@@ -338,6 +338,12 @@ export async function exportServiceWiseExcel(data: any[]): Promise<string> {
 
   worksheet.addRows(data);
 
+  const lastRowNumber = worksheet.rowCount;
+  const lastRow = worksheet.getRow(lastRowNumber);
+  lastRow.eachCell((cell) => {
+    cell.font = { bold: true };
+  });
+
   const reportName = 'Service-Wise-Report';
   const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
   const fileName = `${reportName}-${dateStr}.xlsx`;
