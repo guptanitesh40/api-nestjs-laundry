@@ -1,13 +1,12 @@
-import './instrument';
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import bodyParser from 'body-parser';
 import { useContainer, ValidationError } from 'class-validator';
-import cors from 'cors';
 import dotenv from 'dotenv';
 import { join } from 'path';
+import { AppModule } from './app.module';
+import './instrument';
 import { TrimPipe } from './pipes/trim.pipe';
 
 dotenv.config();
@@ -29,12 +28,29 @@ async function bootstrap() {
       },
     }),
   );
-  app.useStaticAssets(join(__dirname, '..', 'pdf'), { prefix: '/pdf' });
+  app.useStaticAssets(join(__dirname, '..', 'pdf'), {
+    prefix: '/pdf',
+    setHeaders: (res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+    },
+  });
   app.useStaticAssets(join(__dirname, '..', 'images'), {
     index: false,
     prefix: '/images',
   });
-  app.use(cors({ origin: '*' }));
+  // app.use(cors({ origin: '*' }));
+
+  // app.enableCors({
+  //   origin: [`${process.env.WEBSITE_IP}`, `${process.env.ADMIN_IP}`],
+  //   credentials: true,
+  //   exposedHeaders: ['Content-Disposition'],
+  // });
+
+  app.enableCors({
+    origin: '*',
+    exposedHeaders: ['Content-Disposition'],
+  });
 
   app.use(bodyParser.json({ limit: '50mb' }));
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));

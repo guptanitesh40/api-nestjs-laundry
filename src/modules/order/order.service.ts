@@ -436,7 +436,7 @@ export class OrderService {
       orderDetail = {
         order_id: savedOrder.order_id,
         total: savedOrder.total,
-        // paid_amount: savedOrder.paid_amount,
+        paid_amount: savedOrder.paid_amount,
         created_at: savedOrder.created_at,
         address_details: savedOrder.address_details,
         total_items: orderItems.length,
@@ -483,14 +483,14 @@ export class OrderService {
       }
       await this.notificationService?.sendOrderNotification(orderDetail);
 
-      // if (
-      //   createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT &&
-      //   !createOrderDto.created_by_user_id
-      // ) {
-      //   await this.notificationService?.sendOrderPaymentNotification(
-      //     orderDetail,
-      //   );
-      // }
+      if (
+        createOrderDto.payment_type === PaymentType.ONLINE_PAYMENT &&
+        !createOrderDto.created_by_user_id
+      ) {
+        await this.notificationService?.sendOrderPaymentNotification(
+          orderDetail,
+        );
+      }
 
       await this.invoiceService.generateOrderLabels(orderDetail.order_id);
       await this.invoiceService.generateGeneralOrderLabel(orderDetail);
@@ -2001,6 +2001,7 @@ export class OrderService {
         order_id: In(clearDueAmount.order_ids),
         user_id: user_id,
       },
+      relations: ['user'],
     });
 
     let total_pending_amount = 0;
@@ -2065,7 +2066,6 @@ export class OrderService {
     }
 
     await this.orderRepository.save(updatedOrders);
-
     const updateOrders = updatedOrders.map((order) => ({
       order_id: order.order_id,
       total_amount: order.total,
@@ -2079,6 +2079,8 @@ export class OrderService {
         order.kasar_amount -
         order.refund_amount,
     }));
+
+    // await this.notificationService.sendOrderPaymentNotification(orders);
 
     return {
       statusCode: 200,

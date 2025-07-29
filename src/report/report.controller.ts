@@ -1,5 +1,15 @@
-import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Request,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import * as ExcelJS from 'exceljs';
+import { Response } from 'express';
+
 import { RolesGuard } from 'src/modules/auth/guard/role.guard';
 import {
   exportDeliveryExcel,
@@ -192,5 +202,43 @@ export class ReportController {
     const fileUrl = await exportServiceWiseExcel(data);
 
     return { url: fileUrl };
+  }
+
+  @Get('service-wise-report/download')
+  async downloadExcelBuffer(
+    @Query() dto: ReportFilterDto,
+    @Res() res: Response,
+  ) {
+    const data = await this.reportService.getServiceWiseReport(dto);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Service Wise Report');
+
+    worksheet.columns = [
+      { header: 'Branch', key: 'branch' },
+      { header: 'Service', key: 'service' },
+      { header: 'Total Quantity', key: 'total_quantity' },
+      { header: 'Total Amount', key: 'total_amount' },
+      { header: 'Paid Amount', key: 'paid_amount' },
+      { header: 'Pending Amount', key: 'pending_amount' },
+    ];
+
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
+    });
+
+    worksheet.addRows(data);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=Service-Wise-Report.xlsx',
+    );
+    res.send(buffer);
   }
 }

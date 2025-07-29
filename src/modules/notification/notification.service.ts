@@ -50,10 +50,6 @@ export class NotificationService {
   }
 
   async sendOrderPaymentNotification(order: any): Promise<void> {
-    if (!order) {
-      throw new NotFoundException(`Order with ID ${order.order_id} not found.`);
-    }
-
     const message = this.prepareMessageOrderPayment(order);
 
     const encodedMessage = encodeURIComponent(message);
@@ -67,7 +63,7 @@ export class NotificationService {
     }
 
     const notification = this.notificationRepository.create({
-      order_id: order.order_id,
+      order_id: order?.order_id,
       user_id: order.user_id,
       order_status: order.order_status,
       notification_message: message,
@@ -77,7 +73,7 @@ export class NotificationService {
   }
 
   private prepareMessageOrderPayment(order: any) {
-    return `Thank you for making the payment of  ₹ ${order.paid_amount} at Sikka Cleaners. Payment has been processed successfully.`;
+    return `Thank you for making the payment of  ₹${order.paid_amount} at Sikka Cleaners. Payment has been processed successfully.`;
   }
 
   async sendUserNotification(user: any): Promise<any> {
