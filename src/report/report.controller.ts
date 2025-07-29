@@ -43,6 +43,62 @@ export class ReportController {
     return this.reportService.getTotalOrderReport(reportFilterDto);
   }
 
+  @Get('total-orders/download')
+  async downloadTotalOrderExcelBuffer(
+    @Query() dto: ReportFilterDto,
+    @Res() res: Response,
+  ): Promise<any> {
+    const { data: rows, totals } =
+      await this.reportService.getTotalOrderExcelReport(dto);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Total Orders');
+
+    worksheet.columns = [
+      { header: 'ID', key: 'order_id' },
+      { header: 'Branch', key: 'branch' },
+      { header: 'Customer Name', key: 'customer_name' },
+      { header: 'Booking Date', key: 'booking_date' },
+      { header: 'Delivery Date', key: 'delivery_date' },
+      { header: 'Paid Amount', key: 'paid_amount' },
+      { header: 'Total Amount', key: 'total_amount' },
+      { header: 'Pending Amount', key: 'pending_amount' },
+      { header: 'Kasar Amount', key: 'kasar_amount' },
+    ];
+
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
+    });
+
+    worksheet.addRows(rows);
+
+    worksheet.addRow([]);
+
+    worksheet.addRow([
+      totals.total_orders,
+      '',
+      '',
+      '',
+      '',
+      totals.paid_amount,
+      totals.total_amount,
+      totals.pending_amount,
+      totals.kasar_amount,
+    ]);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=Total-orders-Report.xlsx',
+    );
+    res.send(buffer);
+  }
+
   @Get('delivery-completed-report')
   async getDeliveryCompletedReport(@Query() reportFilterDto: ReportFilterDto) {
     return this.reportService.getDeliveryCompletedReport(reportFilterDto);
@@ -81,6 +137,43 @@ export class ReportController {
     return this.reportService.getRefundReport(reportFilterDto);
   }
 
+  @Get('refund-report/download')
+  async downloadRefundExcelBuffer(
+    @Query() dto: ReportFilterDto,
+    @Res() res: Response,
+  ) {
+    const data = await this.reportService.getRefundExcelReport(dto);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Refund');
+
+    worksheet.columns = [
+      { header: 'Order Number', key: 'order_id' },
+      { header: 'Company', key: 'company' },
+      { header: 'Branch', key: 'branch' },
+      { header: 'Customer Name', key: 'customer_name' },
+      { header: 'Customer Address', key: 'address_details' },
+    ];
+
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
+    });
+
+    worksheet.addRows(data);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=refund-Report.xlsx',
+    );
+    res.send(buffer);
+  }
+
   @Get('kasar-report')
   async getKasarReport(@Query() reportFilterDto: ReportFilterDto) {
     return this.reportService.getKasarReport(reportFilterDto);
@@ -99,6 +192,43 @@ export class ReportController {
     }
 
     return this.reportService.getNotActiveCustomerReport(reportFilterDto);
+  }
+
+  @Get('inactive-customer-report/download')
+  async downloadNotActiveCustomerExcelBuffer(
+    @Query() dto: ReportFilterDto,
+    @Res() res: Response,
+  ) {
+    const data = await this.reportService.getNotActiveCustomerExcelReport(dto);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Not Active Customer');
+
+    worksheet.columns = [
+      { header: 'Order Number', key: 'order_id' },
+      { header: 'Company', key: 'company' },
+      { header: 'Branch', key: 'branch' },
+      { header: 'Customer Name', key: 'customer_name' },
+      { header: 'Customer Address', key: 'address_details' },
+    ];
+
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
+    });
+
+    worksheet.addRows(data);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=Not-Active-Customer-Report.xlsx',
+    );
+    res.send(buffer);
   }
 
   @Get('new-customer-acquisition-report')
@@ -152,6 +282,46 @@ export class ReportController {
     );
   }
 
+  @Get('payment-transaction/download')
+  async downloadPaymentTransactionExcelBuffer(
+    @Query() dto: ReportFilterDto,
+    @Res() res: Response,
+  ) {
+    const data = await this.reportService.getGstExcelReport(dto);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Payment Transaction');
+
+    worksheet.columns = [
+      { header: 'ID', key: 'order_id' },
+      { header: 'Company', key: 'company' },
+      { header: 'Branch', key: 'branch' },
+      { header: 'Customer Name', key: 'customer_name' },
+      { header: 'Total Amount', key: 'total_amount' },
+      { header: 'Payment Status', key: 'payment_status' },
+      { header: 'Payment Type', key: 'payment_type' },
+      { header: 'Transaction Id', key: 'transaction_id' },
+    ];
+
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
+    });
+
+    worksheet.addRows(data);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=Transaction-Report.xlsx',
+    );
+    res.send(buffer);
+  }
+
   @Get('gst')
   async getGstExcelReport(
     @Query() reportFilterDto: ReportFilterDto,
@@ -161,6 +331,43 @@ export class ReportController {
     const fileUrl = await exportGstExcel(data);
 
     return { url: fileUrl };
+  }
+
+  @Get('gst/download')
+  async downloadGstExcelBuffer(
+    @Query() dto: ReportFilterDto,
+    @Res() res: Response,
+  ) {
+    const data = await this.reportService.getGstExcelReport(dto);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Gst');
+
+    worksheet.columns = [
+      { header: 'Order Number', key: 'order_id' },
+      { header: 'Company', key: 'company' },
+      { header: 'Branch', key: 'branch' },
+      { header: 'Customer Name', key: 'customer_name' },
+      { header: 'Customer Address', key: 'address_details' },
+    ];
+
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
+    });
+
+    worksheet.addRows(data);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=Gst-Report.xlsx',
+    );
+    res.send(buffer);
   }
 
   @Get('pickup')
@@ -174,6 +381,66 @@ export class ReportController {
     return { url: fileUrl };
   }
 
+  @Get('pickup/download')
+  async downloadPickupExcelBuffer(
+    @Query() dto: ReportFilterDto,
+    @Res() res: Response,
+  ): Promise<any> {
+    const { data: rows, totals } =
+      await this.reportService.getPickupExcelReport(dto);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Pickup');
+
+    worksheet.columns = [
+      { header: 'Pickup Date', key: 'pickup_date' },
+      { header: 'Pickup Done By', key: 'pickup_boy_name' },
+      { header: 'Order Number', key: 'order_id' },
+      { header: 'Branch', key: 'branch' },
+      { header: 'Customer Name', key: 'customer_name' },
+      { header: 'Total Amount', key: 'total_amount' },
+      { header: 'Paid Amount', key: 'paid_amount' },
+      { header: 'Pending Amount', key: 'pending_amount' },
+      { header: 'Payment Status', key: 'payment_status' },
+      { header: 'Kasar Amount', key: 'kasar_amount' },
+      { header: 'Delivery Collect Amount', key: 'delivery_collect_amount' },
+    ];
+
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
+    });
+
+    worksheet.addRows(rows);
+
+    worksheet.addRow([]);
+
+    worksheet.addRow([
+      '',
+      '',
+      totals.total_orders,
+      '',
+      '',
+      totals.total_amount,
+      totals.paid_amount,
+      totals.pending_amount,
+      '',
+      totals.kasar_amount,
+      '',
+    ]);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=Pickup-Report.xlsx',
+    );
+    res.send(buffer);
+  }
+
   @Get('delivery')
   async getDeliveryExcelReport(
     @Query() reportFilterDto: ReportFilterDto,
@@ -184,6 +451,79 @@ export class ReportController {
     const fileUrl = await exportDeliveryExcel(data);
 
     return { url: fileUrl };
+  }
+
+  @Get('delivery/download')
+  async downloadDeliveryExcelBuffer(
+    @Query() dto: ReportFilterDto,
+    @Res() res: Response,
+  ) {
+    const { data: rows, totals } =
+      await this.reportService.getDeliveryExcelReport(dto);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Service Wise Report');
+
+    worksheet.columns = [
+      { header: 'Delivery Date', key: 'delivery_date' },
+      { header: 'Delivery Done By', key: 'delivery_boy_name' },
+      { header: 'Order Number', key: 'order_id' },
+      { header: 'Branch', key: 'branch' },
+      { header: 'Customer Name', key: 'customer_name' },
+      { header: 'Order Number', key: 'order_id' },
+      { header: 'Customer Company Name', key: 'customer_company_name' },
+      { header: 'Customer Address', key: 'address_details' },
+      { header: 'Total Amount', key: 'total_amount' },
+      { header: 'Paid Amount', key: 'paid_amount' },
+      { header: 'Pending Amount', key: 'pending_amount' },
+      { header: 'Payment Status', key: 'payment_status' },
+      { header: 'Kasar Amount', key: 'kasar_amount' },
+      { header: 'Delivery Collect Amount', key: 'delivery_collect_amount' },
+    ];
+
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
+    });
+
+    worksheet.addRows(rows);
+
+    worksheet.addRow([]);
+
+    worksheet.addRow([
+      '',
+      '',
+      totals.total_orders,
+      '',
+      '',
+      '',
+      '',
+      '',
+      totals.total_amount,
+      totals.paid_amount,
+      totals.pending_amount,
+      '',
+      totals.kasar_amount,
+      totals.delivery_collect_amount,
+    ]);
+
+    const lastRow = worksheet.lastRow;
+    if (lastRow) {
+      lastRow.eachCell((cell) => {
+        cell.font = { bold: true };
+      });
+    }
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=Delivery-Report.xlsx',
+    );
+    res.send(buffer);
   }
 
   @Get('branch-wise-summary')
@@ -205,7 +545,7 @@ export class ReportController {
   }
 
   @Get('service-wise-report/download')
-  async downloadExcelBuffer(
+  async downloadServiceWiseExcelBuffer(
     @Query() dto: ReportFilterDto,
     @Res() res: Response,
   ) {
