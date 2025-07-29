@@ -1904,7 +1904,7 @@ export class OrderService {
       .andWhere('order.order_status= :status', {
         status: OrderStatus.DELIVERED,
       })
-      .andWhere('order.total > order.paid_amount + order.kasar_amount')
+      .andWhere('order.total >= order.paid_amount + order.kasar_amount')
       .andWhere('order.refund_status !=:refundStatus ', {
         refundStatus: RefundStatus.FULL,
       })
@@ -1947,7 +1947,7 @@ export class OrderService {
       .createQueryBuilder('order')
       .where('order.user_id=:user_id', { user_id: user_id })
       .andWhere('order.deleted_at IS NULL')
-      .andWhere('order.total > order.paid_amount + order.kasar_amount')
+      .andWhere('order.total >= order.paid_amount + order.kasar_amount')
       .andWhere('order.refund_status !=:refundStatus ', {
         refundStatus: RefundStatus.FULL,
       })

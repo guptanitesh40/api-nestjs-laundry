@@ -1475,6 +1475,24 @@ export class ReportService {
     query.groupBy('branch.branch_name, service.name');
     query.orderBy('branch.branch_name');
 
-    return await query.getRawMany();
+    const data = await query.getRawMany();
+
+    const totals = {
+      branch: 'Total',
+      service: '',
+      total_quantity: 0,
+      total_amount: 0,
+      paid_amount: 0,
+      pending_amount: 0,
+    };
+
+    data.forEach((row) => {
+      totals.total_quantity += Number(row.total_quantity || 0);
+      totals.total_amount += Number(row.total_amount || 0);
+      totals.paid_amount += Number(row.paid_amount || 0);
+      totals.pending_amount += Number(row.pending_amount || 0);
+    });
+
+    return [...data, totals];
   }
 }

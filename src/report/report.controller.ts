@@ -569,6 +569,22 @@ export class ReportController {
 
     worksheet.addRows(data);
 
+    const totalRow = {
+      branch: '',
+      service: '',
+      total_quantity: 0,
+      total_amount: 0,
+      paid_amount: 0,
+      pending_amount: 0,
+    };
+
+    data.forEach((row) => {
+      totalRow.total_quantity += Number(row.total_quantity || 0);
+      totalRow.total_amount += Number(row.total_amount || 0);
+      totalRow.paid_amount += Number(row.paid_amount || 0);
+      totalRow.pending_amount += Number(row.pending_amount || 0);
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
 
     res.setHeader(
