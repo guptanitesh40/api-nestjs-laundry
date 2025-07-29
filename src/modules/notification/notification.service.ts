@@ -50,10 +50,6 @@ export class NotificationService {
   }
 
   async sendOrderPaymentNotification(order: any): Promise<void> {
-    if (!order) {
-      throw new NotFoundException(`Order with ID ${order.order_id} not found.`);
-    }
-
     const message = this.prepareMessageOrderPayment(order);
 
     const encodedMessage = encodeURIComponent(message);
@@ -67,7 +63,7 @@ export class NotificationService {
     }
 
     const notification = this.notificationRepository.create({
-      order_id: order.order_id,
+      order_id: order?.order_id,
       user_id: order.user_id,
       order_status: order.order_status,
       notification_message: message,
@@ -77,7 +73,7 @@ export class NotificationService {
   }
 
   private prepareMessageOrderPayment(order: any) {
-    return `Thank you for making the payment of  ₹ ${order.paid_amount} at Sikka Cleaners. Payment has been processed successfully.`;
+    return `Thank you for making the payment of  ₹${order.paid_amount} at Sikka Cleaners. Payment has been processed successfully.`;
   }
 
   async sendUserNotification(user: any): Promise<any> {
@@ -95,27 +91,6 @@ export class NotificationService {
     if (response.status !== 200) {
       throw new Error('Failed to send WhatsApp notification');
     }
-  }
-
-  async sendOrderCompleteworkshopNotification(order: any): Promise<any> {
-    if (!order) {
-      throw new NotFoundException(`Order with Id ${order.order_id} not found`);
-    }
-    const message = this.prepareMessageForOrderCompleted(order);
-
-    const encodedMessage = encodeURIComponent(message);
-
-    const finalUrl = `${this.apiUrl}?token=${process.env.VISION360_WHATSAPP_API_TOKEN}&phone=91${order.user.mobile_number}&message=${encodedMessage}`;
-
-    const response = await firstValueFrom(this.httpService.post(finalUrl, {}));
-
-    if (response.status !== 200) {
-      throw new Error('Failed to send WhatsApp notification');
-    }
-  }
-
-  private prepareMessageForOrderCompleted(order: any) {
-    return `Dear ${order.user.first_name} ${order.user.last_name}, your order with Booking No: SCONLINE/${order.order_id} has been completed at the workshop and received at the branch.`;
   }
 
   private prepareMessageForUser(user: any) {
@@ -140,8 +115,7 @@ export class NotificationService {
     }
 
     if (
-      order.order_status ===
-      OrderStatus.DELIVERY_BOY_ASSIGNED_AND_READY_FOR_DELIVERY
+      order.order_status === OrderStatus.ORDER_COMPLETED_AND_RECEIVED_AT_BRANCH
     ) {
       return `Dear ${order.user.first_name} ${order.user.last_name},your clothes for dry clean/steam press, (Booking No: SCONLINE/${order.order_id}) are ready. Thank You. Sikka Cleaners. ${process.env.WEBSITE_IP}
 `;

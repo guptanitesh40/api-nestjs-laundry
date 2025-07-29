@@ -35,12 +35,12 @@ export class AboutUsService {
 
     const result = await queryBuilder.getOne();
 
-    const AboutUS = appendBaseUrlToImagesOrPdf([result]);
+    appendBaseUrlToImagesOrPdf([result]);
 
     return {
       statusCode: 200,
       message: 'About us Retrived successfully',
-      data: { result: AboutUS },
+      data: result,
     };
   }
 
