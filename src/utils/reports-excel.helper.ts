@@ -1,7 +1,12 @@
 import * as ExcelJS from 'exceljs';
 import * as path from 'path';
 
-export async function exportTotalOrderExcel(data: any[]): Promise<string> {
+export async function exportTotalOrderExcel(response: {
+  data: any[];
+  totals: any;
+}): Promise<string> {
+  const { data, totals } = response;
+
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Total Orders');
 
@@ -22,6 +27,27 @@ export async function exportTotalOrderExcel(data: any[]): Promise<string> {
   });
 
   worksheet.addRows(data);
+
+  worksheet.addRow([]);
+
+  worksheet.addRow([
+    totals.total_orders,
+    '',
+    '',
+    '',
+    '',
+    totals.paid_amount,
+    totals.total_amount,
+    totals.pending_amount,
+    totals.kasar_amount,
+  ]);
+
+  const lastRow = worksheet.lastRow;
+  if (lastRow) {
+    lastRow.eachCell((cell) => {
+      cell.font = { bold: true };
+    });
+  }
 
   const reportName = 'Total-orders-Report';
   const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
@@ -162,7 +188,12 @@ export async function exportGstExcel(data: any[]): Promise<string> {
   return `${baseUrl}/pdf/${fileName}`;
 }
 
-export async function exportPickupExcel(data: any[]): Promise<string> {
+export async function exportPickupExcel(response: {
+  data: any[];
+  totals: any;
+}): Promise<string> {
+  const { data, totals } = response;
+
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Pickup');
 
@@ -186,6 +217,28 @@ export async function exportPickupExcel(data: any[]): Promise<string> {
 
   worksheet.addRows(data);
 
+  worksheet.addRow([]);
+
+  worksheet.addRow([
+    '',
+    '',
+    totals.total_orders,
+    '',
+    '',
+    totals.total_amount,
+    totals.paid_amount,
+    totals.pending_amount,
+    '',
+    totals.kasar_amount,
+  ]);
+
+  const lastRow = worksheet.lastRow;
+  if (lastRow) {
+    lastRow.eachCell((cell) => {
+      cell.font = { bold: true };
+    });
+  }
+
   const reportName = 'Pickup-Report';
   const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
   const fileName = `${reportName}-${dateStr}.xlsx`;
@@ -197,7 +250,12 @@ export async function exportPickupExcel(data: any[]): Promise<string> {
   return `${baseUrl}/pdf/${fileName}`;
 }
 
-export async function exportDeliveryExcel(data: any[]): Promise<string> {
+export async function exportDeliveryExcel(response: {
+  data: any[];
+  totals: any;
+}): Promise<string> {
+  const { data, totals } = response;
+
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Delivery');
 
@@ -223,6 +281,32 @@ export async function exportDeliveryExcel(data: any[]): Promise<string> {
   });
 
   worksheet.addRows(data);
+
+  worksheet.addRow([]);
+
+  worksheet.addRow([
+    '',
+    '',
+    totals.total_orders,
+    '',
+    '',
+    '',
+    '',
+    '',
+    totals.total_amount,
+    totals.paid_amount,
+    totals.pending_amount,
+    '',
+    totals.kasar_amount,
+    totals.delivery_collect_amount,
+  ]);
+
+  const lastRow = worksheet.lastRow;
+  if (lastRow) {
+    lastRow.eachCell((cell) => {
+      cell.font = { bold: true };
+    });
+  }
 
   const reportName = 'Delivery-Report';
   const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');

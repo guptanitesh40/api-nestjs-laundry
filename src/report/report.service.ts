@@ -84,7 +84,7 @@ export class ReportService {
 
   async getTotalOrderExcelReport(
     reportFilterDto: ReportFilterDto,
-  ): Promise<any> {
+  ): Promise<{ data: any[]; totals: any }> {
     const { startDate, endDate, user_id, company_id, branch_id } =
       reportFilterDto;
 
@@ -160,7 +160,22 @@ export class ReportService {
       .orderBy('orders.created_at', 'ASC')
       .getRawMany();
 
-    return result;
+    const totals = {
+      total_orders: result.length,
+      total_amount: 0,
+      paid_amount: 0,
+      kasar_amount: 0,
+      pending_amount: 0,
+    };
+
+    result.forEach((item) => {
+      totals.total_amount += Number(item.total_amount || 0);
+      totals.paid_amount += Number(item.paid_amount || 0);
+      totals.kasar_amount += Number(item.kasar_amount || 0);
+      totals.pending_amount += Number(item.pending_amount || 0);
+    });
+
+    return { data: result, totals };
   }
 
   async getDeliveryCompletedReport(
@@ -1115,7 +1130,9 @@ export class ReportService {
     return result;
   }
 
-  async getPickupExcelReport(reportFilterDto: ReportFilterDto): Promise<any> {
+  async getPickupExcelReport(
+    reportFilterDto: ReportFilterDto,
+  ): Promise<{ data: any[]; totals: any }> {
     const { startDate, endDate, user_id, company_id, branch_id, driver_id } =
       reportFilterDto;
 
@@ -1201,10 +1218,27 @@ export class ReportService {
       .orderBy('orders.created_at', 'ASC')
       .getRawMany();
 
-    return result;
+    const totals = {
+      total_orders: result.length,
+      total_amount: 0,
+      paid_amount: 0,
+      kasar_amount: 0,
+      pending_amount: 0,
+    };
+
+    result.forEach((item) => {
+      totals.total_amount += Number(item.total_amount || 0);
+      totals.paid_amount += Number(item.paid_amount || 0);
+      totals.kasar_amount += Number(item.kasar_amount || 0);
+      totals.pending_amount += Number(item.pending_amount || 0);
+    });
+
+    return { data: result, totals };
   }
 
-  async getDeliveryExcelReport(reportFilterDto: ReportFilterDto): Promise<any> {
+  async getDeliveryExcelReport(
+    reportFilterDto: ReportFilterDto,
+  ): Promise<{ data: any[]; totals: any }> {
     const { startDate, endDate, user_id, company_id, branch_id, driver_id } =
       reportFilterDto;
 
@@ -1298,7 +1332,26 @@ export class ReportService {
       .orderBy('orders.created_at', 'ASC')
       .getRawMany();
 
-    return result;
+    const totals = {
+      total_orders: result.length,
+      total_amount: 0,
+      paid_amount: 0,
+      kasar_amount: 0,
+      pending_amount: 0,
+      delivery_collect_amount: 0,
+    };
+
+    result.forEach((item) => {
+      totals.total_amount += Number(item.total_amount || 0);
+      totals.paid_amount += Number(item.paid_amount || 0);
+      totals.kasar_amount += Number(item.kasar_amount || 0);
+      totals.pending_amount += Number(item.pending_amount || 0);
+      totals.delivery_collect_amount += Number(
+        item.delivery_collect_amount || 0,
+      );
+    });
+
+    return { data: result, totals };
   }
 
   async getBranchWiseOrderSummary(
